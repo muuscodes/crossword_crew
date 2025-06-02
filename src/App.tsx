@@ -1,10 +1,12 @@
 import "./App.css";
+import Layout from "./components/Layout";
+import LandingPage from "./components/LandingPage";
 
 function App() {
   return (
-    <>
-      <h1 className="text-6xl font-bold text-center pt-5">Crosswords</h1>
-    </>
+    <Layout>
+      <LandingPage />
+    </Layout>
   );
 }
 
