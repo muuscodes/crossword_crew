@@ -1,6 +1,6 @@
-# Crossword Community Website
+# Crossword Crew Website
 
-Welcome to the Crossword Community Website! This platform is designed for crossword enthusiasts to create, share, and solve crosswords while enjoying a collaborative and engaging environment. Whether you're a seasoned constructor or a casual solver, our community is here to support your passion for puzzles.
+Welcome to the Crossword Crew Website! This platform is designed for crossword enthusiasts to create, share, and solve crosswords while enjoying a collaborative and engaging environment. Whether you're a seasoned constructor or a casual solver, our community is here to support your passion for puzzles.
 
 ## Table of Contents
 
