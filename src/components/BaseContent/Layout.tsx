@@ -1,11 +1,11 @@
 import Navbar from "./Navbar";
 import Footer from "./Footer";
-import Modal from "./Modal";
-import Authentication from "./Authentication";
+import Modal from "../NonAuthContent/Modal";
+import Authentication from "../NonAuthContent/Authentication";
 import { useState } from "react";
 
 export default function Layout(props: any) {
-  const { children } = props;
+  const { children, isAuthenticated } = props;
   const [showModal, setShowModal] = useState<boolean>(false);
 
   const handleCloseModal = () => {
@@ -18,7 +18,7 @@ export default function Layout(props: any) {
           <Authentication handleCloseModal={handleCloseModal}></Authentication>
         </Modal>
       )}
-      <Navbar setShowModal={setShowModal} />
+      <Navbar setShowModal={setShowModal} isAuthenticated={isAuthenticated} />
       <main>{children}</main>
       <Footer />
     </>
