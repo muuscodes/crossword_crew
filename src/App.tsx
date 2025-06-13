@@ -10,7 +10,7 @@ import NoPage from "./components/BaseContent/NoPage.tsx";
 // import useAuth from "./context/AuthContext";
 
 function App() {
-  const isAuthenticated = false; // Should be gloabl user
+  const isAuthenticated = true; // Should be gloabl user
 
   return (
     <BrowserRouter>

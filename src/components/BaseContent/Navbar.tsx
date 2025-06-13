@@ -29,7 +29,7 @@ export default function Navbar(props: any) {
         className={`text-white hover:scale-120 ${
           isMenuOpen
             ? "text-6xl w-full text-center py-8 hover:opacity-50"
-            : "text-3xl pr-5 hover:cursor-pointer hover:opacity-50"
+            : "text-3xl p-3 hover:cursor-pointer hover:opacity-50 focus:opacity-70"
         }`}
       >
         {value}

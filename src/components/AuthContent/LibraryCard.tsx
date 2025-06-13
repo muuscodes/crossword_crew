@@ -3,13 +3,17 @@ import Logo from "../../img/favicon.jpg";
 export default function LibraryCard(props: any) {
   const { author, date, completed } = props;
   return (
-    <div className="flex flex-col items-center border-2 p-5 w-90 h-auto bg-black text-white">
+    <div
+      className="flex flex-col items-center border-2 p-5 w-90 h-auto bg-black text-white hover:scale-105 focus:scale-105"
+      tabIndex={0}
+    >
       <a
         href="/library"
         target="_self"
         id="library-logo"
         aria-label="Crossword crew library page"
         className="block w-2/3 h-auto"
+        tabIndex={-1}
       >
         <img src={Logo} alt="Placeholder" />
       </a>

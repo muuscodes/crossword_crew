@@ -7,6 +7,12 @@ export default function CreateCrossword() {
   const [gridDimensions, setGridDimensions] = useState<string>("30vw");
   const [positionBlackSquares, setPositionBlackSquares] =
     useState<boolean>(false);
+  const [currentGridNumbers, setCurrentGridNumbers] = useState<number[]>(
+    Array(gridSize * gridSize).fill(null)
+  );
+  const [blackSquares, setBlackSquares] = useState<boolean[]>(
+    Array(gridSize * gridSize).fill(false)
+  );
 
   const handleGridSizeChange = (
     event: React.ChangeEvent<HTMLSelectElement>
@@ -70,14 +76,23 @@ export default function CreateCrossword() {
           Set black squares
         </button>
       </div>
-      <div className="flex flex-row justify-between w-2/3">
+      <div className={`flex border-1 h-[${gridDimensions}] w-fit`}>
         <CrosswordGrid
           gridSize={gridSize}
           gridDimensions={gridDimensions}
           positionBlackSquares={positionBlackSquares}
           addInputs={true}
+          currentGridNumbers={currentGridNumbers}
+          setCurrentGridNumbers={setCurrentGridNumbers}
+          blackSquares={blackSquares}
+          setBlackSquares={setBlackSquares}
         />
-        <CreateClues />
+
+        <CreateClues
+          gridSize={gridSize}
+          currentGridNumbers={currentGridNumbers}
+          blackSquares={blackSquares}
+        />
       </div>
     </div>
   );
