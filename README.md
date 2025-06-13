@@ -24,9 +24,9 @@
     <a href="https://crossword_Crew.app" target="_blank" rel="noreferrer"><strong>Open the App</strong></a>
     <br />
     <br />
-    <a href="https://github.com/gasnew/crossword_crew/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
+    <a href="https://github.com/muuscodes/crossword_crew/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     ·
-    <a href="https://github.com/gasnew/crossword_crew/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
+    <a href="https://github.com/muuscodes/crossword_crew/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
   </p>
 </div>
 
@@ -87,13 +87,13 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 
-[forks-shield]: https://img.shields.io/github/forks/gasnew/crossword_crew.svg?style=for-the-badge
-[forks-url]: https://github.com/gasnew/crossword_crew/network/members
-[stars-shield]: https://img.shields.io/github/stars/gasnew/crossword_crew.svg?style=for-the-badge
-[stars-url]: https://github.com/gasnew/crossword_crew/stargazers
-[issues-shield]: https://img.shields.io/github/issues/gasnew/crossword_crew.svg?style=for-the-badge
-[issues-url]: https://github.com/gasnew/crossword_crew/issues
-[wfc-worker-url]: https://github.com/gasnew/crossword_crew/blob/master/ui/src/features/builder/WFCWorker.worker.ts
+[forks-shield]: https://img.shields.io/github/forks/muuscodes/crossword_crew.svg?style=for-the-badge
+[forks-url]: https://github.com/muuscodes/crossword_crew/network/members
+[stars-shield]: https://img.shields.io/github/stars/muuscodes/crossword_crew.svg?style=for-the-badge
+[stars-url]: https://github.com/muuscodes/crossword_crew/stargazers
+[issues-shield]: https://img.shields.io/github/issues/muuscodes/crossword_crew.svg?style=for-the-badge
+[issues-url]: https://github.com/muuscodes/crossword_crew/issues
+[wfc-worker-url]: https://github.com/muuscodes/crossword_crew/blob/master/ui/src/features/builder/WFCWorker.worker.ts
 [wfc-url]: https://github.com/mxgmn/WaveFunctionCollapse
 [reddit-post-url]: https://www.reddit.com/r/computerscience/comments/xh1lzi/a_dense_nytstyle_crossword_constructor_using_wave/
 [yarn-install-url]: https://classic.yarnpkg.com/lang/en/docs/install
