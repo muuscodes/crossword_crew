@@ -41,7 +41,7 @@ You can run Crossword Crew locally with the following instructions.
 
 ### Prerequisites
 
-- [npm][npm-install-url]
+* [npm][npm-install-url]
 
 ### Installation
 
@@ -93,7 +93,4 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 [stars-url]: https://github.com/muuscodes/crossword_crew/stargazers
 [issues-shield]: https://img.shields.io/github/issues/muuscodes/crossword_crew.svg?style=for-the-badge
 [issues-url]: https://github.com/muuscodes/crossword_crew/issues
-[wfc-worker-url]: https://github.com/muuscodes/crossword_crew/blob/master/ui/src/features/builder/WFCWorker.worker.ts
-[wfc-url]: https://github.com/mxgmn/WaveFunctionCollapse
-[reddit-post-url]: https://www.reddit.com/r/computerscience/comments/xh1lzi/a_dense_nytstyle_crossword_constructor_using_wave/
-[yarn-install-url]: https://classic.yarnpkg.com/lang/en/docs/install
+[npm-install-url]: https://docs.npmjs.com/cli/v9/configuring-npm/install?v=true
