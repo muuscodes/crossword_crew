@@ -13,7 +13,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/muuscodes/crossword_crew">
-    <img src="src/img/favicon.png" alt="Logo" width="80" height="80">
+    <img src="src/img/favicon.jpg" alt="Logo" width="80" height="80">
   </a>
 
 <h3 align="center">Crossword Crew</h3>
