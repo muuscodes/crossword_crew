@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CrosswordGrid from "./CrosswordGrid";
 import CreateClues from "./CreateClues";
 
@@ -13,40 +13,30 @@ export default function CreateCrossword() {
   const [blackSquares, setBlackSquares] = useState<boolean[]>(
     Array(gridSize * gridSize).fill(false)
   );
+  const [isGridReady, setIsGridReady] = useState<boolean>(false);
 
   const handleGridSizeChange = (
     event: React.ChangeEvent<HTMLSelectElement>
   ) => {
     const value = parseInt(event.target.value);
-    switch (value) {
-      case 5:
-        setGridDimensions("30vw");
-        break;
-      case 7:
-        setGridDimensions("30vw");
-        break;
-      case 9:
-        setGridDimensions("35vw");
-        break;
-      case 11:
-        setGridDimensions("35vw");
-        break;
-      case 13:
-        setGridDimensions("40vw");
-        break;
-      case 15:
-        setGridDimensions("40vw");
-        break;
-      default:
-        setGridDimensions("30vw");
-        break;
-    }
+    setGridDimensions(value <= 7 ? "30vw" : value <= 11 ? "35vw" : "40vw");
     setGridSize(value);
+    setCurrentGridNumbers(Array(value * value).fill(null));
+    setBlackSquares(Array(value * value).fill(false));
+    setIsGridReady(false);
   };
 
   const handleBlackSquaresChange = () => {
     setPositionBlackSquares(!positionBlackSquares);
   };
+
+  useEffect(() => {
+    if (currentGridNumbers.some((num) => num !== null)) {
+      setIsGridReady(true);
+    } else {
+      setIsGridReady(false); // Reset if no numbers are populated
+    }
+  }, [currentGridNumbers]);
 
   return (
     <div className="flex flex-col items-center gap-5 m-4">
@@ -76,7 +66,10 @@ export default function CreateCrossword() {
           Set black squares
         </button>
       </div>
-      <div className={`flex border-1 h-[${gridDimensions}] w-fit`}>
+      <div
+        className={`flex border-1 w-fit`}
+        style={{ height: `calc(${gridDimensions} + 5px)` }}
+      >
         <CrosswordGrid
           gridSize={gridSize}
           gridDimensions={gridDimensions}
@@ -88,11 +81,14 @@ export default function CreateCrossword() {
           setBlackSquares={setBlackSquares}
         />
 
-        <CreateClues
-          gridSize={gridSize}
-          currentGridNumbers={currentGridNumbers}
-          blackSquares={blackSquares}
-        />
+        {isGridReady && (
+          <CreateClues
+            gridSize={gridSize}
+            currentGridNumbers={currentGridNumbers}
+            blackSquares={blackSquares}
+            gridDimensions={gridDimensions}
+          />
+        )}
       </div>
     </div>
   );
