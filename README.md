@@ -12,70 +12,54 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/gasnew/crosswyrd">
-    <img src="ui/public/logo152.png" alt="Logo" width="80" height="80">
+  <a href="https://github.com/muuscodes/crossword_crew">
+    <img src="src/img/favicon.jpg" alt="Logo" width="80" height="80">
   </a>
 
-<h3 align="center">Crosswyrd</h3>
+<h3 align="center">Crossword Crew</h3>
 
   <p align="center">
     The Simple Crossword Constructor
     <br />
-    <a href="https://crosswyrd.app" target="_blank" rel="noreferrer"><strong>Open the App</strong></a>
+    <a href="https://crossword_Crew.app" target="_blank" rel="noreferrer"><strong>Open the App</strong></a>
     <br />
     <br />
-    <a href="https://github.com/gasnew/crosswyrd/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
+    <a href="https://github.com/muuscodes/crossword_crew/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
     ·
-    <a href="https://github.com/gasnew/crosswyrd/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
+    <a href="https://github.com/muuscodes/crossword_crew/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
   </p>
 </div>
 
 ## About The Project
 
-<div align="center">
-  <a href="https://crosswyrd.app">
-    <img src="ui/public/gifs/fill.gif" alt="Animation" width="200" height="200">
-  </a>
-</div>
-
-Crosswyrd is a web app for quickly and simply constructing, sharing, and
+Crossword Crew is a web app for quickly and simply constructing, sharing, and
 playing dense New York Times-style crossword puzzles.
-
-Underlying Crosswyrd's word suggestion, auto-fill, word bank, and tile
-constraint heatmap features is a [wave function collapse algorithm][wfc-url].
-To learn more about how this works, you can check out [the app's original
-Reddit post][reddit-post-url] and the [WFCWorker module][wfc-worker-url] that
-implements the algorithm.
 
 ## Getting Started
 
-You can run Crosswyrd locally with the following instructions.
+You can run Crossword Crew locally with the following instructions.
 
 ### Prerequisites
 
-- [yarn][yarn-install-url]
+* [npm][npm-install-url]
 
 ### Installation
 
 1. Clone the repo
    ```sh
-   git clone git@github.com:gasnew/crosswyrd.git
+   git clone git@github.com:muuscodes/crossword_crew.git
    ```
-2. Navigate to the `ui/` directory
+2. Install packages
    ```sh
-   cd crosswyrd/ui
+   npm install
    ```
-3. Install packages
-   ```sh
-   yarn install
-   ```
-4. Start the dev server
+3. Start the dev server
 
    ```sh
-   yarn start
+   npm start
    ```
 
-   After a few moments, you should be able to interact with Crosswyrd locally
+   After a few moments, you should be able to interact with crossword_crew locally
    at [http://localhost:3000](http://localhost:3000).
 
 ## Contributing
@@ -98,20 +82,15 @@ create a pull request. You can also simply open an issue with the tag
 
 Distributed under the MIT License. See `LICENSE.txt` for more information.
 
-## Contact
 
-@gasnew on [the Crosswyrd Community Discord Server](https://discord.gg/tp3hQChd6S)
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 
-[forks-shield]: https://img.shields.io/github/forks/gasnew/crosswyrd.svg?style=for-the-badge
-[forks-url]: https://github.com/gasnew/crosswyrd/network/members
-[stars-shield]: https://img.shields.io/github/stars/gasnew/crosswyrd.svg?style=for-the-badge
-[stars-url]: https://github.com/gasnew/crosswyrd/stargazers
-[issues-shield]: https://img.shields.io/github/issues/gasnew/crosswyrd.svg?style=for-the-badge
-[issues-url]: https://github.com/gasnew/crosswyrd/issues
-[wfc-worker-url]: https://github.com/gasnew/crosswyrd/blob/master/ui/src/features/builder/WFCWorker.worker.ts
-[wfc-url]: https://github.com/mxgmn/WaveFunctionCollapse
-[reddit-post-url]: https://www.reddit.com/r/computerscience/comments/xh1lzi/a_dense_nytstyle_crossword_constructor_using_wave/
-[yarn-install-url]: https://classic.yarnpkg.com/lang/en/docs/install
+[forks-shield]: https://img.shields.io/github/forks/muuscodes/crossword_crew.svg?style=for-the-badge
+[forks-url]: https://github.com/muuscodes/crossword_crew/network/members
+[stars-shield]: https://img.shields.io/github/stars/muuscodes/crossword_crew.svg?style=for-the-badge
+[stars-url]: https://github.com/muuscodes/crossword_crew/stargazers
+[issues-shield]: https://img.shields.io/github/issues/muuscodes/crossword_crew.svg?style=for-the-badge
+[issues-url]: https://github.com/muuscodes/crossword_crew/issues
+[npm-install-url]: https://docs.npmjs.com/cli/v9/configuring-npm/install?v=true
