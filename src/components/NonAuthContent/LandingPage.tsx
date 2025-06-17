@@ -2,23 +2,22 @@
 import editClues from "../../img/edit-clues.jpeg";
 import editHints from "../../img/edit-hints.jpg";
 import shareCw from "../../img/share-cw.jpg";
-import CrosswordGrid from "../BuildCrossword/CrosswordGrid";
+import LandingCrossword from "./LandingCrossword";
 
 export default function LandingPage() {
-  const createHint = (name: string, id: string, value: string) => {
-    return (
-      <li>
-        <textarea
-          name={name}
-          id={id}
-          cols={20}
-          rows={1}
-          defaultValue={value}
-          style={{ resize: "none" }}
-        ></textarea>
-      </li>
-    );
-  };
+  const createClue = (id: string, entry: string) => (
+    <li className="flex items-center">
+      <p className="font-extrabold mr-2">{id}</p>
+      <textarea
+        id={id}
+        cols={30}
+        rows={1}
+        defaultValue={entry}
+        style={{ resize: "none", fontSize: "1.25rem" }}
+        wrap="true"
+      ></textarea>
+    </li>
+  );
 
   return (
     <>
@@ -28,20 +27,18 @@ export default function LandingPage() {
             Welcome to Crossword Crew
           </h1>
         </section>
-        <section className="w-1/1">
+        <section className="w-full">
           <hr className="border-4" />
           <section className="flex flex-row justify-between items-center bg-gray-200 pt-10 pb-10 lg:pt-0 lg:pb-0">
-            <div className="flex-col">
+            <div className="flex-co">
               <h3 className="text-5xl font-bold m-auto p-10">
                 Create crosswords using an interactive grid:
               </h3>
-              <div aria-label="crossword graphic" className="pb-10">
-                <CrosswordGrid
-                  gridSize={5}
-                  gridDimensions={"25vw"}
-                  positionBlackSquares={true}
-                  addInputs={false}
-                />
+              <div
+                aria-label="crossword graphic"
+                className="pb-10 flex justify-center"
+              >
+                <LandingCrossword />
               </div>
             </div>
             <img
@@ -57,26 +54,18 @@ export default function LandingPage() {
               alt="Crossword 3D image"
               className="border-r-4 hidden lg:block"
             />
-            <div className="flex-col w-1/1">
+            <div className="flex-col w-full">
               <h3 className="text-5xl font-bold m-atuo pb-15">
                 Edit hints with ease:
               </h3>
-              <div className="border-2 rounded-sm p-2 mb-2 bg-white min-w-50 w-1/4 m-auto">
-                <h4 className="font-bold text-xl">Across:</h4>
-                <ol className="mt-3 list-decimal list-inside">
-                  {createHint("across1", "across1", "The man with a cane")}
-                  {createHint("across2", "across2", "Banana split?")}
-                  {createHint("across3", "across3", "Capital of Lesotho")}
-                  {createHint("across4", "across4", "A funny gag")}
-                </ol>
-              </div>
-              <div className="border-2 rounded-sm p-2 mb-2 bg-white min-w-50 w-1/4 m-auto">
-                <h4 className="font-bold text-xl">Down:</h4>
-                <ol className="mt-3 list-decimal list-inside">
-                  {createHint("down1", "down1", "Hello World")}
-                  {createHint("down2", "down2", "A common occurrence")}
-                  {createHint("down3", "down3", "Pi day?")}
-                  {createHint("down4", "down4", "Veracity")}
+              <div className="border-2 rounded-sm p-2 mb-2 bg-white w-1/2 md:w-1/3 lg:w-1/2 m-auto">
+                <h4 className="font-bold text-3xl">Across:</h4>
+                <ol className="mt-3">
+                  {createClue("1", "The man with a cane")}
+                  {createClue("2", "Banana split?")}
+                  {createClue("3", "Capital of Lesotho")}
+                  {createClue("4", "A funny gag")}
+                  {createClue("5", "Chocolate sauce?")}
                 </ol>
               </div>
             </div>
@@ -85,9 +74,9 @@ export default function LandingPage() {
           <section className="flex flex-row justify-between items-center text-center bg-gray-200 pt-10 pb-10 lg:pt-0 lg:pb-0">
             <div className="w-full lg:w-1/2">
               <p className="text-4xl lg:text-4xl font-bold m-auto pb-15 pt-10 justify-self-center-safe ">
-                Share custom puzzles with your friends,
+                Create custom puzzles,
                 <br />
-                solve current crosswords,
+                share them with your friends,
                 <br />
                 and much more!
               </p>

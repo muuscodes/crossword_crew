@@ -97,3 +97,31 @@
   box-shadow: 0 0 0 0 black;
   transform: translate(2px, 2px);
 }
+
+.custom-checkbox {
+  appearance: none; /* Remove default checkbox styling */
+  width: 25px; /* Set width */
+  height: 25px; /* Set height */
+  border: 2px solid black; /* Light gray border */
+  border-radius: 0.375rem; /* Rounded corners */
+  cursor: pointer; /* Pointer cursor on hover */
+  position: relative; /* Position for the ::after pseudo-element */
+}
+
+.custom-checkbox:checked {
+  background-color: black; /* Blue background when checked */
+  border-color: black; /* Blue border when checked */
+}
+
+.custom-checkbox:checked::after {
+  content: ""; /* Empty content for the checkmark */
+  display: inline-block; /* Make it a block element */
+  width: 10px; /* Width of the checkmark */
+  height: 10px; /* Height of the checkmark */
+  background-color: white; /* White checkmark */
+  border-radius: 0.25rem; /* Rounded corners for the checkmark */
+  position: absolute; /* Position it inside the checkbox */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}

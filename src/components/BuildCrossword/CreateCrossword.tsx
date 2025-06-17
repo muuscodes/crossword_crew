@@ -13,6 +13,19 @@ export default function CreateCrossword() {
   const [blackSquares, setBlackSquares] = useState<boolean[]>(
     Array(gridSize * gridSize).fill(false)
   );
+  const [isFocusedCell, setIsFocusedCell] = useState<boolean[]>(
+    Array(gridSize * gridSize).fill(false)
+  );
+  const [isSecondaryFocusedCell, setIsSecondaryFocusedCell] = useState<
+    boolean[]
+  >(Array(gridSize * gridSize).fill(false));
+  const [isFocusedClue, setIsFocusedClue] = useState<boolean[]>(
+    Array(gridSize * gridSize).fill(false)
+  );
+  const [isHighlightAcross, setIsHighlightAcross] = useState<boolean>(true);
+  const [acrossClues, setAcrossClues] = useState<React.ReactElement[]>([]);
+  const [downClues, setDownClues] = useState<React.ReactElement[]>([]);
+  const [clueNumDirection, setClueNumDirection] = useState<string[][]>([]);
   const [isGridReady, setIsGridReady] = useState<boolean>(false);
 
   const handleGridSizeChange = (
@@ -34,40 +47,50 @@ export default function CreateCrossword() {
     if (currentGridNumbers.some((num) => num !== null)) {
       setIsGridReady(true);
     } else {
-      setIsGridReady(false); // Reset if no numbers are populated
+      setIsGridReady(false);
     }
   }, [currentGridNumbers]);
 
   return (
-    <div className="flex flex-col items-center gap-5 m-4">
-      <div>
-        <label htmlFor="gridSize">Select Grid Size:</label>
-        <select
-          name="gridSize"
-          id="gridSize"
-          value={gridSize}
-          onChange={handleGridSizeChange}
-        >
-          <option value="5">5</option>
-          <option value="7">7</option>
-          <option value="9">9</option>
-          <option value="11">11</option>
-          <option value="13">13</option>
-          <option value="15">15</option>
-        </select>
-      </div>
-      <div>
-        <button
-          className={`border-2 border-black hover:bg-red-400 p-2 ${
-            positionBlackSquares ? "bg-black text-white" : "bg-white"
-          }`}
-          onClick={handleBlackSquaresChange}
-        >
-          Set black squares
+    <div className="flex flex-col items-center m-auto border-4 w-fit">
+      <div className="flex flex-row justify-around items-center w-full">
+        <button className="hover:opacity-60 focus:opacity-60 hover:scale-105 focus:scale-105 text-xl p-2">
+          Save
         </button>
+        <button className="hover:opacity-60 focus:opacity-60 hover:scale-105 focus:scale-105 text-xl p-2">
+          Clear
+        </button>
+        <div>
+          <label className="text-xl mr-1" htmlFor="gridSize">
+            Grid Size:
+          </label>
+          <select
+            name="gridSize"
+            id="gridSize"
+            value={gridSize}
+            onChange={handleGridSizeChange}
+            className="border-1 text-xl"
+          >
+            <option value="5">5</option>
+            <option value="7">7</option>
+            <option value="9">9</option>
+            <option value="11">11</option>
+            <option value="13">13</option>
+            <option value="15">15</option>
+          </select>
+        </div>
+        <label className="text-xl flex items-center">
+          Set Black Squares
+          <input
+            type="checkbox"
+            id="checkbox"
+            className="m-2 custom-checkbox"
+            onClick={handleBlackSquaresChange}
+          />
+        </label>
       </div>
       <div
-        className={`flex border-1 w-fit`}
+        className={`flex border-2 w-fit`}
         style={{ height: `calc(${gridDimensions} + 5px)` }}
       >
         <CrosswordGrid
@@ -79,6 +102,15 @@ export default function CreateCrossword() {
           setCurrentGridNumbers={setCurrentGridNumbers}
           blackSquares={blackSquares}
           setBlackSquares={setBlackSquares}
+          isFocusedCell={isFocusedCell}
+          setIsFocusedCell={setIsFocusedCell}
+          isFocusedClue={isFocusedClue}
+          setIsFocusedClue={setIsFocusedClue}
+          isSecondaryFocusedCell={isSecondaryFocusedCell}
+          setIsSecondaryFocusedCell={setIsSecondaryFocusedCell}
+          isHighlightAcross={isHighlightAcross}
+          setIsHighlightAcross={setIsHighlightAcross}
+          clueNumDirection={clueNumDirection}
         />
 
         {isGridReady && (
@@ -87,6 +119,20 @@ export default function CreateCrossword() {
             currentGridNumbers={currentGridNumbers}
             blackSquares={blackSquares}
             gridDimensions={gridDimensions}
+            isFocusedCell={isFocusedCell}
+            setIsFocusedCell={setIsFocusedCell}
+            isSecondaryFocusedCell={isSecondaryFocusedCell}
+            setIsSecondaryFocusedCell={setIsSecondaryFocusedCell}
+            isHighlightAcross={isHighlightAcross}
+            setIsHighlightAcross={setIsHighlightAcross}
+            isFocusedClue={isFocusedClue}
+            setIsFocusedClue={setIsFocusedClue}
+            acrossClues={acrossClues}
+            setAcrossClues={setAcrossClues}
+            downClues={downClues}
+            setDownClues={setDownClues}
+            clueNumDirection={clueNumDirection}
+            setClueNumDirection={setClueNumDirection}
           />
         )}
       </div>

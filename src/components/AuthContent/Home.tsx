@@ -29,16 +29,32 @@ export default function Home() {
       <HomeCard header={"Library"}>
         <div className="list-none flex md:flex-row flex-col bg-gray-100 justify-around w-full p-10">
           <div className="flex flex-col items-center">
-            <h2 className="text-xl p-2 mb-5">Sent puzzles</h2>
-            <div className="w-50 h-50 text-5xl bg-black text-white font-bold text-center p-4">
-              Puzzles
-            </div>
+            <a
+              href="/library"
+              target="_self"
+              aria-label="Crossword crew library page"
+              tabIndex={-1}
+            >
+              <div className="w-50 h-50 text-5xl bg-black text-white font-bold text-center p-4 mt-5 md:mt-0 hover:scale-105 focus:scale-105 flex items-center">
+                Created <br />
+                by <br />
+                Me
+              </div>
+            </a>
           </div>
           <div className="flex flex-col items-center">
-            <h2 className="text-xl p-2 mb-5">Received puzzles</h2>
-            <div className="w-50 h-50 text-5xl bg-black text-white font-bold text-center p-4">
-              Puzzles
-            </div>
+            <a
+              href="/library"
+              target="_self"
+              aria-label="Crossword crew library page"
+              tabIndex={-1}
+            >
+              <div className="w-50 h-50 text-5xl bg-black text-white font-bold text-center p-4 mt-5 md:mt-0 hover:scale-105 focus:scale-105 flex items-center">
+                Created <br />
+                by <br />
+                Others
+              </div>
+            </a>
           </div>
         </div>
       </HomeCard>
