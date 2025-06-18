@@ -18,6 +18,7 @@ export default function CreateClues(props: any) {
     setIsFocusedCell,
     clueNumDirection,
     setClueNumDirection,
+    setClueToCellHighlight,
   } = props;
 
   const [acrossClueValues, setAcrossClueValues] = useState<string[]>(
@@ -28,22 +29,58 @@ export default function CreateClues(props: any) {
   );
   const hasInitialized = useRef(false);
 
-  const createClue = (id: string, value: string, index: number) => (
-    <li className="flex">
-      <p className="font-bold mr-2 w-4 text-right">{id}</p>
-      <textarea
-        id={id}
-        cols={30}
-        rows={1}
-        defaultValue={value}
-        style={{ resize: "none", fontSize: "1.25rem" }}
-        wrap="true"
-        className={`border-1 ${isFocusedClue[index] ? "bg-blue-200" : ""}`}
-        onFocus={() => handleFocus(index)}
-        onChange={(e) => handleUserInput(e, parseInt(id))}
-      ></textarea>
-    </li>
-  );
+  const createClue = (
+    id: string,
+    value: string,
+    index: number,
+    direction: string
+  ) => {
+    let isHighlight: boolean = false;
+    const focusedCellIndex: number = isFocusedCell.indexOf(true);
+
+    if (
+      isFocusedClue[index] &&
+      clueNumDirection[index][0] &&
+      clueNumDirection[index][1]
+    ) {
+      if (isFocusedCell[index] == isFocusedClue[index]) {
+        isHighlight = true;
+      } else if (focusedCellIndex < index + gridSize && direction === "down") {
+        isHighlight = false;
+      } else if (
+        focusedCellIndex < index + gridSize &&
+        direction === "across"
+      ) {
+        isHighlight = true;
+      } else if (focusedCellIndex >= index + gridSize && direction === "down") {
+        isHighlight = true;
+      } else if (
+        focusedCellIndex >= index + gridSize &&
+        direction === "across"
+      ) {
+        isHighlight = false;
+      }
+    } else if (isFocusedClue[index]) {
+      isHighlight = true;
+    }
+
+    return (
+      <li className="flex">
+        <p className="font-bold mr-2 w-4 text-right">{id}</p>
+        <textarea
+          id={id + direction}
+          cols={30}
+          rows={1}
+          defaultValue={value}
+          style={{ resize: "none", fontSize: "1.25rem" }}
+          wrap="true"
+          className={`border-1 ${isHighlight ? "bg-blue-200" : ""}`}
+          onFocus={() => handleFocus(index)}
+          onChange={(e) => handleUserInput(e, parseInt(id))}
+        ></textarea>
+      </li>
+    );
+  };
 
   const createClueNumDirections = () => {
     const newClueDirs: string[][] = Array.from(
@@ -81,6 +118,7 @@ export default function CreateClues(props: any) {
     newFocusedClues[index] = true;
     setIsFocusedCell(newFocusedCells);
     setIsFocusedClue(newFocusedClues);
+    setClueToCellHighlight(index);
   };
 
   const handleUserInput = (
@@ -131,7 +169,8 @@ export default function CreateClues(props: any) {
           const newAcrossClue = createClue(
             currentGridNumbers[index]?.toString(),
             "",
-            index
+            index,
+            "across"
           );
           if (newAcrossClue) {
             newAcrossClues.push(newAcrossClue);
@@ -141,7 +180,8 @@ export default function CreateClues(props: any) {
           const newDownClue = createClue(
             currentGridNumbers[index]?.toString(),
             "",
-            index
+            index,
+            "down"
           );
           if (newDownClue) {
             newDownClues.push(newDownClue);
@@ -160,7 +200,10 @@ export default function CreateClues(props: any) {
       className="flex-col border-2"
       style={{ height: `calc(${gridDimensions} + 5px)` }}
     >
-      <div className="border-2 p-2 bg-white overflow-y-auto h-1/2">
+      <div
+        id="scrollableContainerAcross"
+        className="border-2 p-2 bg-white overflow-y-auto h-1/2"
+      >
         <h4 className="font-bold text-xl px-2 text-white bg-black border-2 w-fit">
           Across
         </h4>
@@ -170,7 +213,10 @@ export default function CreateClues(props: any) {
           ))}
         </ul>
       </div>
-      <div className="border-2 p-2 bg-white overflow-y-auto h-1/2">
+      <div
+        id="scrollableContainerDown"
+        className="border-2 p-2 bg-white overflow-y-auto h-1/2"
+      >
         <h4 className="font-bold text-xl px-2 text-white bg-black border-2 w-fit">
           Down
         </h4>

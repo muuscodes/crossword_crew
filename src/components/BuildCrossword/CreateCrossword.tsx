@@ -26,6 +26,7 @@ export default function CreateCrossword() {
   const [acrossClues, setAcrossClues] = useState<React.ReactElement[]>([]);
   const [downClues, setDownClues] = useState<React.ReactElement[]>([]);
   const [clueNumDirection, setClueNumDirection] = useState<string[][]>([]);
+  const [clueToCellHighlight, setClueToCellHighlight] = useState<number>(-1);
   const [isGridReady, setIsGridReady] = useState<boolean>(false);
 
   const handleGridSizeChange = (
@@ -41,6 +42,18 @@ export default function CreateCrossword() {
 
   const handleBlackSquaresChange = () => {
     setPositionBlackSquares(!positionBlackSquares);
+  };
+
+  const scrollToClue = (index: number, direction: string) => {
+    const containerId =
+      direction === "across"
+        ? "scrollableContainerAcross"
+        : "scrollableContainerDown";
+    const container = document.getElementById(containerId);
+    const clueElement = container?.querySelector("ul")?.children[index];
+    if (clueElement) {
+      clueElement.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
   };
 
   useEffect(() => {
@@ -111,6 +124,8 @@ export default function CreateCrossword() {
           isHighlightAcross={isHighlightAcross}
           setIsHighlightAcross={setIsHighlightAcross}
           clueNumDirection={clueNumDirection}
+          scrollToClue={scrollToClue}
+          clueToCellHighlight={clueToCellHighlight}
         />
 
         {isGridReady && (
@@ -124,7 +139,6 @@ export default function CreateCrossword() {
             isSecondaryFocusedCell={isSecondaryFocusedCell}
             setIsSecondaryFocusedCell={setIsSecondaryFocusedCell}
             isHighlightAcross={isHighlightAcross}
-            setIsHighlightAcross={setIsHighlightAcross}
             isFocusedClue={isFocusedClue}
             setIsFocusedClue={setIsFocusedClue}
             acrossClues={acrossClues}
@@ -133,6 +147,8 @@ export default function CreateCrossword() {
             setDownClues={setDownClues}
             clueNumDirection={clueNumDirection}
             setClueNumDirection={setClueNumDirection}
+            scrollToClue={scrollToClue}
+            setClueToCellHighlight={setClueToCellHighlight}
           />
         )}
       </div>
