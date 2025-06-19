@@ -30,6 +30,7 @@ export default function CreateCrossword() {
   const [isAcrossClueHighlight, setIsAcrossClueHighlight] =
     useState<boolean>(true);
   const [isGridReady, setIsGridReady] = useState<boolean>(false);
+  const [isFocusedOnGrid, setIsFocusedOnGrid] = useState<boolean>(false);
 
   const handleGridSizeChange = (
     event: React.ChangeEvent<HTMLSelectElement>
@@ -128,6 +129,8 @@ export default function CreateCrossword() {
           scrollToClue={scrollToClue}
           clueToCellHighlight={clueToCellHighlight}
           isAcrossClueHighlight={isAcrossClueHighlight}
+          isFocusedOnGrid={isFocusedOnGrid}
+          setIsFocusedOnGrid={setIsFocusedOnGrid}
         />
 
         {isGridReady && (
@@ -148,6 +151,8 @@ export default function CreateCrossword() {
             setClueNumDirection={setClueNumDirection}
             setClueToCellHighlight={setClueToCellHighlight}
             setIsAcrossClueHighlight={setIsAcrossClueHighlight}
+            isFocusedOnGrid={isFocusedOnGrid}
+            setIsFocusedOnGrid={setIsFocusedOnGrid}
           />
         )}
       </div>

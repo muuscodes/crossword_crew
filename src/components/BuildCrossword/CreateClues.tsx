@@ -20,6 +20,8 @@ export default function CreateClues(props: any) {
     setClueNumDirection,
     setClueToCellHighlight,
     setIsAcrossClueHighlight,
+    isFocusedOnGrid,
+    setIsFocusedOnGrid,
   } = props;
 
   const [acrossClueValues, setAcrossClueValues] = useState<string[]>(
@@ -76,10 +78,11 @@ export default function CreateClues(props: any) {
           tabIndex={0}
           defaultValue={value}
           style={{ resize: "none", fontSize: "1.25rem" }}
-          wrap="true"
+          wrap="soft"
           className={`border-1 ${isHighlight ? "bg-blue-200" : ""}`}
           onFocus={() => handleFocus(index, direction)}
-          onChange={(e) => handleUserInput(e, id, index)}
+          // onChange={(e) => handleUserInput(e, id, index)}
+          onChange={(e) => handleInputChange(e, direction, index)}
         ></textarea>
       </li>
     );
@@ -115,6 +118,7 @@ export default function CreateClues(props: any) {
   };
 
   const handleFocus = (index: number, direction: string) => {
+    setIsFocusedOnGrid(false);
     const newFocusedCells = Array(gridSize * gridSize).fill(false);
     const newFocusedClues = Array(gridSize * gridSize).fill(false);
     newFocusedCells[index] = true;
@@ -141,23 +145,39 @@ export default function CreateClues(props: any) {
 
   const handleUserInput = (
     event: React.ChangeEvent<HTMLTextAreaElement>,
-    id: string,
+    direction: string,
     index: number
   ) => {
     const value = event.target.value;
-    const newAcrossValues = [...acrossClueValues];
-    const newDownValues = [...downClueValues];
-    // const index = parseInt(id);
-    console.log(index);
+    const newAcrossValues = [...acrossClueValues].map((value) => {
+      return value;
+    });
+    const newDownValues = [...downClueValues].map((value) => {
+      return value;
+    });
 
-    if (id.includes("across")) {
-      newAcrossValues[index] = value;
-      setAcrossClueValues(newAcrossValues);
+    if (!isFocusedOnGrid) {
+      if (direction === "across") {
+        newAcrossValues[index] = value;
+        setAcrossClueValues(newAcrossValues);
+      }
+      if (direction === "down") {
+        newDownValues[index] = value;
+        setDownClueValues(newDownValues);
+      }
     }
-    if (id.includes("down")) {
-      newDownValues[index] = value;
-      setDownClueValues(newDownValues);
-    }
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement>,
+    direction: string,
+    index: number
+  ) => {
+    const target = e.target;
+    target.style.height = "auto";
+    const newHeight = Math.min(target.scrollHeight, 48);
+    target.style.height = `${newHeight}px`;
+    handleUserInput(e, direction, index);
   };
 
   useEffect(() => {
@@ -225,31 +245,35 @@ export default function CreateClues(props: any) {
       className="flex-col border-2"
       style={{ height: `calc(${gridDimensions} + 5px)` }}
     >
-      <div
-        id="scrollableContainerAcross"
-        className="border-2 p-2 bg-white overflow-y-auto h-1/2"
-      >
-        <h4 className="font-bold text-xl px-2 text-white bg-black border-2 w-fit">
+      <div className="h-1/2">
+        <h4 className="flex items-center font-bold text-xl px-2 text-white bg-black border-2 w-fit h-1/7">
           Across
         </h4>
-        <ul className="mt-3 list-none">
-          {acrossClues.map((clue: React.ReactElement, index: string) => (
-            <React.Fragment key={index}>{clue}</React.Fragment>
-          ))}
-        </ul>
+        <div
+          id="scrollableContainerAcross"
+          className="border-2 p-2 bg-white overflow-y-auto h-6/7"
+        >
+          <ul className="mt-3 list-none">
+            {acrossClues.map((clue: React.ReactElement, index: string) => (
+              <React.Fragment key={index}>{clue}</React.Fragment>
+            ))}
+          </ul>
+        </div>
       </div>
-      <div
-        id="scrollableContainerDown"
-        className="border-2 p-2 bg-white overflow-y-auto h-1/2"
-      >
-        <h4 className="font-bold text-xl px-2 text-white bg-black border-2 w-fit">
+      <div className="h-1/2">
+        <h4 className="flex items-center font-bold text-xl px-2 text-white bg-black border-2 w-fit h-1/7">
           Down
         </h4>
-        <ul className="mt-3 list-none">
-          {downClues.map((clue: React.ReactElement, index: string) => (
-            <React.Fragment key={index}>{clue}</React.Fragment>
-          ))}
-        </ul>
+        <div
+          id="scrollableContainerDown"
+          className="border-2 p-2 bg-white overflow-y-auto h-6/7"
+        >
+          <ul className="mt-3 list-none">
+            {downClues.map((clue: React.ReactElement, index: string) => (
+              <React.Fragment key={index}>{clue}</React.Fragment>
+            ))}
+          </ul>
+        </div>
       </div>
     </div>
   );

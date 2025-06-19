@@ -21,6 +21,8 @@ export default function CrosswordGrid(props: any) {
     scrollToClue,
     clueToCellHighlight,
     isAcrossClueHighlight,
+    isFocusedOnGrid,
+    setIsFocusedOnGrid,
   } = props;
   const currentCell = useRef(-1);
   const [currentGridValues, setCurrentGridValues] = useState<string[]>(
@@ -93,6 +95,7 @@ export default function CrosswordGrid(props: any) {
   };
 
   const handleFocus = (index: number, isAcrossHighlight: boolean) => {
+    setIsFocusedOnGrid(true);
     const previousCell: number = currentCell.current;
     currentCell.current = index;
 
@@ -316,106 +319,111 @@ export default function CrosswordGrid(props: any) {
     const index = currentCell.current;
 
     event.stopPropagation();
-    switch (event.key) {
-      case "ArrowUp":
-        event.preventDefault();
-        let upIndex = index - gridSize;
-        while (upIndex >= 0 && blackSquares[upIndex]) {
-          upIndex -= gridSize;
-        }
-        if (upIndex < 0) {
-          const currentCol = index % gridSize;
-          upIndex = (gridSize - 1) * gridSize + currentCol - 1;
+    if (isFocusedOnGrid) {
+      switch (event.key) {
+        case "ArrowUp":
+          event.preventDefault();
+          let upIndex = index - gridSize;
           while (upIndex >= 0 && blackSquares[upIndex]) {
             upIndex -= gridSize;
           }
-        }
-        if (upIndex < 0) {
-          upIndex = index;
-        }
-        handleFocus(upIndex, isHighlightAcross);
-        break;
+          if (upIndex < 0) {
+            const currentCol = index % gridSize;
+            upIndex = (gridSize - 1) * gridSize + currentCol - 1;
+            while (upIndex >= 0 && blackSquares[upIndex]) {
+              upIndex -= gridSize;
+            }
+          }
+          if (upIndex < 0) {
+            upIndex = index;
+          }
+          handleFocus(upIndex, isHighlightAcross);
+          break;
 
-      case "ArrowDown":
-        event.preventDefault();
-        let downIndex = index + gridSize;
-        while (downIndex < gridSize * gridSize && blackSquares[downIndex]) {
-          downIndex += gridSize;
-        }
-        if (downIndex >= gridSize * gridSize) {
-          const currentCol = index % gridSize;
-          downIndex = currentCol + 1;
+        case "ArrowDown":
+          event.preventDefault();
+          let downIndex = index + gridSize;
           while (downIndex < gridSize * gridSize && blackSquares[downIndex]) {
             downIndex += gridSize;
           }
-        }
-        if (downIndex >= gridSize * gridSize) {
-          downIndex = index;
-        }
-        handleFocus(downIndex, isHighlightAcross);
-        break;
+          if (downIndex >= gridSize * gridSize) {
+            const currentCol = index % gridSize;
+            downIndex = currentCol + 1;
+            while (downIndex < gridSize * gridSize && blackSquares[downIndex]) {
+              downIndex += gridSize;
+            }
+          }
+          if (downIndex >= gridSize * gridSize) {
+            downIndex = index;
+          }
+          handleFocus(downIndex, isHighlightAcross);
+          break;
 
-      case "ArrowLeft":
-        event.preventDefault();
-        let leftIndex = index - 1;
-        while (leftIndex >= 0 && blackSquares[leftIndex]) {
-          leftIndex--;
-        }
-        if (leftIndex < 0) {
-          leftIndex = gridSize * gridSize - 1;
+        case "ArrowLeft":
+          event.preventDefault();
+          let leftIndex = index - 1;
           while (leftIndex >= 0 && blackSquares[leftIndex]) {
             leftIndex--;
           }
-        }
-        if (leftIndex < 0) {
-          leftIndex = index;
-        }
-        handleFocus(leftIndex, isHighlightAcross);
-        break;
+          if (leftIndex < 0) {
+            leftIndex = gridSize * gridSize - 1;
+            while (leftIndex >= 0 && blackSquares[leftIndex]) {
+              leftIndex--;
+            }
+          }
+          if (leftIndex < 0) {
+            leftIndex = index;
+          }
+          handleFocus(leftIndex, isHighlightAcross);
+          break;
 
-      case "ArrowRight":
-        event.preventDefault();
-        let rightIndex = index + 1;
-        while (rightIndex < gridSize * gridSize && blackSquares[rightIndex]) {
-          rightIndex++;
-        }
-        if (rightIndex >= gridSize * gridSize) {
-          rightIndex = 0;
+        case "ArrowRight":
+          event.preventDefault();
+          let rightIndex = index + 1;
           while (rightIndex < gridSize * gridSize && blackSquares[rightIndex]) {
             rightIndex++;
           }
-        }
-        if (rightIndex >= gridSize * gridSize) {
-          rightIndex = index;
-        }
-        handleFocus(rightIndex, isHighlightAcross);
-        break;
-
-      case "Tab":
-        event.preventDefault();
-        const acrossIndices: number[] = [];
-        const downIndices: number[] = [];
-        clueNumDirection.forEach((item: string[], index: number) => {
-          if (item[0] === "across") {
-            acrossIndices.push(index);
+          if (rightIndex >= gridSize * gridSize) {
+            rightIndex = 0;
+            while (
+              rightIndex < gridSize * gridSize &&
+              blackSquares[rightIndex]
+            ) {
+              rightIndex++;
+            }
           }
-          if (item[1] === "down") {
-            downIndices.push(index);
+          if (rightIndex >= gridSize * gridSize) {
+            rightIndex = index;
           }
-        });
-        if (event.shiftKey) {
-          handleShiftTab(index, 0, acrossIndices, downIndices);
-        } else {
-          handleTab(index, 0, acrossIndices, downIndices);
-        }
-        break;
+          handleFocus(rightIndex, isHighlightAcross);
+          break;
 
-      case " ":
-        event.preventDefault();
-        handleFocus(index, !isHighlightAcross);
-        break;
-      default:
-        break;
+        case "Tab":
+          event.preventDefault();
+          const acrossIndices: number[] = [];
+          const downIndices: number[] = [];
+          clueNumDirection.forEach((item: string[], index: number) => {
+            if (item[0] === "across") {
+              acrossIndices.push(index);
+            }
+            if (item[1] === "down") {
+              downIndices.push(index);
+            }
+          });
+          if (event.shiftKey) {
+            handleShiftTab(index, 0, acrossIndices, downIndices);
+          } else {
+            handleTab(index, 0, acrossIndices, downIndices);
+          }
+          break;
+
+        case " ":
+          event.preventDefault();
+          handleFocus(index, !isHighlightAcross);
+          break;
+        default:
+          break;
+      }
     }
   };
 
