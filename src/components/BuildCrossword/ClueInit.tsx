@@ -1,7 +1,15 @@
 export default function ClueInit(
   props: any
 ): [React.ReactElement[], React.ReactElement[], string[][]] {
-  const { gridSize, currentGridNumbers, isFocusedClue } = props;
+  const {
+    gridSize,
+    currentGridNumbers,
+    isFocusedClue,
+    isFocusedCell,
+    clueNumDirection,
+    handleFocus,
+    handleUserInput,
+  } = props;
   let acrossCluesInit: React.ReactElement[] = [];
   let downCluesInit: React.ReactElement[] = [];
   const clueDirectionsInit: string[][] = Array.from(
@@ -9,20 +17,59 @@ export default function ClueInit(
     () => ["", ""]
   );
 
-  const createClue = (id: string, value: string, index: number) => (
-    <li className="flex">
-      <p className="font-bold mr-2 w-4 text-right">{id}</p>
-      <textarea
-        id={id}
-        cols={30}
-        rows={1}
-        defaultValue={value}
-        style={{ resize: "none", fontSize: "1.25rem" }}
-        wrap="true"
-        className={`border-1 ${isFocusedClue[index] ? "bg-blue-200" : ""}`}
-      ></textarea>
-    </li>
-  );
+  const createClue = (
+    id: string,
+    value: string,
+    index: number,
+    direction: string
+  ) => {
+    let isHighlight: boolean = false;
+    const focusedCellIndex: number = isFocusedCell.indexOf(true);
+
+    if (
+      isFocusedClue[index] &&
+      clueNumDirection[index][0] &&
+      clueNumDirection[index][1]
+    ) {
+      if (isFocusedCell[index] == isFocusedClue[index]) {
+        isHighlight = true;
+      } else if (focusedCellIndex < index + gridSize && direction === "down") {
+        isHighlight = false;
+      } else if (
+        focusedCellIndex < index + gridSize &&
+        direction === "across"
+      ) {
+        isHighlight = true;
+      } else if (focusedCellIndex >= index + gridSize && direction === "down") {
+        isHighlight = true;
+      } else if (
+        focusedCellIndex >= index + gridSize &&
+        direction === "across"
+      ) {
+        isHighlight = false;
+      }
+    } else if (isFocusedClue[index]) {
+      isHighlight = true;
+    }
+
+    return (
+      <li className="flex">
+        <p className="font-bold mr-2 w-4 text-right">{id}</p>
+        <textarea
+          id={id + direction}
+          cols={30}
+          rows={1}
+          tabIndex={0}
+          defaultValue={value}
+          style={{ resize: "none", fontSize: "1.25rem" }}
+          wrap="true"
+          className={`border-1 ${isHighlight ? "bg-blue-200" : ""}`}
+          onFocus={() => handleFocus(index, direction)}
+          onChange={(e) => handleUserInput(e, parseInt(id))}
+        ></textarea>
+      </li>
+    );
+  };
 
   const initialize = () => {
     let acrossInit: React.ReactElement[] = [];
@@ -41,7 +88,8 @@ export default function ClueInit(
           const newAcrossClue = createClue(
             currentGridNumbers[index]?.toString(),
             "",
-            index
+            index,
+            "across"
           );
           if (newAcrossClue) {
             acrossInit.push(newAcrossClue);
@@ -54,7 +102,8 @@ export default function ClueInit(
           const newDownClue = createClue(
             currentGridNumbers[index]?.toString(),
             "",
-            index
+            index,
+            "down"
           );
           if (newDownClue) {
             downInit.push(newDownClue);

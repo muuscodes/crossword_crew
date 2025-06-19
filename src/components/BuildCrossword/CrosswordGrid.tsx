@@ -20,6 +20,7 @@ export default function CrosswordGrid(props: any) {
     clueNumDirection,
     scrollToClue,
     clueToCellHighlight,
+    isAcrossClueHighlight,
   } = props;
   const currentCell = useRef(-1);
   const [currentGridValues, setCurrentGridValues] = useState<string[]>(
@@ -42,7 +43,7 @@ export default function CrosswordGrid(props: any) {
       setIsFocusedCell(cleanArray);
       setIsSecondaryFocusedCell(cleanArray);
     } else {
-      handleFocus(index);
+      handleFocus(index, isHighlightAcross);
     }
   };
 
@@ -78,7 +79,6 @@ export default function CrosswordGrid(props: any) {
         }
       }
     }
-
     return newNumbers;
   };
 
@@ -92,12 +92,12 @@ export default function CrosswordGrid(props: any) {
     setCurrentGridValues(newGrid);
   };
 
-  const handleFocus = (index: number) => {
+  const handleFocus = (index: number, isAcrossHighlight: boolean) => {
     const previousCell: number = currentCell.current;
     currentCell.current = index;
 
     if (!positionBlackSquares && !blackSquares[index]) {
-      let newHighlightAcross: boolean = isHighlightAcross;
+      let newHighlightAcross: boolean = isAcrossHighlight;
       if (previousCell === index) {
         newHighlightAcross = !isHighlightAcross;
         setIsHighlightAcross(newHighlightAcross);
@@ -115,8 +115,7 @@ export default function CrosswordGrid(props: any) {
     }
   };
 
-  const handleSecondaryFocus = (index: number, highlight: boolean) => {
-    // Handle secondarily focused cells
+  const handleSecondaryFocus = (index: number, acrossHighlight: boolean) => {
     const newSecondaryFocusGrid = Array(gridSize * gridSize).fill(false);
     const focusedCellCol = index % gridSize;
     const focusedCellRow = (index - focusedCellCol) / gridSize;
@@ -183,12 +182,16 @@ export default function CrosswordGrid(props: any) {
         }
 
         // Row highlight
-        if (i === focusedCellRow && highlight && rowSlice.includes(ind)) {
+        if (i === focusedCellRow && acrossHighlight && rowSlice.includes(ind)) {
           newSecondaryFocusGrid[ind] = true;
         }
 
         // Col highlight
-        if (j === focusedCellCol && !highlight && colSlice.includes(ind)) {
+        if (
+          j === focusedCellCol &&
+          !acrossHighlight &&
+          colSlice.includes(ind)
+        ) {
           newSecondaryFocusGrid[ind] = true;
         }
       }
@@ -197,7 +200,7 @@ export default function CrosswordGrid(props: any) {
       rowSlice,
       colSlice,
       index,
-      highlight
+      acrossHighlight
     );
 
     scrollToClue(indexInClueList, dir);
@@ -209,7 +212,7 @@ export default function CrosswordGrid(props: any) {
     rowSlice: number[],
     colSlice: number[],
     index: number,
-    highlight: boolean
+    acrossHighlight: boolean
   ) => {
     // Handle focused clue
     const newFocusedClues = Array(gridSize * gridSize).fill(false);
@@ -229,8 +232,11 @@ export default function CrosswordGrid(props: any) {
     });
 
     // Down clue starting from the number
-    if (currentGridNumbers[index] && clueNumDirection[index][1] && !highlight) {
-      console.log("In first down");
+    if (
+      currentGridNumbers[index] &&
+      clueNumDirection[index][1] &&
+      !acrossHighlight
+    ) {
       newFocusedClues[index] = true;
       direction = "down";
       clueListIndex = downIndices.indexOf(index);
@@ -240,9 +246,8 @@ export default function CrosswordGrid(props: any) {
     else if (
       currentGridNumbers[index] &&
       clueNumDirection[index][0] &&
-      highlight
+      acrossHighlight
     ) {
-      console.log("In first across");
       newFocusedClues[index] = true;
       direction = "across";
       clueListIndex = acrossIndices.indexOf(index);
@@ -252,9 +257,8 @@ export default function CrosswordGrid(props: any) {
     else if (
       currentGridNumbers[index] &&
       clueNumDirection[index][1] &&
-      highlight
+      acrossHighlight
     ) {
-      console.log("In second across");
       newFocusedClues[sortedAcross[0]] = true;
       direction = "across";
       clueListIndex = acrossIndices.indexOf(sortedAcross[0]);
@@ -264,9 +268,8 @@ export default function CrosswordGrid(props: any) {
     else if (
       currentGridNumbers[index] &&
       clueNumDirection[index][0] &&
-      !highlight
+      !acrossHighlight
     ) {
-      console.log("In second down");
       newFocusedClues[sortedDown[0]] = true;
       direction = "down";
       clueListIndex = downIndices.indexOf(sortedDown[0]);
@@ -274,11 +277,10 @@ export default function CrosswordGrid(props: any) {
     }
     // Across clue only one clue in slice
     else if (
-      highlight &&
+      acrossHighlight &&
       !clueNumDirection[index][0] &&
       !clueNumDirection[index][1]
     ) {
-      console.log("In last across");
       newFocusedClues[sortedAcross[0]] = true;
       direction = "across";
       clueListIndex = acrossIndices.indexOf(sortedAcross[0]);
@@ -286,11 +288,10 @@ export default function CrosswordGrid(props: any) {
     }
     // Down clue only one clue in slice
     else if (
-      !highlight &&
+      !acrossHighlight &&
       !clueNumDirection[index][0] &&
       !clueNumDirection[index][1]
     ) {
-      console.log("In last down");
       newFocusedClues[sortedDown[0]] = true;
       direction = "down";
       clueListIndex = downIndices.indexOf(sortedDown[0]);
@@ -314,30 +315,231 @@ export default function CrosswordGrid(props: any) {
   const handleKeyDown = (event: KeyboardEvent) => {
     const index = currentCell.current;
 
+    event.stopPropagation();
     switch (event.key) {
       case "ArrowUp":
-        if (index - gridSize >= 0) handleFocus(index - gridSize);
+        event.preventDefault();
+        let upIndex = index - gridSize;
+        while (upIndex >= 0 && blackSquares[upIndex]) {
+          upIndex -= gridSize;
+        }
+        if (upIndex < 0) {
+          const currentCol = index % gridSize;
+          upIndex = (gridSize - 1) * gridSize + currentCol - 1;
+          while (upIndex >= 0 && blackSquares[upIndex]) {
+            upIndex -= gridSize;
+          }
+        }
+        if (upIndex < 0) {
+          upIndex = index;
+        }
+        handleFocus(upIndex, isHighlightAcross);
         break;
+
       case "ArrowDown":
-        if (index + gridSize < gridSize * gridSize)
-          handleFocus(index + gridSize);
+        event.preventDefault();
+        let downIndex = index + gridSize;
+        while (downIndex < gridSize * gridSize && blackSquares[downIndex]) {
+          downIndex += gridSize;
+        }
+        if (downIndex >= gridSize * gridSize) {
+          const currentCol = index % gridSize;
+          downIndex = currentCol + 1;
+          while (downIndex < gridSize * gridSize && blackSquares[downIndex]) {
+            downIndex += gridSize;
+          }
+        }
+        if (downIndex >= gridSize * gridSize) {
+          downIndex = index;
+        }
+        handleFocus(downIndex, isHighlightAcross);
         break;
+
       case "ArrowLeft":
-        if (index % gridSize > 0) handleFocus(index - 1);
+        event.preventDefault();
+        let leftIndex = index - 1;
+        while (leftIndex >= 0 && blackSquares[leftIndex]) {
+          leftIndex--;
+        }
+        if (leftIndex < 0) {
+          leftIndex = gridSize * gridSize - 1;
+          while (leftIndex >= 0 && blackSquares[leftIndex]) {
+            leftIndex--;
+          }
+        }
+        if (leftIndex < 0) {
+          leftIndex = index;
+        }
+        handleFocus(leftIndex, isHighlightAcross);
         break;
+
       case "ArrowRight":
-        if (index % gridSize < gridSize - 1) handleFocus(index + 1);
+        event.preventDefault();
+        let rightIndex = index + 1;
+        while (rightIndex < gridSize * gridSize && blackSquares[rightIndex]) {
+          rightIndex++;
+        }
+        if (rightIndex >= gridSize * gridSize) {
+          rightIndex = 0;
+          while (rightIndex < gridSize * gridSize && blackSquares[rightIndex]) {
+            rightIndex++;
+          }
+        }
+        if (rightIndex >= gridSize * gridSize) {
+          rightIndex = index;
+        }
+        handleFocus(rightIndex, isHighlightAcross);
         break;
+
       case "Tab":
-        event.preventDefault(); // Prevent default tab behavior
-        // Logic to move to the next available clue can be added here
+        event.preventDefault();
+        const acrossIndices: number[] = [];
+        const downIndices: number[] = [];
+        clueNumDirection.forEach((item: string[], index: number) => {
+          if (item[0] === "across") {
+            acrossIndices.push(index);
+          }
+          if (item[1] === "down") {
+            downIndices.push(index);
+          }
+        });
+        if (event.shiftKey) {
+          handleShiftTab(index, 0, acrossIndices, downIndices);
+        } else {
+          handleTab(index, 0, acrossIndices, downIndices);
+        }
         break;
+
       case " ":
-        event.preventDefault(); // Prevent default space behavior
-        setIsHighlightAcross(!isHighlightAcross); // Toggle between across and down
+        event.preventDefault();
+        handleFocus(index, !isHighlightAcross);
         break;
       default:
         break;
+    }
+  };
+
+  const handleTab = (
+    index: number,
+    loopCount: number,
+    acrossIndices: number[],
+    downIndices: number[]
+  ) => {
+    const totalCells = gridSize * gridSize;
+
+    if (loopCount > 1) {
+      return;
+    }
+    let found = false;
+    for (let i = index + 1; i < totalCells; i++) {
+      if (
+        isHighlightAcross &&
+        currentGridNumbers[i] &&
+        acrossIndices.indexOf(i) >= 0
+      ) {
+        handleFocus(i, isHighlightAcross);
+        found = true;
+        break;
+      } else {
+        if (
+          !isHighlightAcross &&
+          currentGridNumbers[i] &&
+          downIndices.indexOf(i) >= 0
+        ) {
+          handleFocus(i, isHighlightAcross);
+          found = true;
+          break;
+        }
+      }
+    }
+    if (!found) {
+      for (let i = index + 1; i < totalCells; i++) {
+        if (
+          isHighlightAcross &&
+          currentGridNumbers[i] &&
+          acrossIndices.indexOf(i) >= 0
+        ) {
+          handleFocus(i, isHighlightAcross);
+          found = true;
+          break;
+        } else {
+          if (
+            !isHighlightAcross &&
+            currentGridNumbers[i] &&
+            downIndices.indexOf(i) >= 0
+          ) {
+            handleFocus(i, isHighlightAcross);
+            found = true;
+            break;
+          }
+        }
+      }
+    }
+    if (!found) {
+      handleTab(-1, loopCount + 1, acrossIndices, downIndices);
+    }
+  };
+
+  const handleShiftTab = (
+    index: number,
+    loopCount: number,
+    acrossIndices: number[],
+    downIndices: number[]
+  ) => {
+    const totalCells = gridSize * gridSize;
+
+    if (loopCount > 1) {
+      return;
+    }
+
+    let found = false;
+
+    for (let i = index - 1; i < totalCells; i--) {
+      if (
+        isHighlightAcross &&
+        currentGridNumbers[i] &&
+        acrossIndices.indexOf(i) >= 0
+      ) {
+        handleFocus(i, isHighlightAcross);
+        found = true;
+        break;
+      } else {
+        if (
+          !isHighlightAcross &&
+          currentGridNumbers[i] &&
+          downIndices.indexOf(i) >= 0
+        ) {
+          handleFocus(i, isHighlightAcross);
+          found = true;
+          break;
+        }
+      }
+    }
+    if (!found) {
+      for (let i = index - 1; i < totalCells; i--) {
+        if (
+          isHighlightAcross &&
+          currentGridNumbers[i] &&
+          acrossIndices.indexOf(i) >= 0
+        ) {
+          handleFocus(i, isHighlightAcross);
+          found = true;
+          break;
+        } else {
+          if (
+            !isHighlightAcross &&
+            currentGridNumbers[i] &&
+            downIndices.indexOf(i) >= 0
+          ) {
+            handleFocus(i, isHighlightAcross);
+            found = true;
+            break;
+          }
+        }
+      }
+    }
+    if (!found) {
+      handleShiftTab(totalCells, loopCount + 1, acrossIndices, downIndices);
     }
   };
 
@@ -355,10 +557,54 @@ export default function CrosswordGrid(props: any) {
     const hasNonNullValues = currentGridNumbers.some(
       (value: number) => value !== null
     );
-    if (hasNonNullValues && isHighlightAcross) {
+
+    // Across clue with across highlighted
+    if (
+      hasNonNullValues &&
+      isHighlightAcross &&
+      clueNumDirection[index][0] &&
+      !clueNumDirection[index][1]
+    ) {
       handleSecondaryFocus(index, true);
-    } else if (hasNonNullValues && !isHighlightAcross) {
+    }
+    // Down clue with across highlighted
+    else if (
+      hasNonNullValues &&
+      isHighlightAcross &&
+      clueNumDirection[index][1] &&
+      !clueNumDirection[index][0]
+    ) {
       handleSecondaryFocus(index, false);
+    }
+    // Across clue with down highlighted
+    else if (
+      hasNonNullValues &&
+      !isHighlightAcross &&
+      clueNumDirection[index][0] &&
+      !clueNumDirection[index][1]
+    ) {
+      handleSecondaryFocus(index, true);
+    }
+    // Down clue with down highlighted
+    else if (
+      hasNonNullValues &&
+      !isHighlightAcross &&
+      clueNumDirection[index][1] &&
+      !clueNumDirection[index][0]
+    ) {
+      handleSecondaryFocus(index, false);
+    }
+    // Both across and down clue
+    else if (
+      hasNonNullValues &&
+      clueNumDirection[index][0] &&
+      clueNumDirection[index][1]
+    ) {
+      if (isAcrossClueHighlight) {
+        handleSecondaryFocus(index, true);
+      } else {
+        handleSecondaryFocus(index, false);
+      }
     }
   }, [clueToCellHighlight]);
 

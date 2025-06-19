@@ -19,6 +19,7 @@ export default function CreateClues(props: any) {
     clueNumDirection,
     setClueNumDirection,
     setClueToCellHighlight,
+    setIsAcrossClueHighlight,
   } = props;
 
   const [acrossClueValues, setAcrossClueValues] = useState<string[]>(
@@ -28,6 +29,7 @@ export default function CreateClues(props: any) {
     Array(gridSize * gridSize).fill("")
   );
   const hasInitialized = useRef(false);
+  // const clueClicked = useRef(-1);
 
   const createClue = (
     id: string,
@@ -71,12 +73,13 @@ export default function CreateClues(props: any) {
           id={id + direction}
           cols={30}
           rows={1}
+          tabIndex={0}
           defaultValue={value}
           style={{ resize: "none", fontSize: "1.25rem" }}
           wrap="true"
           className={`border-1 ${isHighlight ? "bg-blue-200" : ""}`}
-          onFocus={() => handleFocus(index)}
-          onChange={(e) => handleUserInput(e, parseInt(id))}
+          onFocus={() => handleFocus(index, direction)}
+          onChange={(e) => handleUserInput(e, id, index)}
         ></textarea>
       </li>
     );
@@ -111,7 +114,7 @@ export default function CreateClues(props: any) {
     return newClueDirs;
   };
 
-  const handleFocus = (index: number) => {
+  const handleFocus = (index: number, direction: string) => {
     const newFocusedCells = Array(gridSize * gridSize).fill(false);
     const newFocusedClues = Array(gridSize * gridSize).fill(false);
     newFocusedCells[index] = true;
@@ -119,21 +122,39 @@ export default function CreateClues(props: any) {
     setIsFocusedCell(newFocusedCells);
     setIsFocusedClue(newFocusedClues);
     setClueToCellHighlight(index);
+    let isAcrossHighlight: boolean = true;
+    if (direction === "across") {
+      isAcrossHighlight = true;
+    } else isAcrossHighlight = false;
+    // const prevClickedClue = clueClicked.current;
+    // clueClicked.current = index;
+    // if (
+    //   prevClickedClue === clueClicked.current &&
+    //   clueNumDirection[index] &&
+    //   clueNumDirection[index][0] &&
+    //   clueNumDirection[index][1]
+    // ) {
+    //   isAcrossHighlight = !isAcrossHighlight;
+    // }
+    setIsAcrossClueHighlight(isAcrossHighlight);
   };
 
   const handleUserInput = (
     event: React.ChangeEvent<HTMLTextAreaElement>,
+    id: string,
     index: number
   ) => {
     const value = event.target.value;
     const newAcrossValues = [...acrossClueValues];
     const newDownValues = [...downClueValues];
+    // const index = parseInt(id);
+    console.log(index);
 
-    if (clueNumDirection[index][0] === "across") {
+    if (id.includes("across")) {
       newAcrossValues[index] = value;
       setAcrossClueValues(newAcrossValues);
     }
-    if (clueNumDirection[index][1] === "down") {
+    if (id.includes("down")) {
       newDownValues[index] = value;
       setDownClueValues(newDownValues);
     }
@@ -151,6 +172,10 @@ export default function CreateClues(props: any) {
         gridSize,
         currentGridNumbers,
         isFocusedClue,
+        isFocusedCell,
+        clueNumDirection,
+        handleFocus,
+        handleUserInput,
       });
       setAcrossClues(acrossCluesInit);
       setDownClues(downCluesInit);

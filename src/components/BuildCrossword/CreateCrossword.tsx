@@ -27,6 +27,8 @@ export default function CreateCrossword() {
   const [downClues, setDownClues] = useState<React.ReactElement[]>([]);
   const [clueNumDirection, setClueNumDirection] = useState<string[][]>([]);
   const [clueToCellHighlight, setClueToCellHighlight] = useState<number>(-1);
+  const [isAcrossClueHighlight, setIsAcrossClueHighlight] =
+    useState<boolean>(true);
   const [isGridReady, setIsGridReady] = useState<boolean>(false);
 
   const handleGridSizeChange = (
@@ -66,7 +68,7 @@ export default function CreateCrossword() {
 
   return (
     <div className="flex flex-col items-center m-auto border-4 w-fit">
-      <div className="flex flex-row justify-around items-center w-full">
+      <div className="flex flex-col md:flex-row justify-around items-center w-full">
         <button className="hover:opacity-60 focus:opacity-60 hover:scale-105 focus:scale-105 text-xl p-2">
           Save
         </button>
@@ -103,7 +105,7 @@ export default function CreateCrossword() {
         </label>
       </div>
       <div
-        className={`flex border-2 w-fit`}
+        className={`flex flex-col md:flex-row border-2 w-fit`}
         style={{ height: `calc(${gridDimensions} + 5px)` }}
       >
         <CrosswordGrid
@@ -117,7 +119,6 @@ export default function CreateCrossword() {
           setBlackSquares={setBlackSquares}
           isFocusedCell={isFocusedCell}
           setIsFocusedCell={setIsFocusedCell}
-          isFocusedClue={isFocusedClue}
           setIsFocusedClue={setIsFocusedClue}
           isSecondaryFocusedCell={isSecondaryFocusedCell}
           setIsSecondaryFocusedCell={setIsSecondaryFocusedCell}
@@ -126,6 +127,7 @@ export default function CreateCrossword() {
           clueNumDirection={clueNumDirection}
           scrollToClue={scrollToClue}
           clueToCellHighlight={clueToCellHighlight}
+          isAcrossClueHighlight={isAcrossClueHighlight}
         />
 
         {isGridReady && (
@@ -136,9 +138,6 @@ export default function CreateCrossword() {
             gridDimensions={gridDimensions}
             isFocusedCell={isFocusedCell}
             setIsFocusedCell={setIsFocusedCell}
-            isSecondaryFocusedCell={isSecondaryFocusedCell}
-            setIsSecondaryFocusedCell={setIsSecondaryFocusedCell}
-            isHighlightAcross={isHighlightAcross}
             isFocusedClue={isFocusedClue}
             setIsFocusedClue={setIsFocusedClue}
             acrossClues={acrossClues}
@@ -147,8 +146,8 @@ export default function CreateCrossword() {
             setDownClues={setDownClues}
             clueNumDirection={clueNumDirection}
             setClueNumDirection={setClueNumDirection}
-            scrollToClue={scrollToClue}
             setClueToCellHighlight={setClueToCellHighlight}
+            setIsAcrossClueHighlight={setIsAcrossClueHighlight}
           />
         )}
       </div>
