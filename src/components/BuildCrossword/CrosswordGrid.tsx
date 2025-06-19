@@ -89,8 +89,46 @@ export default function CrosswordGrid(props: any) {
     index: number
   ) => {
     const value = event.target.value;
-    const newGrid = [...currentGridValues];
+    const newGrid = [...currentGridValues].map((value) => {
+      return value;
+    });
     newGrid[index] = value;
+
+    const inputEvent = event.nativeEvent as InputEvent;
+    if (value === "" && inputEvent.inputType === "deleteContentBackward") {
+      handleFocus(index, isHighlightAcross);
+    } else if (isHighlightAcross && value !== "") {
+      let rightIndex = index + 1;
+      while (rightIndex < gridSize * gridSize && blackSquares[rightIndex]) {
+        rightIndex++;
+      }
+      if (rightIndex >= gridSize * gridSize) {
+        rightIndex = 0;
+        while (rightIndex < gridSize * gridSize && blackSquares[rightIndex]) {
+          rightIndex++;
+        }
+      }
+      if (rightIndex >= gridSize * gridSize) {
+        rightIndex = index;
+      }
+      handleFocus(rightIndex, isHighlightAcross);
+    } else if (!isHighlightAcross && value !== "") {
+      let downIndex = index + gridSize;
+      while (downIndex < gridSize * gridSize && blackSquares[downIndex]) {
+        downIndex += gridSize;
+      }
+      if (downIndex >= gridSize * gridSize) {
+        const currentCol = index % gridSize;
+        downIndex = currentCol + 1;
+        while (downIndex < gridSize * gridSize && blackSquares[downIndex]) {
+          downIndex += gridSize;
+        }
+      }
+      if (downIndex >= gridSize * gridSize) {
+        downIndex = index;
+      }
+      handleFocus(downIndex, isHighlightAcross);
+    }
     setCurrentGridValues(newGrid);
   };
 
@@ -317,9 +355,8 @@ export default function CrosswordGrid(props: any) {
 
   const handleKeyDown = (event: KeyboardEvent) => {
     const index = currentCell.current;
-
     event.stopPropagation();
-    if (isFocusedOnGrid) {
+    if (isFocusedOnGrid && event.key !== "Backspace") {
       switch (event.key) {
         case "ArrowUp":
           event.preventDefault();

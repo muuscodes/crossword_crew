@@ -70,12 +70,6 @@ export default function CreateCrossword() {
   return (
     <div className="flex flex-col items-center m-auto border-4 w-fit">
       <div className="flex flex-col md:flex-row justify-around items-center w-full">
-        <button className="hover:opacity-60 focus:opacity-60 hover:scale-105 focus:scale-105 text-xl p-2">
-          Save
-        </button>
-        <button className="hover:opacity-60 focus:opacity-60 hover:scale-105 focus:scale-105 text-xl p-2">
-          Clear
-        </button>
         <div>
           <label className="text-xl mr-1" htmlFor="gridSize">
             Grid Size:
@@ -155,6 +149,17 @@ export default function CreateCrossword() {
             setIsFocusedOnGrid={setIsFocusedOnGrid}
           />
         )}
+      </div>
+      <div className="flex flex-row justify-evenly w-full">
+        <button className="hover:opacity-60 focus:opacity-60 hover:scale-105 focus:scale-105 text-xl p-2">
+          Save
+        </button>
+        <button className="hover:opacity-60 focus:opacity-60 hover:scale-105 focus:scale-105 text-xl p-2">
+          Clear
+        </button>
+        <button className="hover:opacity-60 focus:opacity-60 hover:scale-105 focus:scale-105 text-xl p-2">
+          Share
+        </button>
       </div>
     </div>
   );
