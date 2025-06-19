@@ -12,9 +12,16 @@ export default function LandingPage() {
         id={id}
         cols={30}
         rows={1}
+        tabIndex={0}
         defaultValue={entry}
         style={{ resize: "none", fontSize: "1.25rem" }}
-        wrap="true"
+        wrap="soft"
+        onChange={(e) => {
+          const target = e.target;
+          target.style.height = "auto";
+          const newHeight = Math.min(target.scrollHeight, 48);
+          target.style.height = `${newHeight}px`;
+        }}
       ></textarea>
     </li>
   );
@@ -58,7 +65,7 @@ export default function LandingPage() {
               <h3 className="text-5xl font-bold m-atuo pb-15">
                 Edit hints with ease:
               </h3>
-              <div className="border-2 rounded-sm p-2 mb-2 bg-white w-1/2 md:w-1/3 lg:w-1/2 m-auto">
+              <div className="border-2 rounded-sm p-2 mb-2 bg-white w-1/2 md:w-1/3 lg:w-1/2 m-auto flex-col items-center">
                 <h4 className="font-bold text-3xl">Across:</h4>
                 <ol className="mt-3">
                   {createClue("1", "The man with a cane")}

@@ -88,7 +88,16 @@ export default function LandingCrossword() {
     return bgColor;
   };
 
-  console.log(currentGridNumbers);
+  const handleSpaceKey = (
+    event: React.KeyboardEvent<HTMLDivElement>,
+    index: number
+  ) => {
+    event.stopPropagation();
+    if (event.key === " ") {
+      event.preventDefault();
+      handleCellInteraction(index);
+    }
+  };
 
   return (
     <div
@@ -104,6 +113,7 @@ export default function LandingCrossword() {
         <div
           key={index}
           onClick={() => handleCellInteraction(index)}
+          onKeyDown={(event) => handleSpaceKey(event, index)}
           tabIndex={0}
           className={`flex border border-black relative 
           ${handleBgColor(index)}`}
