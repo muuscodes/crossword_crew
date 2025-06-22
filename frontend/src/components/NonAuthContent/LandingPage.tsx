@@ -14,7 +14,10 @@ export default function LandingPage() {
         rows={1}
         tabIndex={0}
         defaultValue={entry}
-        style={{ resize: "none", fontSize: "1.25rem" }}
+        style={{
+          resize: "none",
+          fontSize: "1.25rem",
+        }}
         wrap="soft"
         onChange={(e) => {
           const target = e.target;

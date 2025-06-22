@@ -3,8 +3,9 @@ import Footer from "./Footer";
 import Modal from "../NonAuthContent/Modal";
 import Authentication from "../NonAuthContent/Authentication";
 import { useState } from "react";
+import type { LayoutProps } from "../utils/types";
 
-export default function Layout(props: any) {
+export default function Layout(props: LayoutProps) {
   const { children, isAuthenticated } = props;
   const [showModal, setShowModal] = useState<boolean>(false);
 

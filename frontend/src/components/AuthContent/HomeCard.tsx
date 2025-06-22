@@ -1,4 +1,6 @@
-export default function HomeCard(props: any) {
+import type { HomeCardProps } from "../utils/types";
+
+export default function HomeCard(props: HomeCardProps) {
   const { children, header } = props;
   return (
     <div className="flex flex-col border-3 w-3/4 h-auto mb-15 justify-between items-center shadow-gray-700 shadow-lg">

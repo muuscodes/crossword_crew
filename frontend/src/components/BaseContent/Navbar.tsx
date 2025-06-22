@@ -1,7 +1,8 @@
 import { useState } from "react";
 import favicon from "../../img/favicon.jpg";
+import type { NavbarProps } from "../utils/types";
 
-export default function Navbar(props: any) {
+export default function Navbar(props: NavbarProps) {
   const { setShowModal, isAuthenticated } = props;
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
 

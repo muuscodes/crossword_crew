@@ -7,8 +7,8 @@ export default function ClueInit(
     isFocusedClue,
     isFocusedCell,
     clueNumDirection,
-    handleFocus,
-    handleInputChange,
+    handleFocusClue,
+    handleInputChangeClue,
   } = props;
   let acrossCluesInit: React.ReactElement[] = [];
   let downCluesInit: React.ReactElement[] = [];
@@ -64,15 +64,15 @@ export default function ClueInit(
           style={{ resize: "none", fontSize: "1.25rem" }}
           wrap="true"
           className={`border-1 ${isHighlight ? "bg-blue-200" : ""}`}
-          onFocus={() => handleFocus(index, direction)}
+          onFocus={() => handleFocusClue(index, direction)}
           // onChange={(e) => handleUserInput(e, parseInt(id))}
-          onChange={(e) => handleInputChange(e, direction, index)}
+          onChange={(e) => handleInputChangeClue(e, direction, index)}
         ></textarea>
       </li>
     );
   };
 
-  const initialize = () => {
+  const initialize = (): void => {
     let acrossInit: React.ReactElement[] = [];
     let downInit: React.ReactElement[] = [];
     for (let i = 0; i < gridSize; i++) {

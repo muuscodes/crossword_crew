@@ -1,8 +1,8 @@
 import { useState } from "react";
 
 export default function LandingCrossword() {
-  const gridSize = 5;
-  const gridDimensions = "25vw";
+  const gridSize: number = 5;
+  const gridDimensions: string = "25vw";
   const [currentGridNumbers, setCurrentGridNumbers] = useState<
     (number | null)[]
   >([
@@ -36,17 +36,17 @@ export default function LandingCrossword() {
     Array(gridSize * gridSize).fill(false)
   );
 
-  const handleCellInteraction = (index: number) => {
+  const handleCellInteraction = (index: number): void => {
     // Set black squares
-    const newblackSquares = [...blackSquares];
+    const newblackSquares: boolean[] = [...blackSquares];
     newblackSquares[index] = !newblackSquares[index];
     setBlackSquares(newblackSquares);
     setCurrentGridNumbers(assignNumbers(newblackSquares));
   };
 
-  const assignNumbers = (blackSquares: boolean[]) => {
-    const newNumbers = Array(gridSize * gridSize).fill(null);
-    let number = 1;
+  const assignNumbers = (blackSquares: boolean[]): number[] => {
+    const newNumbers: number[] = Array(gridSize * gridSize).fill(null);
+    let number: number = 1;
 
     for (let i = 0; i < gridSize; i++) {
       for (let j = 0; j < gridSize; j++) {
@@ -80,8 +80,8 @@ export default function LandingCrossword() {
     return newNumbers;
   };
 
-  const handleBgColor = (index: number) => {
-    let bgColor = "bg-white";
+  const handleBgColor = (index: number): string => {
+    let bgColor: string = "bg-white";
     if (blackSquares && blackSquares[index]) {
       bgColor = "bg-black";
     }
@@ -91,7 +91,7 @@ export default function LandingCrossword() {
   const handleSpaceKey = (
     event: React.KeyboardEvent<HTMLDivElement>,
     index: number
-  ) => {
+  ): void => {
     event.stopPropagation();
     if (event.key === " ") {
       event.preventDefault();

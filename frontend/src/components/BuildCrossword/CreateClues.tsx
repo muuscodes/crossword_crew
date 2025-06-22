@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import React from "react";
 import ClueInit from "./ClueInit";
+import type { CrosswordClueProps } from "../utils/types";
 
-export default function CreateClues(props: any) {
+export default function CreateClues(props: CrosswordClueProps) {
   const {
     gridSize,
     currentGridNumbers,
@@ -13,32 +14,23 @@ export default function CreateClues(props: any) {
     downClues,
     setDownClues,
     isFocusedClue,
-    setIsFocusedClue,
     isFocusedCell,
-    setIsFocusedCell,
     clueNumDirection,
     setClueNumDirection,
-    setClueToCellHighlight,
-    setIsAcrossClueHighlight,
-    isFocusedOnGrid,
-    setIsFocusedOnGrid,
+    handleUserInputClue,
+    handleFocusClue,
+    handleInputChangeClue,
+    mapClues,
   } = props;
 
-  const [acrossClueValues, setAcrossClueValues] = useState<string[]>(
-    Array(gridSize * gridSize).fill("")
-  );
-  const [downClueValues, setDownClueValues] = useState<string[]>(
-    Array(gridSize * gridSize).fill("")
-  );
   const hasInitialized = useRef(false);
-  // const clueClicked = useRef(-1);
 
   const createClue = (
     id: string,
     value: string,
     index: number,
     direction: string
-  ) => {
+  ): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> => {
     let isHighlight: boolean = false;
     const focusedCellIndex: number = isFocusedCell.indexOf(true);
 
@@ -80,22 +72,22 @@ export default function CreateClues(props: any) {
           style={{ resize: "none", fontSize: "1.25rem" }}
           wrap="soft"
           className={`border-1 ${isHighlight ? "bg-blue-200" : ""}`}
-          onFocus={() => handleFocus(index, direction)}
+          onFocus={() => handleFocusClue(index, direction)}
           // onChange={(e) => handleUserInput(e, id, index)}
-          onChange={(e) => handleInputChange(e, direction, index)}
+          onChange={(e) => handleInputChangeClue(e, direction, index)}
         ></textarea>
       </li>
     );
   };
 
-  const createClueNumDirections = () => {
+  const createClueNumDirections = (): string[][] => {
     const newClueDirs: string[][] = Array.from(
       { length: gridSize * gridSize },
       () => ["", ""]
     );
     for (let i = 0; i < gridSize; i++) {
       for (let j = 0; j < gridSize; j++) {
-        const index = i * gridSize + j;
+        const index: number = i * gridSize + j;
 
         if (currentGridNumbers[index]) {
           if (
@@ -117,69 +109,6 @@ export default function CreateClues(props: any) {
     return newClueDirs;
   };
 
-  const handleFocus = (index: number, direction: string) => {
-    setIsFocusedOnGrid(false);
-    const newFocusedCells = Array(gridSize * gridSize).fill(false);
-    const newFocusedClues = Array(gridSize * gridSize).fill(false);
-    newFocusedCells[index] = true;
-    newFocusedClues[index] = true;
-    setIsFocusedCell(newFocusedCells);
-    setIsFocusedClue(newFocusedClues);
-    setClueToCellHighlight(index);
-    let isAcrossHighlight: boolean = true;
-    if (direction === "across") {
-      isAcrossHighlight = true;
-    } else isAcrossHighlight = false;
-    // const prevClickedClue = clueClicked.current;
-    // clueClicked.current = index;
-    // if (
-    //   prevClickedClue === clueClicked.current &&
-    //   clueNumDirection[index] &&
-    //   clueNumDirection[index][0] &&
-    //   clueNumDirection[index][1]
-    // ) {
-    //   isAcrossHighlight = !isAcrossHighlight;
-    // }
-    setIsAcrossClueHighlight(isAcrossHighlight);
-  };
-
-  const handleUserInput = (
-    event: React.ChangeEvent<HTMLTextAreaElement>,
-    direction: string,
-    index: number
-  ) => {
-    const value = event.target.value;
-    const newAcrossValues = [...acrossClueValues].map((value) => {
-      return value;
-    });
-    const newDownValues = [...downClueValues].map((value) => {
-      return value;
-    });
-
-    if (!isFocusedOnGrid) {
-      if (direction === "across") {
-        newAcrossValues[index] = value;
-        setAcrossClueValues(newAcrossValues);
-      }
-      if (direction === "down") {
-        newDownValues[index] = value;
-        setDownClueValues(newDownValues);
-      }
-    }
-  };
-
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLTextAreaElement>,
-    direction: string,
-    index: number
-  ) => {
-    const target = e.target;
-    target.style.height = "auto";
-    const newHeight = Math.min(target.scrollHeight, 48);
-    target.style.height = `${newHeight}px`;
-    handleUserInput(e, direction, index);
-  };
-
   useEffect(() => {
     if (
       !hasInitialized.current &&
@@ -194,8 +123,8 @@ export default function CreateClues(props: any) {
         isFocusedClue,
         isFocusedCell,
         clueNumDirection,
-        handleFocus,
-        handleUserInput,
+        handleFocusClue,
+        handleUserInputClue,
       });
       setAcrossClues(acrossCluesInit);
       setDownClues(downCluesInit);
@@ -204,8 +133,12 @@ export default function CreateClues(props: any) {
   }, [gridSize, currentGridNumbers]);
 
   useEffect(() => {
-    if (hasInitialized.current && acrossClues.length > 0) {
-      const newDirs = createClueNumDirections();
+    if (
+      hasInitialized.current &&
+      acrossClues.length > 0 &&
+      downClues.length > 0
+    ) {
+      const newDirs: string[][] = createClueNumDirections();
       const newAcrossClues: React.ReactElement[] = [];
       const newDownClues: React.ReactElement[] = [];
 
@@ -242,7 +175,7 @@ export default function CreateClues(props: any) {
 
   return (
     <div
-      className="flex-col border-2"
+      className="flex-col border-y-2"
       style={{ height: `calc(${gridDimensions} + 5px)` }}
     >
       <div className="h-1/2">
@@ -253,11 +186,7 @@ export default function CreateClues(props: any) {
           id="scrollableContainerAcross"
           className="border-2 p-2 bg-white overflow-y-auto h-6/7"
         >
-          <ul className="mt-3 list-none">
-            {acrossClues.map((clue: React.ReactElement, index: string) => (
-              <React.Fragment key={index}>{clue}</React.Fragment>
-            ))}
-          </ul>
+          <ul className="mt-3 list-none">{mapClues(acrossClues)}</ul>
         </div>
       </div>
       <div className="h-1/2">
@@ -268,11 +197,7 @@ export default function CreateClues(props: any) {
           id="scrollableContainerDown"
           className="border-2 p-2 bg-white overflow-y-auto h-6/7"
         >
-          <ul className="mt-3 list-none">
-            {downClues.map((clue: React.ReactElement, index: string) => (
-              <React.Fragment key={index}>{clue}</React.Fragment>
-            ))}
-          </ul>
+          <ul className="mt-3 list-none">{mapClues(downClues)}</ul>
         </div>
       </div>
     </div>

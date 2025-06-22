@@ -1,6 +1,7 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef } from "react";
+import type { CrosswordGridProps } from "../utils/types";
 
-export default function CrosswordGrid(props: any) {
+export default function CrosswordGrid(props: CrosswordGridProps) {
   const {
     gridSize,
     gridDimensions,
@@ -23,82 +24,54 @@ export default function CrosswordGrid(props: any) {
     isAcrossClueHighlight,
     isFocusedOnGrid,
     setIsFocusedOnGrid,
+    currentGridValues,
+    setCurrentGridValues,
+    handleClear,
+    assignNumbers,
   } = props;
   const currentCell = useRef(-1);
-  const [currentGridValues, setCurrentGridValues] = useState<string[]>(
-    Array(gridSize * gridSize).fill("")
-  );
   const inputRefs = useRef<(HTMLInputElement | null)[]>(
     Array(gridSize * gridSize).fill(null)
   );
-
-  const handleCellClick = (index: number) => {
-    const cleanArray = Array(gridSize * gridSize).fill(false);
+  const handleCellClick = (index: number): void => {
+    const cleanArray: boolean[] = Array(gridSize * gridSize).fill(false);
 
     if (positionBlackSquares) {
       // Set black squares
-      const newblackSquares = [...blackSquares];
+      const newblackSquares: boolean[] = [...blackSquares];
       newblackSquares[index] = !newblackSquares[index];
       setBlackSquares(newblackSquares);
       setCurrentGridNumbers(assignNumbers(newblackSquares));
-
       setIsFocusedCell(cleanArray);
+      setIsFocusedClue(cleanArray);
       setIsSecondaryFocusedCell(cleanArray);
     } else {
-      handleFocus(index, isHighlightAcross);
+      handleFocus(index, isHighlightAcross, false);
     }
-  };
-
-  const assignNumbers = (blackSquares: boolean[]) => {
-    const newNumbers = Array(gridSize * gridSize).fill(null);
-    let number = 1;
-
-    for (let i = 0; i < gridSize; i++) {
-      for (let j = 0; j < gridSize; j++) {
-        const index = i * gridSize + j;
-
-        // Check if the cell is a black square
-        if (blackSquares[index]) {
-          continue; // Skip black squares
-        }
-
-        // Check for horizontal word start
-        if (j === 0 || (i < gridSize && blackSquares[index - gridSize])) {
-          newNumbers[index] = number++;
-        }
-
-        // Check for vertical word start
-        if (
-          i === 0 ||
-          (j < gridSize &&
-            !blackSquares[index - gridSize] &&
-            blackSquares[index - 1])
-        ) {
-          if (newNumbers[index] === null) {
-            // Only assign if not already assigned
-            newNumbers[index] = number++;
-          }
-        }
-      }
-    }
-    return newNumbers;
   };
 
   const handleUserInput = (
     event: React.ChangeEvent<HTMLInputElement>,
     index: number
-  ) => {
-    const value = event.target.value;
-    const newGrid = [...currentGridValues].map((value) => {
+  ): void => {
+    const value: string = event.target.value;
+    const newGrid: string[] = [...currentGridValues].map((value) => {
       return value;
     });
     newGrid[index] = value;
 
     const inputEvent = event.nativeEvent as InputEvent;
     if (value === "" && inputEvent.inputType === "deleteContentBackward") {
-      handleFocus(index, isHighlightAcross);
-    } else if (isHighlightAcross && value !== "") {
-      let rightIndex = index + 1;
+      if (currentGridValues[index] === "") {
+        handleArrowLeft(index);
+      } else {
+        handleFocus(index, isHighlightAcross, true);
+      }
+    } else if (
+      isHighlightAcross &&
+      inputEvent.inputType !== "deleteContentBackward"
+    ) {
+      let rightIndex: number = index + 1;
       while (rightIndex < gridSize * gridSize && blackSquares[rightIndex]) {
         rightIndex++;
       }
@@ -111,9 +84,12 @@ export default function CrosswordGrid(props: any) {
       if (rightIndex >= gridSize * gridSize) {
         rightIndex = index;
       }
-      handleFocus(rightIndex, isHighlightAcross);
-    } else if (!isHighlightAcross && value !== "") {
-      let downIndex = index + gridSize;
+      handleFocus(rightIndex, isHighlightAcross, false);
+    } else if (
+      !isHighlightAcross &&
+      inputEvent.inputType !== "deleteContentBackward"
+    ) {
+      let downIndex: number = index + gridSize;
       while (downIndex < gridSize * gridSize && blackSquares[downIndex]) {
         downIndex += gridSize;
       }
@@ -127,24 +103,28 @@ export default function CrosswordGrid(props: any) {
       if (downIndex >= gridSize * gridSize) {
         downIndex = index;
       }
-      handleFocus(downIndex, isHighlightAcross);
+      handleFocus(downIndex, isHighlightAcross, false);
     }
     setCurrentGridValues(newGrid);
   };
 
-  const handleFocus = (index: number, isAcrossHighlight: boolean) => {
+  const handleFocus = (
+    index: number,
+    isAcrossHighlight: boolean,
+    isBackspace: boolean
+  ): void => {
     setIsFocusedOnGrid(true);
     const previousCell: number = currentCell.current;
     currentCell.current = index;
 
     if (!positionBlackSquares && !blackSquares[index]) {
       let newHighlightAcross: boolean = isAcrossHighlight;
-      if (previousCell === index) {
+      if (previousCell === index && !isBackspace) {
         newHighlightAcross = !isHighlightAcross;
         setIsHighlightAcross(newHighlightAcross);
       }
       // Handle focused cell
-      const newFocusGrid = Array(gridSize * gridSize).fill(false);
+      const newFocusGrid: boolean[] = Array(gridSize * gridSize).fill(false);
       newFocusGrid[index] = true;
       setIsFocusedCell(newFocusGrid);
 
@@ -157,12 +137,14 @@ export default function CrosswordGrid(props: any) {
   };
 
   const handleSecondaryFocus = (index: number, acrossHighlight: boolean) => {
-    const newSecondaryFocusGrid = Array(gridSize * gridSize).fill(false);
-    const focusedCellCol = index % gridSize;
-    const focusedCellRow = (index - focusedCellCol) / gridSize;
+    const newSecondaryFocusGrid: boolean[] = Array(gridSize * gridSize).fill(
+      false
+    );
+    const focusedCellCol: number = index % gridSize;
+    const focusedCellRow: number = (index - focusedCellCol) / gridSize;
 
     // Row secondary highlighting
-    const rowSlice = [];
+    const rowSlice: number[] = [];
     for (let k = 1; k < gridSize + 1; k++)
       if (focusedCellCol === 0 || index - k == undefined) {
         break;
@@ -182,7 +164,7 @@ export default function CrosswordGrid(props: any) {
       }
 
     // Col secondary highlighting
-    const colSlice = [];
+    const colSlice: number[] = [];
     for (let k = 1; k < gridSize + 1; k++)
       if (focusedCellRow === 0 || index - k * gridSize == undefined) {
         break;
@@ -237,7 +219,7 @@ export default function CrosswordGrid(props: any) {
         }
       }
     }
-    const [dir, newClues, indexInClueList] = handleFocusClue(
+    const [dir, newClues, indexInClueList] = handleFocusFromClue(
       rowSlice,
       colSlice,
       index,
@@ -249,14 +231,14 @@ export default function CrosswordGrid(props: any) {
     setIsSecondaryFocusedCell(newSecondaryFocusGrid);
   };
 
-  const handleFocusClue = (
+  const handleFocusFromClue = (
     rowSlice: number[],
     colSlice: number[],
     index: number,
     acrossHighlight: boolean
-  ) => {
+  ): [string, boolean[], number] => {
     // Handle focused clue
-    const newFocusedClues = Array(gridSize * gridSize).fill(false);
+    const newFocusedClues: boolean[] = Array(gridSize * gridSize).fill(false);
     const sortedAcross: number[] = rowSlice.sort((a, b) => a - b);
     const sortedDown: number[] = colSlice.sort((a, b) => a - b);
     let direction: string = "";
@@ -341,8 +323,8 @@ export default function CrosswordGrid(props: any) {
     return [direction, newFocusedClues, clueListIndex];
   };
 
-  const handleBgColor = (index: number) => {
-    let bgColor = "bg-white";
+  const handleBgColor = (index: number): string => {
+    let bgColor: string = "bg-white";
     if (blackSquares && blackSquares[index]) {
       bgColor = "bg-black";
     } else if (isFocusedCell[index]) {
@@ -353,20 +335,25 @@ export default function CrosswordGrid(props: any) {
     return bgColor;
   };
 
-  const handleKeyDown = (event: KeyboardEvent) => {
-    const index = currentCell.current;
+  const handleKeyDown = (event: KeyboardEvent): void => {
+    const index: number = currentCell.current;
     event.stopPropagation();
+
     if (isFocusedOnGrid && event.key !== "Backspace") {
       switch (event.key) {
         case "ArrowUp":
           event.preventDefault();
-          let upIndex = index - gridSize;
+          let upIndex: number = index - gridSize;
           while (upIndex >= 0 && blackSquares[upIndex]) {
             upIndex -= gridSize;
           }
           if (upIndex < 0) {
             const currentCol = index % gridSize;
-            upIndex = (gridSize - 1) * gridSize + currentCol - 1;
+            if (currentCol === 0) {
+              upIndex = gridSize * gridSize - 1;
+            } else {
+              upIndex = (gridSize - 1) * gridSize + currentCol - 1;
+            }
             while (upIndex >= 0 && blackSquares[upIndex]) {
               upIndex -= gridSize;
             }
@@ -374,18 +361,22 @@ export default function CrosswordGrid(props: any) {
           if (upIndex < 0) {
             upIndex = index;
           }
-          handleFocus(upIndex, isHighlightAcross);
+          handleFocus(upIndex, isHighlightAcross, false);
           break;
 
         case "ArrowDown":
           event.preventDefault();
-          let downIndex = index + gridSize;
+          let downIndex: number = index + gridSize;
           while (downIndex < gridSize * gridSize && blackSquares[downIndex]) {
             downIndex += gridSize;
           }
           if (downIndex >= gridSize * gridSize) {
             const currentCol = index % gridSize;
-            downIndex = currentCol + 1;
+            if (currentCol === 4) {
+              downIndex = 0;
+            } else {
+              downIndex = currentCol + 1;
+            }
             while (downIndex < gridSize * gridSize && blackSquares[downIndex]) {
               downIndex += gridSize;
             }
@@ -393,30 +384,16 @@ export default function CrosswordGrid(props: any) {
           if (downIndex >= gridSize * gridSize) {
             downIndex = index;
           }
-          handleFocus(downIndex, isHighlightAcross);
+          handleFocus(downIndex, isHighlightAcross, false);
           break;
 
         case "ArrowLeft":
           event.preventDefault();
-          let leftIndex = index - 1;
-          while (leftIndex >= 0 && blackSquares[leftIndex]) {
-            leftIndex--;
-          }
-          if (leftIndex < 0) {
-            leftIndex = gridSize * gridSize - 1;
-            while (leftIndex >= 0 && blackSquares[leftIndex]) {
-              leftIndex--;
-            }
-          }
-          if (leftIndex < 0) {
-            leftIndex = index;
-          }
-          handleFocus(leftIndex, isHighlightAcross);
+          handleArrowLeft(index);
           break;
-
         case "ArrowRight":
           event.preventDefault();
-          let rightIndex = index + 1;
+          let rightIndex: number = index + 1;
           while (rightIndex < gridSize * gridSize && blackSquares[rightIndex]) {
             rightIndex++;
           }
@@ -432,7 +409,7 @@ export default function CrosswordGrid(props: any) {
           if (rightIndex >= gridSize * gridSize) {
             rightIndex = index;
           }
-          handleFocus(rightIndex, isHighlightAcross);
+          handleFocus(rightIndex, isHighlightAcross, false);
           break;
 
         case "Tab":
@@ -456,7 +433,7 @@ export default function CrosswordGrid(props: any) {
 
         case " ":
           event.preventDefault();
-          handleFocus(index, !isHighlightAcross);
+          handleFocus(index, !isHighlightAcross, false);
           break;
         default:
           break;
@@ -464,25 +441,42 @@ export default function CrosswordGrid(props: any) {
     }
   };
 
+  const handleArrowLeft = (index: number): void => {
+    let leftIndex: number = index - 1;
+    while (leftIndex >= 0 && blackSquares[leftIndex]) {
+      leftIndex--;
+    }
+    if (leftIndex < 0) {
+      leftIndex = gridSize * gridSize - 1;
+      while (leftIndex >= 0 && blackSquares[leftIndex]) {
+        leftIndex--;
+      }
+    }
+    if (leftIndex < 0) {
+      leftIndex = index;
+    }
+    handleFocus(leftIndex, isHighlightAcross, false);
+  };
+
   const handleTab = (
     index: number,
     loopCount: number,
     acrossIndices: number[],
     downIndices: number[]
-  ) => {
-    const totalCells = gridSize * gridSize;
+  ): void => {
+    const totalCells: number = gridSize * gridSize;
 
     if (loopCount > 1) {
       return;
     }
-    let found = false;
+    let found: boolean = false;
     for (let i = index + 1; i < totalCells; i++) {
       if (
         isHighlightAcross &&
         currentGridNumbers[i] &&
         acrossIndices.indexOf(i) >= 0
       ) {
-        handleFocus(i, isHighlightAcross);
+        handleFocus(i, isHighlightAcross, false);
         found = true;
         break;
       } else {
@@ -491,7 +485,7 @@ export default function CrosswordGrid(props: any) {
           currentGridNumbers[i] &&
           downIndices.indexOf(i) >= 0
         ) {
-          handleFocus(i, isHighlightAcross);
+          handleFocus(i, isHighlightAcross, false);
           found = true;
           break;
         }
@@ -504,7 +498,7 @@ export default function CrosswordGrid(props: any) {
           currentGridNumbers[i] &&
           acrossIndices.indexOf(i) >= 0
         ) {
-          handleFocus(i, isHighlightAcross);
+          handleFocus(i, isHighlightAcross, false);
           found = true;
           break;
         } else {
@@ -513,7 +507,7 @@ export default function CrosswordGrid(props: any) {
             currentGridNumbers[i] &&
             downIndices.indexOf(i) >= 0
           ) {
-            handleFocus(i, isHighlightAcross);
+            handleFocus(i, isHighlightAcross, false);
             found = true;
             break;
           }
@@ -530,22 +524,22 @@ export default function CrosswordGrid(props: any) {
     loopCount: number,
     acrossIndices: number[],
     downIndices: number[]
-  ) => {
-    const totalCells = gridSize * gridSize;
+  ): void => {
+    const totalCells: number = gridSize * gridSize;
 
     if (loopCount > 1) {
       return;
     }
 
-    let found = false;
+    let found: boolean = false;
 
-    for (let i = index - 1; i < totalCells; i--) {
+    for (let i = index - 1; i >= 0; i--) {
       if (
         isHighlightAcross &&
         currentGridNumbers[i] &&
         acrossIndices.indexOf(i) >= 0
       ) {
-        handleFocus(i, isHighlightAcross);
+        handleFocus(i, isHighlightAcross, false);
         found = true;
         break;
       } else {
@@ -554,20 +548,20 @@ export default function CrosswordGrid(props: any) {
           currentGridNumbers[i] &&
           downIndices.indexOf(i) >= 0
         ) {
-          handleFocus(i, isHighlightAcross);
+          handleFocus(i, isHighlightAcross, false);
           found = true;
           break;
         }
       }
     }
     if (!found) {
-      for (let i = index - 1; i < totalCells; i--) {
+      for (let i = index - 1; i >= 0; i--) {
         if (
           isHighlightAcross &&
           currentGridNumbers[i] &&
           acrossIndices.indexOf(i) >= 0
         ) {
-          handleFocus(i, isHighlightAcross);
+          handleFocus(i, isHighlightAcross, false);
           found = true;
           break;
         } else {
@@ -576,7 +570,7 @@ export default function CrosswordGrid(props: any) {
             currentGridNumbers[i] &&
             downIndices.indexOf(i) >= 0
           ) {
-            handleFocus(i, isHighlightAcross);
+            handleFocus(i, isHighlightAcross, false);
             found = true;
             break;
           }
@@ -599,7 +593,7 @@ export default function CrosswordGrid(props: any) {
 
   useEffect(() => {
     const index: number = clueToCellHighlight;
-    const hasNonNullValues = currentGridNumbers.some(
+    const hasNonNullValues: boolean = currentGridNumbers.some(
       (value: number) => value !== null
     );
 
@@ -654,17 +648,12 @@ export default function CrosswordGrid(props: any) {
   }, [clueToCellHighlight]);
 
   useEffect(() => {
-    const cleanArray = Array(gridSize * gridSize).fill(false);
-    setBlackSquares(cleanArray);
-    const newNumbers = assignNumbers(cleanArray);
-    setCurrentGridNumbers(newNumbers);
-    setIsFocusedCell(cleanArray);
-    setIsSecondaryFocusedCell(cleanArray);
+    handleClear();
   }, [gridSize]);
 
   return (
     <div
-      className="grid border-3 border-black"
+      className="grid border-y-3 border-r-3 border-x-2 border-black"
       style={{
         gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
         gridTemplateRows: `repeat(${gridSize}, 1fr)`,
@@ -699,7 +688,7 @@ export default function CrosswordGrid(props: any) {
               type="text"
               maxLength={1}
               className={`w-full h-full text-center absolute top-0 left-0 ${
-                positionBlackSquares ? "cursor-pointer text-white" : ""
+                positionBlackSquares ? "cursor-pointer" : ""
               }`}
               onChange={(e) => handleUserInput(e, index)}
               value={currentGridValues[index]}

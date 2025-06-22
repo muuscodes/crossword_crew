@@ -1,6 +1,7 @@
 import Logo from "../../img/favicon.jpg";
+import type { LibraryCardProps } from "../utils/types";
 
-export default function LibraryCard(props: any) {
+export default function LibraryCard(props: LibraryCardProps) {
   const { author, date, completed } = props;
   return (
     <div

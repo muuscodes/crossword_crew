@@ -1,6 +1,9 @@
 import LibraryCard from "./LibraryCard";
 
 export default function Library() {
+  const handleSort = () => {
+    // filter
+  };
   return (
     <div className="min-h-screen flex flex-col m-auto w-5/6">
       <h1 className="text-center text-7xl mb-10 mt-5">Library</h1>

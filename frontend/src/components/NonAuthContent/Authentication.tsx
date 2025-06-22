@@ -39,14 +39,14 @@ export default function Authentication(props: any) {
         placeholder={isSignUp ? "password" : "********"}
         className="bg-white text-black pl-3 p-0.5 mt-2"
       />
-      <button type="submit" className="text-xl p-2 w-20 mt-4 authButton">
+      <button type="submit" className="text-xl p-2 w-20 mt-4 fancyButton">
         {isSignUp ? "Submit" : "Login"}
       </button>
       <hr className="text-white" />
       <p>{isSignUp ? "Already have an account?" : "Don't have an account?"}</p>
       <button
         onClick={handleSignUpToggle}
-        className="text-xl p-2 w-30 authButton"
+        className="text-xl p-2 w-30 fancyButton"
       >
         {isSignUp ? "Login" : "Sign up"}
       </button>
