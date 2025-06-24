@@ -1,0 +1,36 @@
+###
+# Welcome to the server
+GET http://localhost:3000
+
+###
+# Get all users
+GET http://localhost:3000/users
+
+###
+# Get a single user from their username
+GET http://localhost:3000/users/muuscodes
+
+###
+# Add a single user
+POST http://localhost:3000/users
+Content-Type: application/json
+
+{
+    "username" : "muuscodes",
+    "email" : "muuscodes@gmail.com",
+    "password" : "muuscodes"
+}
+
+###
+# Update a user password
+PATCH http://localhost:3000/users/muuscodes
+Content-Type: application/json
+
+{
+    "password": "newpassword"
+}
+
+###
+DELETE http://localhost:3000/users/muuscodes
+
+

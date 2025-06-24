@@ -4,7 +4,8 @@ import CrosswordGrid from "./CrosswordGrid";
 import CreateClues from "./CreateClues";
 import ClueInit from "./ClueInit";
 
-export default function CreateCrossword() {
+export default function CreateCrossword(props: any) {
+  const { setIsSaved } = props;
   const [gridSize, setGridSize] = useState<number>(5);
   const [gridDimensions, setGridDimensions] = useState<string>("30vw");
   const [positionBlackSquares, setPositionBlackSquares] =
@@ -213,6 +214,30 @@ export default function CreateCrossword() {
     }
   }, [currentGridNumbers]);
 
+  async function saveGrid() {
+    setIsSaved(true);
+    try {
+      await fetch("http://localhost:3000/users/grids", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          gridSize,
+          currentGridValues,
+          currentGridNumbers,
+          blackSquares,
+          acrossClueValues,
+          downClueValues,
+          clueNumDirection,
+        }),
+      });
+      setIsSaved(false);
+    } catch (error) {
+      console.log("Server error:", error);
+    }
+  }
+
   return (
     <div className="flex flex-col items-center m-auto border-4 w-fit">
       <div className="flex flex-col md:flex-row justify-around items-center w-full bg-gray-200">
@@ -299,7 +324,9 @@ export default function CreateCrossword() {
         )}
       </div>
       <div className="flex flex-row justify-evenly w-full py-2 bg-gray-200 border-t-3">
-        <button className="fancyButton bigger">Save</button>
+        <button className="fancyButton bigger" onClick={() => saveGrid()}>
+          Save
+        </button>
         <button className="fancyButton bigger " onClick={() => handleClear()}>
           Clear
         </button>

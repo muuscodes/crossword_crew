@@ -455,6 +455,8 @@ export default function CrosswordGrid(props: CrosswordGridProps) {
     if (leftIndex < 0) {
       leftIndex = index;
     }
+    console.log(leftIndex);
+
     handleFocus(leftIndex, isHighlightAcross, false);
   };
 
@@ -653,7 +655,7 @@ export default function CrosswordGrid(props: CrosswordGridProps) {
 
   return (
     <div
-      className="grid border-y-3 border-r-3 border-x-2 border-black"
+      className="grid border-y-3 border-r-3 border-x-2 border-black w-40vw"
       style={{
         gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
         gridTemplateRows: `repeat(${gridSize}, 1fr)`,

@@ -75,10 +75,10 @@ export default function Navbar(props: NavbarProps) {
               &#9776;
             </button>
             <nav className="hidden lg:flex pr-5">
-              {createMenuNavLink("/", "Home")}
               {createMenuNavLink("/create", "Create")}
               {createMenuNavLink("/library", "Library")}
               {createMenuNavLink("/contact", "Contact")}
+              {createMenuNavLink("/account", "Account")}
             </nav>
           </div>
         ) : (
@@ -104,6 +104,8 @@ export default function Navbar(props: NavbarProps) {
           {createMenuNavLink("/library", "Library")}
           <hr className="text-white w-5/6" />
           {createMenuNavLink("/contact", "Contact")}
+          <hr className="text-white w-5/6" />
+          {createMenuNavLink("/account", "Account")}
         </nav>
       </section>
     </header>

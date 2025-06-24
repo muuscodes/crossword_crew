@@ -1,15 +1,28 @@
 import { Client } from "pg";
+import { Pool } from "pg";
 import dotenv from "dotenv";
 dotenv.config();
+const user = process.env.DB_USER;
 const pw = process.env.DB_ENCRYPTED_PASSWORD;
+const host = process.env.DB_HOST;
+const port = process.env.DB_PORT;
+const db_name = process.env.DB_NAME;
+
+export const pool = new Pool({
+  user: user,
+  password: pw,
+  host: host,
+  port: port,
+  database: db_name,
+});
 
 const createClient = () => {
   return new Client({
-    user: "admin",
-    host: "localhost",
-    database: "crossword_crew",
+    user: user,
+    host: host,
+    database: db_name,
     password: pw,
-    port: 5432,
+    port: port,
   });
 };
 
