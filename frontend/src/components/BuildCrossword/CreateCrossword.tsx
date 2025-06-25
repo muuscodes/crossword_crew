@@ -8,6 +8,7 @@ export default function CreateCrossword(props: any) {
   const { setIsSaved } = props;
   const [gridSize, setGridSize] = useState<number>(5);
   const [gridDimensions, setGridDimensions] = useState<string>("30vw");
+  const [gridHeight, setGridHeight] = useState<string>(gridDimensions + "5px");
   const [positionBlackSquares, setPositionBlackSquares] =
     useState<boolean>(false);
   const [currentGridNumbers, setCurrentGridNumbers] = useState<number[]>(
@@ -216,13 +217,17 @@ export default function CreateCrossword(props: any) {
 
   async function saveGrid() {
     setIsSaved(true);
+    const userid = 1;
+    const completed = false;
     try {
-      await fetch("http://localhost:3000/users/grids", {
+      await fetch("/users/grids", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          userid,
+          completed,
           gridSize,
           currentGridValues,
           currentGridNumbers,
@@ -232,14 +237,35 @@ export default function CreateCrossword(props: any) {
           clueNumDirection,
         }),
       });
-      setIsSaved(false);
+      // setIsSaved(false);
     } catch (error) {
       console.log("Server error:", error);
     }
   }
+  const updateGridDimensions = () => {
+    const newWidth: string =
+      window.innerWidth < 420
+        ? " 320px"
+        : window.innerWidth < 768
+        ? "387.5px"
+        : gridDimensions;
+    const newHeight: string =
+      window.innerWidth < 768 ? "h-fit" : `${gridDimensions} + 5px`;
+    setGridDimensions(newWidth);
+    setGridHeight(newHeight);
+  };
+
+  useEffect(() => {
+    window.addEventListener("resize", updateGridDimensions);
+    updateGridDimensions();
+
+    return () => {
+      window.removeEventListener("resize", updateGridDimensions);
+    };
+  }, []);
 
   return (
-    <div className="flex flex-col items-center m-auto border-4 w-fit">
+    <div className="flex flex-col items-center m-auto border-4 w-fit shadow-2xl h-fit">
       <div className="flex flex-col md:flex-row justify-around items-center w-full bg-gray-200">
         <div>
           <label className="text-xl mr-1" htmlFor="gridSize">
@@ -271,8 +297,8 @@ export default function CreateCrossword(props: any) {
         </label>
       </div>
       <div
-        className={`flex flex-col md:flex-row border-y-2 w-fit`}
-        style={{ height: `calc(${gridDimensions} + 5px)` }}
+        className={`flex flex-col md:flex-row border-y-2 w-fit h-auto`}
+        style={{ height: `${gridHeight}` }}
       >
         <CrosswordGrid
           gridSize={gridSize}

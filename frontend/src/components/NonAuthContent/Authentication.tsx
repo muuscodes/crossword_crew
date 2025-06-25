@@ -8,6 +8,27 @@ export default function Authentication(props: any) {
     setIsSignUp(!isSignUp);
   };
 
+  const generateRandomToken = () => {
+    const array = new Uint8Array(16);
+    window.crypto.getRandomValues(array);
+    const token = Array.from(array, (byte) =>
+      ("0" + byte.toString(16)).slice(-2)
+    ).join("");
+    return token;
+  };
+
+  // the client id from GCP
+  const client_id =
+    "151423192531-776ea11i20ef617fclnr2mvi8ucvrsgb.apps.googleusercontent.com";
+
+  // create a CSRF token and store it locally
+  const state = generateRandomToken();
+  localStorage.setItem("latestCSRFToken", state);
+
+  // redirect the user to Google
+  const link = `https://accounts.google.com/o/oauth2/auth?scope=https://www.googleapis.com/auth/cloud-platform&response_type=code&access_type=offline&state=${state}&redirect_uri=https://localhost:5173/oauth2/callback&client_id=${client_id}`;
+  window.location.assign(link);
+
   return (
     <>
       <div className="flex flex-row-reverse justify-between">

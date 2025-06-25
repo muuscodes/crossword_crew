@@ -27,7 +27,7 @@ export default function LibraryCard(props: LibraryCardProps) {
         </p>
         <p className="m-2">
           <span className="bg-white text-black p-0.5">Completion status</span>{" "}
-          {completed ? "Completed" : "In progress"}
+          {completed ? "Completed" : "Unsolved"}
         </p>
       </div>
     </div>

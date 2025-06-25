@@ -59,18 +59,8 @@ export default function CrosswordGrid(props: CrosswordGridProps) {
       return value;
     });
     newGrid[index] = value;
-
     const inputEvent = event.nativeEvent as InputEvent;
-    if (value === "" && inputEvent.inputType === "deleteContentBackward") {
-      if (currentGridValues[index] === "") {
-        handleArrowLeft(index);
-      } else {
-        handleFocus(index, isHighlightAcross, true);
-      }
-    } else if (
-      isHighlightAcross &&
-      inputEvent.inputType !== "deleteContentBackward"
-    ) {
+    if (isHighlightAcross && inputEvent.inputType !== "deleteContentBackward") {
       let rightIndex: number = index + 1;
       while (rightIndex < gridSize * gridSize && blackSquares[rightIndex]) {
         rightIndex++;
@@ -338,30 +328,19 @@ export default function CrosswordGrid(props: CrosswordGridProps) {
   const handleKeyDown = (event: KeyboardEvent): void => {
     const index: number = currentCell.current;
     event.stopPropagation();
-
-    if (isFocusedOnGrid && event.key !== "Backspace") {
+    if (event.key === "Backspace") {
+      if (currentGridValues[index] === "" && isHighlightAcross) {
+        handleArrowLeft(index);
+      } else if (currentGridValues[index] === "" && !isHighlightAcross) {
+        handleArrowUp(index);
+      } else {
+        handleFocus(index, isHighlightAcross, true);
+      }
+    } else if (isFocusedOnGrid) {
       switch (event.key) {
         case "ArrowUp":
           event.preventDefault();
-          let upIndex: number = index - gridSize;
-          while (upIndex >= 0 && blackSquares[upIndex]) {
-            upIndex -= gridSize;
-          }
-          if (upIndex < 0) {
-            const currentCol = index % gridSize;
-            if (currentCol === 0) {
-              upIndex = gridSize * gridSize - 1;
-            } else {
-              upIndex = (gridSize - 1) * gridSize + currentCol - 1;
-            }
-            while (upIndex >= 0 && blackSquares[upIndex]) {
-              upIndex -= gridSize;
-            }
-          }
-          if (upIndex < 0) {
-            upIndex = index;
-          }
-          handleFocus(upIndex, isHighlightAcross, false);
+          handleArrowUp(index);
           break;
 
         case "ArrowDown":
@@ -455,9 +434,30 @@ export default function CrosswordGrid(props: CrosswordGridProps) {
     if (leftIndex < 0) {
       leftIndex = index;
     }
-    console.log(leftIndex);
 
     handleFocus(leftIndex, isHighlightAcross, false);
+  };
+
+  const handleArrowUp = (index: number): void => {
+    let upIndex: number = index - gridSize;
+    while (upIndex >= 0 && blackSquares[upIndex]) {
+      upIndex -= gridSize;
+    }
+    if (upIndex < 0) {
+      const currentCol = index % gridSize;
+      if (currentCol === 0) {
+        upIndex = gridSize * gridSize - 1;
+      } else {
+        upIndex = (gridSize - 1) * gridSize + currentCol - 1;
+      }
+      while (upIndex >= 0 && blackSquares[upIndex]) {
+        upIndex -= gridSize;
+      }
+    }
+    if (upIndex < 0) {
+      upIndex = index;
+    }
+    handleFocus(upIndex, isHighlightAcross, false);
   };
 
   const handleTab = (

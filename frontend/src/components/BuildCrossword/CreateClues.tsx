@@ -178,28 +178,28 @@ export default function CreateClues(props: CrosswordClueProps) {
       className="flex-col border-y-2"
       style={{ height: `calc(${gridDimensions} + 5px)` }}
     >
-      <div className="h-1/2 -z-10">
-        <div className="border-2 bg-gray-200">
-          <h4 className="flex items-center font-bold text-xl px-2 text-white bg-black w-fit h-fit">
+      <div className="h-1/2">
+        <div className="border-2 bg-gray-200 h-2/8 flex items-center text-center">
+          <h4 className="m-auto text-center font-bold text-xl px-1 text-white bg-black w-fit">
             Across
           </h4>
         </div>
         <div
           id="scrollableContainerAcross"
-          className="border-2 p-2 bg-white overflow-y-auto h-6/7"
+          className="border-2 p-2 bg-white overflow-y-auto h-6/8"
         >
           <ul className="mt-3 list-none">{mapClues(acrossClues)}</ul>
         </div>
       </div>
       <div className="h-1/2">
-        <div className="border-2 bg-gray-200">
-          <h4 className="flex items-center font-bold text-xl px-2 text-white bg-black w-fit h-fit">
+        <div className="border-2 bg-gray-200 h-2/8 flex items-center text-center">
+          <h4 className="m-auto text-center font-bold text-xl px-1 text-white bg-black w-fit">
             Down
           </h4>
         </div>
         <div
           id="scrollableContainerDown"
-          className="border-2 p-2 bg-white overflow-y-auto h-6/7"
+          className="border-2 p-2 bg-white overflow-y-auto h-6/8"
         >
           <ul className="mt-3 list-none">{mapClues(downClues)}</ul>
         </div>

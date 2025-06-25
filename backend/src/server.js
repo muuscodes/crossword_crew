@@ -8,9 +8,6 @@ import { connectToDatabase } from "./db.js";
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 
-// const aPath =
-//   "/Users/Nellilo/Desktop/Codine/post_2025/aprendizaje/learning_process/projects/crossword_crew/frontend/index.html";
-
 // Get the file path from the URL of the current module
 const __filename = fileURLToPath(import.meta.url);
 // Get the directory name from the file path
@@ -25,30 +22,24 @@ app.use((req, res, next) => {
   next();
 });
 
-// app.use(express.static(path.join(__dirname, "../../frontend/src"))); // index.html and App.css/App.tsx/main.tsx are not in the same spot, this may not work
-
-// Serving up the HTML file from the /public directory
-// app.get("/", (req, res) => {
-//   // res.sendFile(path.join(__dirname, "../frontend", "index.html"));
-//   res.sendFile(aPath);
-//   res.status(200).send({
-//     message: "Welcome to the backend!",
-//   });
-// });
-
-app.get("/", (req, res) => {
-  try {
-    res.status(200).send({
-      message: "Welcome to the backend!",
-    });
-  } catch (error) {
-    console.log("Not working: ", error);
-  }
-});
+// Serve static files from React app
+app.use(express.static(path.resolve(__dirname, "../../frontend/dist")));
 
 // Routes
-// app.use("/auth", authRoutes);
+app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
+
+app.all("*catchall", (req, res) => {
+  res.sendFile(
+    path.resolve(__dirname, "../../frontend/dist/index.html"),
+    (err) => {
+      if (err) {
+        console.error("Error sending index.html:", err);
+        res.status(err.status).end();
+      }
+    }
+  );
+});
 
 const startServer = async () => {
   try {

@@ -1,72 +1,74 @@
 import { Router } from "express";
+// import session from "express-session";
+import passport from "passport";
 const router = Router();
-// import { none, any, one } from "./db.js";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import dotenv from "dotenv";
+dotenv.config();
+const client_id = process.env.GOOGLE_CLIENT_ID;
+const client_secret = process.env.GOOGLE_CLIENT_SECRET;
+const callback = process.env.CALLBACK_URI;
 
-// Create a new record
-router.post("/records", async (req, res, next) => {
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: client_id,
+      clientSecret: client_secret,
+      callbackURL: callback,
+    },
+    function (accessToken, refreshToken, profile, cb) {
+      // User.findOrCreate({ googleId: profile.id }, function (err, user) {
+      //   return cb(err, user);
+      // });
+      return done(null, profile);
+    }
+  )
+);
+
+passport.serializeUser((user, done) => {
+  done(null, user);
+});
+
+passport.deserializeUser((user, done) => {
+  done(null, user);
+});
+
+// Middleware
+const isLoggedIn = (req, res, next) => {
+  req.user ? next() : res.sendStatus(401);
+};
+// router.use(session({ secret: "cats" }));
+// router.use(passport.initialize());
+// router.use(passport.session());
+
+router.get("/", (req, res) => {
   try {
-    const { name, age } = req.body;
-    const record = await none("INSERT INTO records(name, age) VALUES($1, $2)", [
-      name,
-      age,
-    ]);
-    res.json({
-      message: "Record created successfully",
-    });
+    res.send('<a href="/auth/google">Authentication</a>');
   } catch (error) {
-    next(error);
+    console.log("Not working: ", error);
   }
 });
 
-// Get all records
-router.get("/records", async (req, res, next) => {
-  try {
-    const records = await any("SELECT * FROM records");
-    res.json(records);
-  } catch (error) {
-    next(error);
+router.get(
+  "/google",
+  passport.authenticate("google", { scope: ["email", "profile"] })
+);
+
+router.get(
+  "/google/callback",
+  passport.authenticate("google", { failureRedirect: "/failure" }),
+  function (req, res) {
+    // Successful authentication, redirect home.
+    res.redirect("/protected");
   }
+);
+
+router.get("/failure", (req, res) => {
+  res.send("Failed");
 });
 
-// Get a single record by ID
-router.get("/records/:id", async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const record = await one("SELECT * FROM records WHERE id = $1", id);
-    res.json(record);
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Update a record by ID
-router.put("/records/:id", async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { name, age } = req.body;
-    const record = await none(
-      "UPDATE records SET name = $1, age = $2 WHERE id = $3",
-      [name, age, id]
-    );
-    res.json({
-      message: "Record updated successfully",
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-// Delete a record by ID
-router.delete("/records/:id", async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const record = await none("DELETE FROM records WHERE id = $1", id);
-    res.json({
-      message: "Record deleted successfully",
-    });
-  } catch (error) {
-    next(error);
-  }
+router.get("/protected", isLoggedIn, (req, res) => {
+  res.send("Hello!");
 });
 
 export default router;

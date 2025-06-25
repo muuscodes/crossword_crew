@@ -5,7 +5,7 @@ export default function Account() {
 
   async function getUserData() {
     try {
-      const response = await fetch("http://localhost:3000/users/muuscodes");
+      const response = await fetch("/users/muuscodes");
       const freshData = await response.json();
       let newData: any = {
         username: "",
