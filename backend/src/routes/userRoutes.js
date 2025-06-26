@@ -84,6 +84,7 @@ router.post("/grids", async (req, res) => {
     const {
       userid,
       completed,
+      puzzleTitle,
       gridSize,
       currentGridValues,
       currentGridNumbers,
@@ -92,15 +93,38 @@ router.post("/grids", async (req, res) => {
       downClueValues,
       clueNumDirection,
     } = req.body;
+
+    // Insert into the crossword_grids table
     await pool.query(
       `INSERT INTO crossword_grids_test 
-    (userid_creator, completed_status, grid_size, grid_values, grid_numbers, black_squares, 
-        across_clues, down_clues, clue_number_directions) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+    (userid_creator, completed_status, puzzle_title, grid_size, grid_values, grid_numbers, black_squares, 
+        across_clues, down_clues, clue_number_directions) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
       [
         userid,
         completed,
+        puzzleTitle,
         gridSize,
         currentGridValues,
+        currentGridNumbers,
+        blackSquares,
+        acrossClueValues,
+        downClueValues,
+        clueNumDirection,
+      ]
+    );
+
+    // Insert into the solver_grids table
+    const cleanGridValues = Array(gridSize * gridSize).fill("");
+    await pool.query(
+      `INSERT INTO solver_grids_test 
+    (userid_creator, completed_status, puzzle_title, grid_size, grid_values, grid_numbers, black_squares, 
+        across_clues, down_clues, clue_number_directions) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      [
+        userid,
+        completed,
+        puzzleTitle,
+        gridSize,
+        cleanGridValues,
         currentGridNumbers,
         blackSquares,
         acrossClueValues,
@@ -117,8 +141,8 @@ router.post("/grids", async (req, res) => {
   }
 });
 
-// Get a users crosswords for library
-router.get("/grids/:userid", async (req, res) => {
+// Get a user's crosswords for library
+router.get("/:userid/grids", async (req, res) => {
   try {
     const { userid } = req.params;
     const result = await pool.query(
@@ -132,6 +156,46 @@ router.get("/grids/:userid", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).send("Internal Server Error");
+  }
+});
+
+// Get a solver's crosswords for solving
+router.get("/:userId/solver/:gridId", async (req, res) => {
+  try {
+    const { userId, gridId } = req.params;
+    const result = await pool.query(
+      "SELECT * FROM solver_grids_test WHERE userid_creator = $1 AND grid_id = $2",
+      [userId, gridId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).send("User not found");
+    }
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+// Save solver progress
+router.post("/solver/:gridId", async (req, res) => {
+  try {
+    const { gridId } = req.params;
+    const { currentGridValues, completed } = req.body;
+
+    // Update the solver_grids table
+    await pool.query(
+      `UPDATE solver_grids_test 
+      SET completed_status = $1, grid_values = $2
+      WHERE grid_id = $3`,
+      [completed, currentGridValues, gridId]
+    );
+    res.status(201).send({
+      message: "Successfully added crossword grid",
+    });
+  } catch (error) {
+    console.log("Something is amiss", error);
+    res.sendStatus(500);
   }
 });
 

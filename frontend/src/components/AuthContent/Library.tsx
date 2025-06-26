@@ -2,26 +2,52 @@ import LibraryCard from "./LibraryCard";
 import { useState, useEffect } from "react";
 
 export default function Library() {
-  const [userData, setUserData] = useState<any>("");
+  const [userData, setUserData] = useState<string[]>([]);
+  const [userCards, setUserCards] = useState<React.ReactNode[]>([]);
+  const notServer: boolean = true;
   const userid = 1;
-  // const handleSort = () => {
-  //   // filter
-  // };
+  const handleSort = () => {
+    userData;
+  };
 
   async function getUserData() {
     try {
-      const response = await fetch(`/users/grids/${userid}`);
-      const freshData = await response.json();
-      let newData: any = {
-        username: "Test User",
-        time_created: "",
-        completed_status: "",
-      };
-      freshData.forEach((element: any) => {
+      const response = await fetch(
+        `${
+          notServer
+            ? `http://localhost:3000/users/${userid}/grids`
+            : `/users/${userid}/grids`
+        }`
+      );
+      const result = await response.json();
+      const newUserData: string[] = [];
+      const newCards: React.ReactNode[] = [];
+      result.forEach((element: any) => {
+        let newData: any = {
+          username: "Test User",
+          time_created: "",
+          completed_status: "",
+        };
         newData.time_created = element.time_created;
         newData.completed_status = element.completed_status;
+        newData.puzzle_title = element.puzzle_title;
+        if (newData.puzzle_title === "") {
+          newData.puzzle_title = "Crossword Puzzle";
+        }
+        newUserData.push(newData);
+        const newCard = (
+          <LibraryCard
+            author={"Evan Austin"}
+            name={newData.puzzle_title}
+            date={newData.time_created}
+            completed={newData.completed_status}
+            key={element.grid_id}
+          />
+        );
+        newCards.push(newCard);
       });
-      setUserData(newData);
+      setUserData(newUserData);
+      setUserCards(newCards);
     } catch (error) {
       console.log("Server error:", error);
     }
@@ -36,59 +62,19 @@ export default function Library() {
       <h1 className="text-center text-7xl mb-10 mt-5">Library</h1>
       <div className="border-1 w-fit mb-5">
         <p className="inline px-2 text-bold border-r-1">Sort by:</p>
-        <select name="sort-library" id="sort-library">
+        <select
+          name="sort-library"
+          id="sort-library"
+          onChange={() => handleSort()}
+        >
           <option value="author">Author</option>
-          <option value="date">Date created ascending</option>
-          <option value="author">Date created descending</option>
-          <option value="author">Completion</option>
+          <option value="date">Date: ascending</option>
+          <option value="author">Date: descending</option>
+          <option value="author">Completion status</option>
         </select>
       </div>
       <section className="flex flex-row gap-5 mb-15 flex-wrap justify-around">
-        <LibraryCard
-          author={"Evan Austin"}
-          date={userData.time_created}
-          completed={userData.completed_status}
-        />
-        {/* <LibraryCard
-          author={"Evan Austin"}
-          date={"February 10, 1999"}
-          completed={false}
-        />
-        <LibraryCard
-          author={"Evan Austin"}
-          date={"February 10, 1999"}
-          completed={false}
-        />
-        <LibraryCard
-          author={"Evan Austin"}
-          date={"February 10, 1999"}
-          completed={false}
-        />
-        <LibraryCard
-          author={"Evan Austin"}
-          date={"February 10, 1999"}
-          completed={false}
-        />
-        <LibraryCard
-          author={"Evan Austin"}
-          date={"February 10, 1999"}
-          completed={false}
-        />
-        <LibraryCard
-          author={"Evan Austin"}
-          date={"February 10, 1999"}
-          completed={false}
-        />
-        <LibraryCard
-          author={"Evan Austin"}
-          date={"February 10, 1999"}
-          completed={false}
-        />
-        <LibraryCard
-          author={"Evan Austin"}
-          date={"February 10, 1999"}
-          completed={false}
-        /> */}
+        {userCards}
       </section>
     </div>
   );

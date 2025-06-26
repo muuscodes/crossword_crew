@@ -8,6 +8,7 @@ import Library from "./components/AuthContent/Library.tsx";
 import Create from "./components/AuthContent/Create.tsx";
 import NoPage from "./components/BaseContent/NoPage.tsx";
 import Account from "./components/AuthContent/Account.tsx";
+import Solver from "./components/SolveCrossword/Solver.tsx";
 // import useAuth from "./context/AuthContext";
 
 function App() {
@@ -33,6 +34,10 @@ function App() {
           <Route
             path="account"
             element={isAuthenticated ? <Account /> : <Navigate to="/" />}
+          />
+          <Route
+            path="solver"
+            element={isAuthenticated ? <Solver /> : <Navigate to="/" />}
           />
           <Route path="*" element={<NoPage />} />
         </Routes>

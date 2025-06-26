@@ -19,7 +19,7 @@ export default function Home() {
             </div>
           </div>
           <div className="flex flex-col items-center">
-            <h2 className="text-xl p-2 mb-5">Number of puzzles sent</h2>
+            <h2 className="text-xl p-2 mb-5">Number of puzzles received</h2>
             <div className="text-5xl bg-black text-white font-bold text-center p-4">
               0
             </div>

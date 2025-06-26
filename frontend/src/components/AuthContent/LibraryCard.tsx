@@ -2,7 +2,7 @@ import Logo from "../../img/favicon.jpg";
 import type { LibraryCardProps } from "../utils/types";
 
 export default function LibraryCard(props: LibraryCardProps) {
-  const { author, date, completed } = props;
+  const { author, name, date, completed } = props;
   return (
     <div
       className="flex flex-col items-center border-2 p-5 w-90 h-auto bg-black text-white hover:scale-105 focus:scale-105"
@@ -21,6 +21,9 @@ export default function LibraryCard(props: LibraryCardProps) {
       <div className="items-left mt-2">
         <p className="m-2">
           <span className="bg-white text-black p-0.5">Created by</span> {author}
+        </p>
+        <p className="m-2">
+          <span className="bg-white text-black p-0.5">Puzzle Title</span> {name}
         </p>
         <p className="m-2">
           <span className="bg-white text-black p-0.5">Created on</span> {date}

@@ -44,6 +44,9 @@ export default function CreateCrossword(props: any) {
   );
   const [isGridReady, setIsGridReady] = useState<boolean>(false);
   const [isFocusedOnGrid, setIsFocusedOnGrid] = useState<boolean>(false);
+  const [puzzleTitle, setPuzzleTitle] = useState<string>("");
+
+  const notServer: boolean = true;
 
   const handleGridSizeChange = (
     event: React.ChangeEvent<HTMLSelectElement>
@@ -58,6 +61,13 @@ export default function CreateCrossword(props: any) {
 
   const handleBlackSquaresChange = (): void => {
     setPositionBlackSquares(!positionBlackSquares);
+  };
+
+  const handleTitleChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ): void => {
+    const value: string = event.target.value;
+    setPuzzleTitle(value);
   };
 
   const scrollToClue = (index: number, direction: string): void => {
@@ -220,26 +230,29 @@ export default function CreateCrossword(props: any) {
     const userid = 1;
     const completed = false;
     try {
-      await fetch("/users/grids", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userid,
-          completed,
-          gridSize,
-          currentGridValues,
-          currentGridNumbers,
-          blackSquares,
-          acrossClueValues,
-          downClueValues,
-          clueNumDirection,
-        }),
-      });
-      // setIsSaved(false);
+      await fetch(
+        `${notServer ? `http://localhost:3000/users/grids` : `/users/grids`}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userid,
+            completed,
+            puzzleTitle,
+            gridSize,
+            currentGridValues,
+            currentGridNumbers,
+            blackSquares,
+            acrossClueValues,
+            downClueValues,
+            clueNumDirection,
+          }),
+        }
+      );
     } catch (error) {
-      console.log("Server error:", error);
+      throw new Error();
     }
   }
   const updateGridDimensions = () => {
@@ -293,6 +306,15 @@ export default function CreateCrossword(props: any) {
             id="checkbox"
             className="m-2 custom-checkbox"
             onClick={handleBlackSquaresChange}
+          />
+        </label>
+        <label className="text-xl flex items-center">
+          Puzzle Title:
+          <input
+            type="text"
+            id="title"
+            className="m-2 bg-white border-2"
+            onChange={(e) => handleTitleChange(e)}
           />
         </label>
       </div>

@@ -1,16 +1,13 @@
 import { useEffect, useRef } from "react";
-import type { CrosswordGridProps } from "../utils/types";
+import type { SolverGridProps } from "../utils/types";
 
-export default function CrosswordGrid(props: CrosswordGridProps) {
+export default function CrosswordGrid(props: SolverGridProps) {
   const {
     gridSize,
     gridDimensions,
-    positionBlackSquares,
     addInputs,
     currentGridNumbers,
-    setCurrentGridNumbers,
     blackSquares,
-    setBlackSquares,
     isFocusedCell,
     setIsFocusedCell,
     setIsFocusedClue,
@@ -26,28 +23,13 @@ export default function CrosswordGrid(props: CrosswordGridProps) {
     setIsFocusedOnGrid,
     currentGridValues,
     setCurrentGridValues,
-    handleClear,
-    assignNumbers,
   } = props;
   const currentCell = useRef(-1);
   const inputRefs = useRef<(HTMLInputElement | null)[]>(
     Array(gridSize * gridSize).fill(null)
   );
   const handleCellClick = (index: number): void => {
-    const cleanArray: boolean[] = Array(gridSize * gridSize).fill(false);
-
-    if (positionBlackSquares) {
-      // Set black squares
-      const newblackSquares: boolean[] = [...blackSquares];
-      newblackSquares[index] = !newblackSquares[index];
-      setBlackSquares(newblackSquares);
-      setCurrentGridNumbers(assignNumbers(newblackSquares));
-      setIsFocusedCell(cleanArray);
-      setIsFocusedClue(cleanArray);
-      setIsSecondaryFocusedCell(cleanArray);
-    } else {
-      handleFocus(index, isHighlightAcross, false);
-    }
+    handleFocus(index, isHighlightAcross, false);
   };
 
   const handleUserInput = (
@@ -107,23 +89,21 @@ export default function CrosswordGrid(props: CrosswordGridProps) {
     const previousCell: number = currentCell.current;
     currentCell.current = index;
 
-    if (!positionBlackSquares && !blackSquares[index]) {
-      let newHighlightAcross: boolean = isAcrossHighlight;
-      if (previousCell === index && !isBackspace) {
-        newHighlightAcross = !isHighlightAcross;
-        setIsHighlightAcross(newHighlightAcross);
-      }
-      // Handle focused cell
-      const newFocusGrid: boolean[] = Array(gridSize * gridSize).fill(false);
-      newFocusGrid[index] = true;
-      setIsFocusedCell(newFocusGrid);
-
-      if (inputRefs.current[index]) {
-        inputRefs.current[index]?.focus();
-      }
-
-      handleSecondaryFocus(index, newHighlightAcross);
+    let newHighlightAcross: boolean = isAcrossHighlight;
+    if (previousCell === index && !isBackspace) {
+      newHighlightAcross = !isHighlightAcross;
+      setIsHighlightAcross(newHighlightAcross);
     }
+    // Handle focused cell
+    const newFocusGrid: boolean[] = Array(gridSize * gridSize).fill(false);
+    newFocusGrid[index] = true;
+    setIsFocusedCell(newFocusGrid);
+
+    if (inputRefs.current[index]) {
+      inputRefs.current[index]?.focus();
+    }
+
+    handleSecondaryFocus(index, newHighlightAcross);
   };
 
   const handleSecondaryFocus = (index: number, acrossHighlight: boolean) => {
@@ -328,7 +308,7 @@ export default function CrosswordGrid(props: CrosswordGridProps) {
   const handleKeyDown = (event: KeyboardEvent): void => {
     const index: number = currentCell.current;
     event.stopPropagation();
-    if (event.key === "Backspace" && isFocusedOnGrid) {
+    if (event.key === "Backspace") {
       if (currentGridValues[index] === "" && isHighlightAcross) {
         handleArrowLeft(index);
       } else if (currentGridValues[index] === "" && !isHighlightAcross) {
@@ -649,10 +629,6 @@ export default function CrosswordGrid(props: CrosswordGridProps) {
     }
   }, [clueToCellHighlight]);
 
-  useEffect(() => {
-    handleClear();
-  }, [gridSize]);
-
   return (
     <div
       className="grid border-y-3 border-r-3 border-x-2 border-black w-40vw"
@@ -689,9 +665,7 @@ export default function CrosswordGrid(props: CrosswordGridProps) {
             <input
               type="text"
               maxLength={1}
-              className={`w-full h-full text-center absolute top-0 left-0 ${
-                positionBlackSquares ? "cursor-pointer" : ""
-              }`}
+              className={`w-full h-full text-center absolute top-0 left-0`}
               onChange={(e) => handleUserInput(e, index)}
               value={currentGridValues[index]}
               ref={(el) => {

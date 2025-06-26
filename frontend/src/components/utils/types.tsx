@@ -15,6 +15,7 @@ export interface HomeCardProps {
 
 export interface LibraryCardProps {
   author: string;
+  name: string;
   date: string;
   completed: boolean;
 }
@@ -97,6 +98,59 @@ export interface CrosswordClueProps {
     direction: string,
     index: number
   ) => void;
+  mapClues: (
+    prevState: React.ReactElement<
+      unknown,
+      string | React.JSXElementConstructor<any>
+    >[]
+  ) => React.ReactNode;
+}
+
+export interface SolverGridProps {
+  gridSize: number;
+  gridDimensions: string;
+  addInputs: boolean;
+  currentGridNumbers: number[];
+  blackSquares: boolean[];
+  isFocusedCell: boolean[];
+  isSecondaryFocusedCell: boolean[];
+  isHighlightAcross: boolean;
+  clueNumDirection: string[][];
+  clueToCellHighlight: number;
+  isAcrossClueHighlight: boolean;
+  isFocusedOnGrid: boolean;
+  currentGridValues: string[];
+  setIsFocusedCell: (
+    value: boolean[] | ((prevState: boolean[]) => boolean[])
+  ) => void;
+  setIsFocusedClue: (
+    value: boolean[] | ((prevState: boolean[]) => boolean[])
+  ) => void;
+  setIsSecondaryFocusedCell: (
+    value: boolean[] | ((prevState: boolean[]) => boolean[])
+  ) => void;
+  setIsHighlightAcross: (
+    value: boolean | ((prevState: boolean) => boolean)
+  ) => void;
+  setIsFocusedOnGrid: (
+    value: boolean | ((prevState: boolean) => boolean)
+  ) => void;
+  setCurrentGridValues: (
+    value: string[] | ((prevState: string[]) => string[])
+  ) => void;
+  scrollToClue: (index: number, direction: string) => void;
+}
+
+export interface SolverClueProps {
+  gridSize: number;
+  currentGridNumbers: number[];
+  gridDimensions: string;
+  isFocusedCell: boolean[];
+  clueNumDirection: string[][];
+  acrossClueValues: string[];
+  downClueValues: string[];
+  isFocusedClue: boolean[];
+  handleFocusClue: (index: number, direction: string) => void;
   mapClues: (
     prevState: React.ReactElement<
       unknown,
