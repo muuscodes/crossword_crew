@@ -9,11 +9,11 @@ import Create from "./components/AuthContent/Create.tsx";
 import NoPage from "./components/BaseContent/NoPage.tsx";
 import Account from "./components/AuthContent/Account.tsx";
 import Solver from "./components/SolveCrossword/Solver.tsx";
+import Editor from "./components/EditCrossword/Editor.tsx";
 // import useAuth from "./context/AuthContext";
 
 function App() {
   const isAuthenticated: boolean = true; // Should be gloabl user
-
   return (
     <BrowserRouter>
       <Layout isAuthenticated={isAuthenticated}>
@@ -38,6 +38,10 @@ function App() {
           <Route
             path="solver"
             element={isAuthenticated ? <Solver /> : <Navigate to="/" />}
+          />
+          <Route
+            path="editor"
+            element={isAuthenticated ? <Editor /> : <Navigate to="/" />}
           />
           <Route path="*" element={<NoPage />} />
         </Routes>

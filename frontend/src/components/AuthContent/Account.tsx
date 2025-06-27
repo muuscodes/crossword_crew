@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 export default function Account() {
   const [userData, setUserData] = useState<any>("");
-  const notServer: boolean = true;
+  const notServer: boolean = false;
 
   async function getUserData() {
     try {

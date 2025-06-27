@@ -4,11 +4,6 @@
   font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
 }
 
-.navbar {
-  text-shadow: 0px 10px 20px rgba(255, 255, 255, 0.5);
-  max-height: 10vh;
-}
-
 @keyframes open-menu {
   0% {
     transform: scaleY(0);
@@ -52,7 +47,7 @@
   inset: 0;
   background: rgba(0, 0, 0, 0.834);
   opacity: 0.8;
-  z-index: 99;
+  z-index: 9;
   border: none;
   width: 100%;
   box-shadow: unset;
@@ -96,6 +91,7 @@
 .fancyButton:hover {
   box-shadow: 0 0 0 0 black;
   transform: translate(3px, 3px);
+  cursor: pointer;
 }
 
 .fancyButton:active {

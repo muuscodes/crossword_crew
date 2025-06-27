@@ -5,7 +5,7 @@ export default function LibraryCard(props: LibraryCardProps) {
   const { author, name, date, completed } = props;
   return (
     <div
-      className="flex flex-col items-center border-2 p-5 w-90 h-auto bg-black text-white hover:scale-105 focus:scale-105"
+      className="flex flex-col items-center border-2 p-5 w-90 h-auto bg-black text-white hover:scale-105 focus:scale-105 shadow-2xl"
       tabIndex={0}
     >
       <a

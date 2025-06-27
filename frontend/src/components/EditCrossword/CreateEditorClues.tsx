@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import React from "react";
-import ClueInit from "./ClueInit";
 import type { CrosswordClueProps } from "../utils/types";
 
 export default function CreateClues(props: CrosswordClueProps) {
@@ -73,7 +72,6 @@ export default function CreateClues(props: CrosswordClueProps) {
           wrap="soft"
           className={`border-1 w-7/8 ${isHighlight ? "bg-blue-200" : ""}`}
           onFocus={() => handleFocusClue(index, direction)}
-          // onChange={(e) => handleUserInput(e, id, index)}
           onChange={(e) => handleInputChangeClue(e, direction, index)}
         ></textarea>
       </li>
@@ -117,18 +115,6 @@ export default function CreateClues(props: CrosswordClueProps) {
       blackSquares
     ) {
       hasInitialized.current = true;
-      const [acrossCluesInit, downCluesInit, clueDirectionsInit] = ClueInit({
-        gridSize,
-        currentGridNumbers,
-        isFocusedClue,
-        isFocusedCell,
-        clueNumDirection,
-        handleFocusClue,
-        handleUserInputClue,
-      });
-      setAcrossClues(acrossCluesInit);
-      setDownClues(downCluesInit);
-      setClueNumDirection(clueDirectionsInit);
     }
   }, [gridSize, currentGridNumbers]);
 

@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function LandingCrossword() {
   const gridSize: number = 5;
-  const gridDimensions: string = "25vw";
+  const [gridDimensions, setGridDimensions] = useState<string>("25vw");
+  const [gridHeight, setGridHeight] = useState<string>(gridDimensions + "5px");
   const [currentGridNumbers, setCurrentGridNumbers] = useState<
     (number | null)[]
   >([
@@ -99,6 +100,28 @@ export default function LandingCrossword() {
     }
   };
 
+  const updateGridDimensions = () => {
+    const newWidth: string =
+      window.innerWidth < 420
+        ? "310px"
+        : window.innerWidth < 1024
+        ? "387.5px"
+        : gridDimensions;
+    const newHeight: string =
+      window.innerWidth < 768 ? "h-fit" : `${gridDimensions} + 5px`;
+    setGridDimensions(newWidth);
+    setGridHeight(newHeight);
+  };
+
+  useEffect(() => {
+    window.addEventListener("resize", updateGridDimensions);
+    updateGridDimensions();
+
+    return () => {
+      window.removeEventListener("resize", updateGridDimensions);
+    };
+  }, []);
+
   return (
     <div
       className="grid border-3 border-black"
@@ -106,7 +129,7 @@ export default function LandingCrossword() {
         gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
         gridTemplateRows: `repeat(${gridSize}, 1fr)`,
         width: `calc(${gridDimensions} + 5px)`,
-        height: `calc(${gridDimensions} + 5px)`,
+        height: gridHeight,
       }}
     >
       {Array.from({ length: gridSize * gridSize }, (_, index) => (

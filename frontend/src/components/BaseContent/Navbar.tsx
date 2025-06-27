@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import favicon from "../../img/favicon.jpg";
 import type { NavbarProps } from "../utils/types";
 
@@ -13,7 +13,7 @@ export default function Navbar(props: NavbarProps) {
   const landingButton = (
     <button
       onClick={() => setShowModal(true)}
-      className="p-3 mr-5 lg:text-3xl text-xl text-white hover:opacity-50 hover:text-red navbar"
+      className="p-3 mr-5 lg:text-3xl text-xl text-white hover:opacity-50 max-h-[10vh] hover:scale-110 hover:cursor-pointer"
     >
       Sign In | Sign Up
     </button>
@@ -38,6 +38,17 @@ export default function Navbar(props: NavbarProps) {
     );
   };
 
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isMenuOpen]);
+
   return (
     <header className=" bg-black text-white z-10">
       <section className="p-4 flex justify-between items-center">
@@ -51,7 +62,7 @@ export default function Navbar(props: NavbarProps) {
             <img
               src={favicon}
               alt="Crossword 3D image"
-              className="navbar inline ml-2"
+              className="max-h-[10vh] inline ml-2"
             />
           </a>
 
@@ -61,7 +72,7 @@ export default function Navbar(props: NavbarProps) {
             id="home-words"
             aria-label="Crossword crew home page"
           >
-            <h1 className="font-extrabold text-2xl lg:text-4xl inline">
+            <h1 className="font-extrabold lg:text-4xl sm:inline hidden sm:text-2xl md:text-3xl">
               Crossword Crew
             </h1>
           </a>
@@ -80,6 +91,7 @@ export default function Navbar(props: NavbarProps) {
               {createMenuNavLink("/contact", "Contact")}
               {createMenuNavLink("/account", "Account")}
               {createMenuNavLink("/solver", "Solver")}
+              {createMenuNavLink("/editor", "Editor")}
             </nav>
           </div>
         ) : (

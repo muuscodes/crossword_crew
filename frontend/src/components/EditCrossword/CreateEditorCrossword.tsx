@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import React from "react";
-import CrosswordGrid from "./CrosswordGrid";
-import CreateClues from "./CreateClues";
-import ClueInit from "./ClueInit";
+import CrosswordGrid from "./CrosswordEditorGrid";
+import CreateClues from "./CreateEditorClues";
 
 export default function CreateCrossword(props: any) {
   const { setIsSaved } = props;
@@ -47,16 +46,30 @@ export default function CreateCrossword(props: any) {
   const [puzzleTitle, setPuzzleTitle] = useState<string>("");
 
   const notServer: boolean = true;
+  const userId = 1;
+  const gridId = 4;
 
-  const handleGridSizeChange = (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ): void => {
-    const value: number = parseInt(event.target.value);
-    setGridDimensions(value <= 7 ? "30vw" : value <= 11 ? "35vw" : "40vw");
-    setGridSize(value);
-    setCurrentGridNumbers(Array(value * value).fill(null));
-    setBlackSquares(Array(value * value).fill(false));
-    setIsGridReady(false);
+  const getCrosswordData = async () => {
+    try {
+      const response = await fetch(
+        `${
+          notServer
+            ? `http://localhost:3000/users/${userId}/solver/${gridId}`
+            : `/users/${userId}/solver/${gridId}`
+        }`
+      );
+      const result = await response.json();
+      setGridSize(result[0].grid_size);
+      setCurrentGridNumbers(result[0].grid_numbers);
+      setCurrentGridValues(result[0].grid_values);
+      setBlackSquares(result[0].black_squares);
+      setClueNumDirection(result[0].clue_number_directions);
+      setDownClueValues(result[0].down_clues);
+      setPuzzleTitle(result[0].puzzle_title);
+      setAcrossClueValues(result[0].across_clues);
+    } catch (error) {
+      throw new Error();
+    }
   };
 
   const handleBlackSquaresChange = (): void => {
@@ -151,20 +164,6 @@ export default function CreateCrossword(props: any) {
     setCurrentGridValues(cleanArrayString);
     const newNumbers = assignNumbers(cleanArrayBool);
     setCurrentGridNumbers(newNumbers);
-    const [acrossCluesInit, downCluesInit, clueDirectionsInit] = ClueInit({
-      gridSize,
-      currentGridNumbers,
-      isFocusedClue,
-      isFocusedCell,
-      clueNumDirection,
-      handleFocusClue,
-      handleInputChangeClue,
-    });
-    setAcrossClues(acrossCluesInit);
-    setDownClues(downCluesInit);
-    setClueNumDirection(clueDirectionsInit);
-    mapClues(acrossCluesInit);
-    mapClues(downCluesInit);
   };
 
   const handleFocusClue = (index: number, direction: string): void => {
@@ -272,6 +271,7 @@ export default function CreateCrossword(props: any) {
   };
 
   useEffect(() => {
+    getCrosswordData();
     window.addEventListener("resize", updateGridDimensions);
     updateGridDimensions();
 
@@ -283,25 +283,6 @@ export default function CreateCrossword(props: any) {
   return (
     <div className="flex flex-col items-center m-auto border-4 w-fit shadow-2xl h-fit">
       <div className="flex flex-col md:flex-row justify-around items-center w-full bg-gray-200">
-        <div>
-          <label className="text-xl mr-1" htmlFor="gridSize">
-            Grid Size:
-          </label>
-          <select
-            name="gridSize"
-            id="gridSize"
-            value={gridSize}
-            onChange={handleGridSizeChange}
-            className="border-1 text-xl bg-white"
-          >
-            <option value="5">5</option>
-            <option value="7">7</option>
-            <option value="9">9</option>
-            <option value="11">11</option>
-            <option value="13">13</option>
-            <option value="15">15</option>
-          </select>
-        </div>
         <label className="text-xl flex items-center">
           Set Black Squares
           <input

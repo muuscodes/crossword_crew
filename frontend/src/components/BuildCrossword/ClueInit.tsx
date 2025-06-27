@@ -63,7 +63,7 @@ export default function ClueInit(
           defaultValue={value}
           style={{ resize: "none", fontSize: "1.25rem" }}
           wrap="true"
-          className={`border-1 ${isHighlight ? "bg-blue-200" : ""}`}
+          className={`border-1 w-7/8 ${isHighlight ? "bg-blue-200" : ""}`}
           onFocus={() => handleFocusClue(index, direction)}
           // onChange={(e) => handleUserInput(e, parseInt(id))}
           onChange={(e) => handleInputChangeClue(e, direction, index)}

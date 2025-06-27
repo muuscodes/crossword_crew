@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import React from "react";
 import CreateSolverGrid from "./CreateSolverGrid.tsx";
 import CreateSolverClues from "./CreateSolverClues.tsx";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faLessThan } from "@fortawesome/free-solid-svg-icons";
+import { faGreaterThan } from "@fortawesome/free-solid-svg-icons";
 
 export default function CreateSolverCrossword() {
   const [gridSize, setGridSize] = useState<number>(5);
@@ -39,10 +42,12 @@ export default function CreateSolverCrossword() {
   const [isGridReady, setIsGridReady] = useState<boolean>(false);
   const [isFocusedOnGrid, setIsFocusedOnGrid] = useState<boolean>(false);
   const [puzzleTitle, setPuzzleTitle] = useState<string>("");
+  const [clueIndicatorRight, setClueIndicatorRight] = useState<number>(0);
+  const [clueIndicatorDown, setClueIndicatorDown] = useState<number>(-1);
 
   const notServer: boolean = true;
   const userId = 1;
-  const gridId = 3;
+  const gridId = 4;
 
   const getCrosswordData = async () => {
     try {
@@ -71,9 +76,23 @@ export default function CreateSolverCrossword() {
 
   const handleClueIndicator = (): string => {
     let clue: string = "";
-    if (isFocusedClue.indexOf(true) > 0) {
+
+    if (isFocusedClue.indexOf(true) >= 0 || isFocusedCell.indexOf(true) > 0) {
       const index = isFocusedClue.indexOf(true);
-      if (isHighlightAcross) {
+
+      if (acrossClueValues[index] && downClueValues[index]) {
+        if (isHighlightAcross) {
+          clue =
+            currentGridNumbers[index]?.toString() +
+            "A | " +
+            acrossClueValues[index];
+        } else {
+          clue =
+            currentGridNumbers[index]?.toString() +
+            "D | " +
+            downClueValues[index];
+        }
+      } else if (acrossClueValues[index]) {
         clue =
           currentGridNumbers[index]?.toString() +
           "A | " +
@@ -89,15 +108,18 @@ export default function CreateSolverCrossword() {
   };
 
   const scrollToClue = (index: number, direction: string): void => {
-    const containerId: string =
-      direction === "across"
-        ? "scrollableContainerAcross"
-        : "scrollableContainerDown";
-    const container: HTMLElement | null = document.getElementById(containerId);
-    const clueElement: Element | undefined =
-      container?.querySelector("ul")?.children[index];
-    if (clueElement) {
-      clueElement.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    if (window.innerWidth > 767) {
+      const containerId: string =
+        direction === "across"
+          ? "scrollableContainerAcross"
+          : "scrollableContainerDown";
+      const container: HTMLElement | null =
+        document.getElementById(containerId);
+      const clueElement: Element | undefined =
+        container?.querySelector("ul")?.children[index];
+      if (clueElement) {
+        clueElement.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
     }
   };
 
@@ -128,9 +150,9 @@ export default function CreateSolverCrossword() {
     setIsFocusedClue(newFocusedClues);
     setClueToCellHighlight(index);
     let isAcrossHighlight: boolean = true;
-    if (direction === "across") {
-      isAcrossHighlight = true;
-    } else isAcrossHighlight = false;
+    if (direction === "down") {
+      isAcrossHighlight = false;
+    }
     setIsAcrossClueHighlight(isAcrossHighlight);
   };
 
@@ -198,13 +220,23 @@ export default function CreateSolverCrossword() {
 
   return (
     <section>
-      <h1 className="text-center text-5xl my-5">{puzzleTitle}</h1>
+      <h1 className="text-center text-5xl my-5">{`Title: ${puzzleTitle}`}</h1>
       <div className="flex flex-col items-center m-auto border-4 w-fit shadow-2xl h-fit">
         <div className="flex flex-col md:flex-row justify-around items-center w-full bg-gray-200">
-          <div className="flex flex-row justify-between p-2 bg-white w-4/5 my-3 border-2 text-2xl">
-            <p>Arrow</p>
-            <p>{handleClueIndicator()}</p>
-            <p>Arrow</p>
+          <div className="flex flex-row justify-between p-2 bg-white w-4/5 my-3 border-2 text-2xl items-center">
+            <FontAwesomeIcon
+              icon={faLessThan}
+              className="hover:scale-120 hover:opacity-50"
+              onClick={() => setClueIndicatorRight(-1)}
+            />
+            <p className="w-3/5" onClick={() => setClueIndicatorDown(1)}>
+              {handleClueIndicator()}
+            </p>
+            <FontAwesomeIcon
+              icon={faGreaterThan}
+              className="hover:scale-120 hover:opacity-50"
+              onClick={() => setClueIndicatorRight(1)}
+            />
           </div>
         </div>
         <div
@@ -232,6 +264,10 @@ export default function CreateSolverCrossword() {
             setIsFocusedOnGrid={setIsFocusedOnGrid}
             currentGridValues={currentGridValues}
             setCurrentGridValues={setCurrentGridValues}
+            clueIndicatorRight={clueIndicatorRight}
+            setClueIndicatorRight={setClueIndicatorRight}
+            clueIndicatorDown={clueIndicatorDown}
+            setClueIndicatorDown={setClueIndicatorDown}
           />
 
           {isGridReady && (

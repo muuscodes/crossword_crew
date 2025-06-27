@@ -1,12 +1,12 @@
 import express from "express";
-import passport from "passport";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
-const PORT = process.env.PORT || 3000;
-const app = express();
 import { connectToDatabase } from "./db.js";
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+const PORT = process.env.PORT || 3000;
+
+const app = express();
 
 // Get the file path from the URL of the current module
 const __filename = fileURLToPath(import.meta.url);

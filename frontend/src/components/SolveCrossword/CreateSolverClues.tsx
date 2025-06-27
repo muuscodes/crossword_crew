@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import React from "react";
 import type { SolverClueProps } from "../utils/types";
 
@@ -19,6 +19,8 @@ export default function CreateClues(props: SolverClueProps) {
     []
   );
   const [downClueInit, setDownClueInit] = useState<React.ReactElement[]>([]);
+  const [clueWidth, setClueWidth] = useState<string>(gridDimensions + "5px");
+  const hasInitialized = useRef(false);
 
   const createClue = (
     id: string,
@@ -58,18 +60,13 @@ export default function CreateClues(props: SolverClueProps) {
     return (
       <li className="flex">
         <p className="font-bold mr-2 w-4 text-right">{id}</p>
-        <textarea
-          id={id + direction}
-          cols={30}
-          rows={1}
-          tabIndex={0}
-          defaultValue={value}
-          contentEditable="false"
-          style={{ resize: "none", fontSize: "1.25rem" }}
-          wrap="soft"
-          className={`border-1 ${isHighlight ? "bg-blue-200" : ""}`}
-          onFocus={() => handleFocusClue(index, direction)}
-        ></textarea>
+        <p
+          className={`text-xl text-left border-b-1 cursor-pointer w-7/8
+          ${isHighlight ? "bg-blue-200" : ""}`}
+          onClick={() => handleFocusClue(index, direction)}
+        >
+          {value}
+        </p>
       </li>
     );
   };
@@ -139,11 +136,77 @@ export default function CreateClues(props: SolverClueProps) {
 
   useEffect(() => {
     if (
+      hasInitialized.current &&
+      acrossClueInit.length > 0 &&
+      downClueInit.length > 0
+    ) {
+      const newAcrossClues: React.ReactElement[] = [];
+      const newDownClues: React.ReactElement[] = [];
+
+      for (let index = 0; index < gridSize * gridSize; index++) {
+        if (
+          clueNumDirection[index][0] &&
+          clueNumDirection[index][0] === "across"
+        ) {
+          const newAcrossClue = createClue(
+            currentGridNumbers[index]?.toString(),
+            acrossClueValues[index],
+            index,
+            "across"
+          );
+          if (newAcrossClue) {
+            newAcrossClues.push(newAcrossClue);
+          }
+        }
+        if (
+          clueNumDirection[index][1] &&
+          clueNumDirection[index][1] === "down"
+        ) {
+          const newDownClue = createClue(
+            currentGridNumbers[index]?.toString(),
+            downClueValues[index],
+            index,
+            "down"
+          );
+          if (newDownClue) {
+            newDownClues.push(newDownClue);
+          }
+        }
+      }
+
+      setAcrossClueInit(newAcrossClues);
+      setDownClueInit(newDownClues);
+    }
+  }, [isFocusedClue, isFocusedCell]);
+
+  useEffect(() => {
+    if (
+      !hasInitialized.current &&
       currentGridNumbers.some((num) => num !== null) &&
       clueNumDirection.some((elem) => elem[0])
     ) {
+      hasInitialized.current = true;
       initialize();
     }
+  }, []);
+
+  const updateGridDimensions = () => {
+    const newWidth: string =
+      window.innerWidth < 420
+        ? " 325px"
+        : window.innerWidth < 768
+        ? "392.5px"
+        : `calc(${gridDimensions} * 0.8 + 5px)`;
+    setClueWidth(newWidth);
+  };
+
+  useEffect(() => {
+    window.addEventListener("resize", updateGridDimensions);
+    updateGridDimensions();
+
+    return () => {
+      window.removeEventListener("resize", updateGridDimensions);
+    };
   }, []);
 
   return (
@@ -160,6 +223,7 @@ export default function CreateClues(props: SolverClueProps) {
         <div
           id="scrollableContainerAcross"
           className="border-2 p-2 bg-white overflow-y-auto h-6/8"
+          style={{ width: clueWidth }}
         >
           <ul className="mt-3 list-none">{mapClues(acrossClueInit)}</ul>
         </div>
@@ -173,6 +237,7 @@ export default function CreateClues(props: SolverClueProps) {
         <div
           id="scrollableContainerDown"
           className="border-2 p-2 bg-white overflow-y-auto h-6/8"
+          style={{ width: clueWidth }}
         >
           <ul className="mt-3 list-none">{mapClues(downClueInit)}</ul>
         </div>

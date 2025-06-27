@@ -120,6 +120,8 @@ export interface SolverGridProps {
   isAcrossClueHighlight: boolean;
   isFocusedOnGrid: boolean;
   currentGridValues: string[];
+  clueIndicatorRight: number;
+  clueIndicatorDown: number;
   setIsFocusedCell: (
     value: boolean[] | ((prevState: boolean[]) => boolean[])
   ) => void;
@@ -139,6 +141,12 @@ export interface SolverGridProps {
     value: string[] | ((prevState: string[]) => string[])
   ) => void;
   scrollToClue: (index: number, direction: string) => void;
+  setClueIndicatorRight: (
+    value: number | ((prevState: number) => number)
+  ) => void;
+  setClueIndicatorDown: (
+    value: number | ((prevState: number) => number)
+  ) => void;
 }
 
 export interface SolverClueProps {

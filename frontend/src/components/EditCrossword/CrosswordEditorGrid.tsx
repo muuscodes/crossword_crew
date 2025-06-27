@@ -1,13 +1,16 @@
 import { useEffect, useRef } from "react";
-import type { SolverGridProps } from "../utils/types";
+import type { CrosswordGridProps } from "../utils/types";
 
-export default function CrosswordGrid(props: SolverGridProps) {
+export default function CrosswordGrid(props: CrosswordGridProps) {
   const {
     gridSize,
     gridDimensions,
+    positionBlackSquares,
     addInputs,
     currentGridNumbers,
+    setCurrentGridNumbers,
     blackSquares,
+    setBlackSquares,
     isFocusedCell,
     setIsFocusedCell,
     setIsFocusedClue,
@@ -23,17 +26,28 @@ export default function CrosswordGrid(props: SolverGridProps) {
     setIsFocusedOnGrid,
     currentGridValues,
     setCurrentGridValues,
-    clueIndicatorRight,
-    setClueIndicatorRight,
-    clueIndicatorDown,
-    setClueIndicatorDown,
+    handleClear,
+    assignNumbers,
   } = props;
   const currentCell = useRef(-1);
   const inputRefs = useRef<(HTMLInputElement | null)[]>(
     Array(gridSize * gridSize).fill(null)
   );
   const handleCellClick = (index: number): void => {
-    handleFocus(index, isHighlightAcross, false);
+    const cleanArray: boolean[] = Array(gridSize * gridSize).fill(false);
+
+    if (positionBlackSquares) {
+      // Set black squares
+      const newblackSquares: boolean[] = [...blackSquares];
+      newblackSquares[index] = !newblackSquares[index];
+      setBlackSquares(newblackSquares);
+      setCurrentGridNumbers(assignNumbers(newblackSquares));
+      setIsFocusedCell(cleanArray);
+      setIsFocusedClue(cleanArray);
+      setIsSecondaryFocusedCell(cleanArray);
+    } else {
+      handleFocus(index, isHighlightAcross, false);
+    }
   };
 
   const handleUserInput = (
@@ -89,11 +103,11 @@ export default function CrosswordGrid(props: SolverGridProps) {
     isAcrossHighlight: boolean,
     isBackspace: boolean
   ): void => {
-    if (!blackSquares[index]) {
-      setIsFocusedOnGrid(true);
-      const previousCell: number = currentCell.current;
-      currentCell.current = index;
+    setIsFocusedOnGrid(true);
+    const previousCell: number = currentCell.current;
+    currentCell.current = index;
 
+    if (!positionBlackSquares && !blackSquares[index]) {
       let newHighlightAcross: boolean = isAcrossHighlight;
       if (previousCell === index && !isBackspace) {
         newHighlightAcross = !isHighlightAcross;
@@ -314,7 +328,7 @@ export default function CrosswordGrid(props: SolverGridProps) {
   const handleKeyDown = (event: KeyboardEvent): void => {
     const index: number = currentCell.current;
     event.stopPropagation();
-    if (event.key === "Backspace") {
+    if (event.key === "Backspace" && isFocusedOnGrid) {
       if (currentGridValues[index] === "" && isHighlightAcross) {
         handleArrowLeft(index);
       } else if (currentGridValues[index] === "" && !isHighlightAcross) {
@@ -580,36 +594,6 @@ export default function CrosswordGrid(props: SolverGridProps) {
   }, []);
 
   useEffect(() => {
-    if (clueIndicatorRight !== 0) {
-      const acrossIndices: number[] = [];
-      const downIndices: number[] = [];
-      const index = currentCell.current;
-      clueNumDirection.forEach((item: string[], index: number) => {
-        if (item[0] === "across") {
-          acrossIndices.push(index);
-        }
-        if (item[1] === "down") {
-          downIndices.push(index);
-        }
-      });
-      if (clueIndicatorRight < 0) {
-        handleShiftTab(index, 0, acrossIndices, downIndices);
-      } else if (clueIndicatorRight > 0) {
-        handleTab(index, 0, acrossIndices, downIndices);
-      }
-      setClueIndicatorRight(0);
-    }
-  }, [clueIndicatorRight]);
-
-  useEffect(() => {
-    if (clueIndicatorDown > 0) {
-      const index = currentCell.current;
-      handleFocus(index, !isHighlightAcross, false);
-      setClueIndicatorDown(-1);
-    }
-  }, [clueIndicatorDown]);
-
-  useEffect(() => {
     const index: number = clueToCellHighlight;
     const hasNonNullValues: boolean = currentGridNumbers.some(
       (value: number) => value !== null
@@ -665,6 +649,10 @@ export default function CrosswordGrid(props: SolverGridProps) {
     }
   }, [clueToCellHighlight]);
 
+  useEffect(() => {
+    handleClear();
+  }, [gridSize]);
+
   return (
     <div
       className="grid border-y-3 border-r-3 border-x-2 border-black w-40vw"
@@ -701,7 +689,9 @@ export default function CrosswordGrid(props: SolverGridProps) {
             <input
               type="text"
               maxLength={1}
-              className={`w-full h-full text-center absolute top-0 left-0`}
+              className={`w-full h-full text-center absolute top-0 left-0 ${
+                positionBlackSquares ? "cursor-pointer" : ""
+              }`}
               onChange={(e) => handleUserInput(e, index)}
               value={currentGridValues[index]}
               ref={(el) => {

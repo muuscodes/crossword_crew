@@ -18,7 +18,7 @@ export default function LandingPage() {
           resize: "none",
           fontSize: "1.25rem",
         }}
-        wrap="soft"
+        className="w-[200px]"
         onChange={(e) => {
           const target = e.target;
           target.style.height = "auto";
@@ -68,7 +68,7 @@ export default function LandingPage() {
               <h3 className="text-5xl font-bold m-atuo pb-15">
                 Edit hints with ease:
               </h3>
-              <div className="border-2 rounded-sm p-2 mb-2 bg-white w-1/2 md:w-1/3 lg:w-1/2 m-auto flex-col items-center">
+              <div className="border-2 rounded-sm p-2 mb-2 bg-white w-1/2 md:w-1/3 lg:w-2/3 xl:w-2/5 m-auto flex-col items-center">
                 <h4 className="font-bold text-3xl">Across:</h4>
                 <ol className="mt-3">
                   {createClue("1", "The man with a cane")}

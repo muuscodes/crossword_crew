@@ -1,5 +1,6 @@
 import LibraryCard from "./LibraryCard";
 import { useState, useEffect } from "react";
+import { format } from "date-fns";
 
 export default function Library() {
   const [userData, setUserData] = useState<string[]>([]);
@@ -28,12 +29,16 @@ export default function Library() {
           time_created: "",
           completed_status: "",
         };
-        newData.time_created = element.time_created;
+
         newData.completed_status = element.completed_status;
         newData.puzzle_title = element.puzzle_title;
         if (newData.puzzle_title === "") {
           newData.puzzle_title = "Crossword Puzzle";
         }
+
+        const date = element.time_created;
+        const formattedDate = format(date, "MMMM d, yyyy 'at' h:mm a");
+        newData.time_created = formattedDate;
         newUserData.push(newData);
         const newCard = (
           <LibraryCard
