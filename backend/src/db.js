@@ -1,4 +1,3 @@
-import { Client } from "pg";
 import { Pool } from "pg";
 import dotenv from "dotenv";
 dotenv.config();
@@ -8,7 +7,7 @@ const host = process.env.DB_HOST;
 const port = process.env.DB_PORT;
 const db_name = process.env.DB_NAME;
 
-export const pool = new Pool({
+const pool = new Pool({
   user: user,
   password: pw,
   host: host,
@@ -16,26 +15,19 @@ export const pool = new Pool({
   database: db_name,
 });
 
-const createClient = () => {
-  return new Client({
-    user: user,
-    host: host,
-    database: db_name,
-    password: pw,
-    port: port,
-  });
-};
+console.log("Database connection pool created");
 
-const connectToDatabase = async () => {
-  const client = createClient();
+let isShuttingDown = false;
+const shutdownDatabase = async () => {
+  if (isShuttingDown) return; // Prevent multiple shutdowns
+  isShuttingDown = true;
+  console.log("Attempting to close database connection...");
   try {
-    await client.connect();
-    console.log("Successfully connected to db!");
+    await pool.end();
+    console.log("Database connection closed.");
   } catch (err) {
-    console.error("Connection error", err.stack);
-  } finally {
-    await client.end();
+    console.error("Error closing the database connection", err.stack);
   }
 };
 
-export { connectToDatabase, createClient };
+export { pool, shutdownDatabase };

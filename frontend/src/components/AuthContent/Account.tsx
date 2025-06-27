@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Account() {
   const [userData, setUserData] = useState<any>("");
-  const notServer: boolean = false;
+  const notServer = useAuth();
 
   async function getUserData() {
     try {

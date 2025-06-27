@@ -1,11 +1,12 @@
 import LibraryCard from "./LibraryCard";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Library() {
   const [userData, setUserData] = useState<string[]>([]);
   const [userCards, setUserCards] = useState<React.ReactNode[]>([]);
-  const notServer: boolean = true;
+  const notServer = useAuth();
   const userid = 1;
   const handleSort = () => {
     userData;

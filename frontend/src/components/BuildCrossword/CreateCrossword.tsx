@@ -3,6 +3,7 @@ import React from "react";
 import CrosswordGrid from "./CrosswordGrid";
 import CreateClues from "./CreateClues";
 import ClueInit from "./ClueInit";
+import { useAuth } from "../../context/AuthContext";
 
 export default function CreateCrossword(props: any) {
   const { setIsSaved } = props;
@@ -46,7 +47,7 @@ export default function CreateCrossword(props: any) {
   const [isFocusedOnGrid, setIsFocusedOnGrid] = useState<boolean>(false);
   const [puzzleTitle, setPuzzleTitle] = useState<string>("");
 
-  const notServer: boolean = true;
+  const notServer = useAuth();
 
   const handleGridSizeChange = (
     event: React.ChangeEvent<HTMLSelectElement>
@@ -258,6 +259,7 @@ export default function CreateCrossword(props: any) {
       throw new Error();
     }
   }
+
   const updateGridDimensions = () => {
     const newWidth: string =
       window.innerWidth < 420

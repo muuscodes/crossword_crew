@@ -166,3 +166,15 @@ export interface SolverClueProps {
     >[]
   ) => React.ReactNode;
 }
+
+export interface AuthContextType {
+  globalUser: any;
+  globalData: any;
+  setGlobalData: React.Dispatch<React.SetStateAction<any>>;
+  setGlobalUser: React.Dispatch<React.SetStateAction<any>>;
+  isLoading: boolean;
+  signup: (email: string, username: string, password: string) => Promise<void>;
+  login: (username_email: string, password: string) => Promise<void>;
+  logout?: () => Promise<void>;
+  notServer: boolean;
+}

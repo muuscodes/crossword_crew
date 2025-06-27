@@ -10,10 +10,12 @@ import NoPage from "./components/BaseContent/NoPage.tsx";
 import Account from "./components/AuthContent/Account.tsx";
 import Solver from "./components/SolveCrossword/Solver.tsx";
 import Editor from "./components/EditCrossword/Editor.tsx";
-// import useAuth from "./context/AuthContext";
+import { useAuth } from "./context/AuthContext";
 
 function App() {
-  const isAuthenticated: boolean = true; // Should be gloabl user
+  const { globalUser } = useAuth();
+  const isAuthenticated = globalUser ? true : false;
+  // const isData = globalData && !!Object.keys(globalData || {}).length;
   return (
     <BrowserRouter>
       <Layout isAuthenticated={isAuthenticated}>

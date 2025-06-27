@@ -5,6 +5,7 @@ import CreateSolverClues from "./CreateSolverClues.tsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faLessThan } from "@fortawesome/free-solid-svg-icons";
 import { faGreaterThan } from "@fortawesome/free-solid-svg-icons";
+import { useAuth } from "../../context/AuthContext.tsx";
 
 export default function CreateSolverCrossword() {
   const [gridSize, setGridSize] = useState<number>(5);
@@ -45,7 +46,7 @@ export default function CreateSolverCrossword() {
   const [clueIndicatorRight, setClueIndicatorRight] = useState<number>(0);
   const [clueIndicatorDown, setClueIndicatorDown] = useState<number>(-1);
 
-  const notServer: boolean = true;
+  const notServer = useAuth();
   const userId = 1;
   const gridId = 4;
 

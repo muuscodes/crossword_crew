@@ -16,7 +16,7 @@ export default function CreateClues(props: CrosswordClueProps) {
     isFocusedCell,
     clueNumDirection,
     setClueNumDirection,
-    handleUserInputClue,
+    // handleUserInputClue,
     handleFocusClue,
     handleInputChangeClue,
     mapClues,

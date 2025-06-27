@@ -1,26 +1,30 @@
 import express from "express";
+import passport from "passport";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
-import { connectToDatabase } from "./db.js";
+import { shutdownDatabase } from "./db.js";
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import dotenv from "dotenv";
+import {
+  corsMiddleware,
+  sessionMiddleware,
+} from "./middleware/serverMiddleware.js";
+dotenv.config();
 const PORT = process.env.PORT || 3000;
 
 const app = express();
 
-// Get the file path from the URL of the current module
+app.use(sessionMiddleware);
+app.use(passport.initialize());
+app.use(passport.session());
+
 const __filename = fileURLToPath(import.meta.url);
-// Get the directory name from the file path
 const __dirname = dirname(__filename);
 
 // Basic middleware
 app.use(express.json());
-app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
-  res.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-  next();
-});
+app.use(corsMiddleware);
 
 // Serve static files from React app
 app.use(express.static(path.resolve(__dirname, "../../frontend/dist")));
@@ -29,7 +33,7 @@ app.use(express.static(path.resolve(__dirname, "../../frontend/dist")));
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 
-app.all("*catchall", (req, res) => {
+app.all("/{*any}", (req, res) => {
   res.sendFile(
     path.resolve(__dirname, "../../frontend/dist/index.html"),
     (err) => {
@@ -41,16 +45,34 @@ app.all("*catchall", (req, res) => {
   );
 });
 
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send("Something went wrong!");
+});
+
 const startServer = async () => {
   try {
-    const dbClient = await connectToDatabase();
-
     // Start the server
     app.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
     });
+
+    // Handle database shutdown
+    const shutdown = async () => {
+      console.log("Shutting down gracefully...");
+      await shutdownDatabase();
+      server.close(() => {
+        console.log("Server closed.");
+        process.exit(0);
+      });
+    };
+
+    process.on("SIGINT", shutdown); // CTRL + C
+    process.on("SIGTERM", shutdown); // Kill terminal
   } catch (error) {
     console.error("Failed to connect to the database:", error);
+    process.exit(1);
   }
 };
 
