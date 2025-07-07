@@ -1,28 +1,36 @@
-import { useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import React from "react";
-import type { CrosswordClueProps } from "../utils/types";
+import type { EditorClueProps } from "../utils/types";
 
-export default function CreateClues(props: CrosswordClueProps) {
+export default function CreateEditorClues(props: EditorClueProps) {
   const {
     gridSize,
     currentGridNumbers,
     blackSquares,
     gridDimensions,
-    acrossClues,
-    setAcrossClues,
-    downClues,
-    setDownClues,
     isFocusedClue,
     isFocusedCell,
     clueNumDirection,
+    acrossClues,
+    downClues,
+    acrossClueValues,
+    downClueValues,
+    setAcrossClues,
+    setDownClues,
+    setAcrossClueValues,
+    setDownClueValues,
     setClueNumDirection,
-    // handleUserInputClue,
     handleFocusClue,
+    handleUserInputClue,
     handleInputChangeClue,
     mapClues,
   } = props;
 
   const hasInitialized = useRef(false);
+  const [acrossClueInit, setAcrossClueInit] = useState<React.ReactElement[]>(
+    []
+  );
+  const [downClueInit, setDownClueInit] = useState<React.ReactElement[]>([]);
 
   const createClue = (
     id: string,
@@ -107,32 +115,86 @@ export default function CreateClues(props: CrosswordClueProps) {
     return newClueDirs;
   };
 
-  useEffect(() => {
-    if (
-      !hasInitialized.current &&
-      gridSize &&
-      currentGridNumbers &&
-      blackSquares
-    ) {
-      hasInitialized.current = true;
+  const initialize = (): void => {
+    let acrossInit: React.ReactElement[] = [];
+    let downInit: React.ReactElement[] = [];
+
+    for (let i = 0; i < gridSize; i++) {
+      for (let j = 0; j < gridSize; j++) {
+        const index = i * gridSize + j;
+        if (
+          currentGridNumbers[index] &&
+          clueNumDirection[index][0] === "across" &&
+          clueNumDirection[index][1] === "down"
+        ) {
+          const newAcrossClue = createClue(
+            currentGridNumbers[index]?.toString(),
+            acrossClueValues[index],
+            index,
+            "across"
+          );
+          if (newAcrossClue) {
+            acrossInit.push(newAcrossClue);
+          }
+          const newDownClue = createClue(
+            currentGridNumbers[index]?.toString(),
+            downClueValues[index],
+            index,
+            "down"
+          );
+          if (newDownClue) {
+            downInit.push(newDownClue);
+          }
+        } else if (
+          currentGridNumbers[index] &&
+          clueNumDirection[index][0] === "across"
+        ) {
+          const newAcrossClue = createClue(
+            currentGridNumbers[index]?.toString(),
+            acrossClueValues[index],
+            index,
+            "across"
+          );
+          if (newAcrossClue) {
+            acrossInit.push(newAcrossClue);
+          }
+        } else if (
+          currentGridNumbers[index] &&
+          clueNumDirection[index][1] === "down"
+        ) {
+          const newDownClue = createClue(
+            currentGridNumbers[index]?.toString(),
+            downClueValues[index],
+            index,
+            "down"
+          );
+          if (newDownClue) {
+            downInit.push(newDownClue);
+          }
+        }
+      }
     }
-  }, [gridSize, currentGridNumbers]);
+    setAcrossClueInit(acrossInit);
+    setDownClueInit(downInit);
+  };
 
   useEffect(() => {
     if (
       hasInitialized.current &&
-      acrossClues.length > 0 &&
-      downClues.length > 0
+      acrossClueInit.length > 0 &&
+      downClueInit.length > 0
     ) {
-      const newDirs: string[][] = createClueNumDirections();
       const newAcrossClues: React.ReactElement[] = [];
       const newDownClues: React.ReactElement[] = [];
 
       for (let index = 0; index < gridSize * gridSize; index++) {
-        if (newDirs[index][0] && newDirs[index][0] === "across") {
+        if (
+          clueNumDirection[index][0] &&
+          clueNumDirection[index][0] === "across"
+        ) {
           const newAcrossClue = createClue(
             currentGridNumbers[index]?.toString(),
-            "",
+            acrossClueValues[index],
             index,
             "across"
           );
@@ -140,10 +202,13 @@ export default function CreateClues(props: CrosswordClueProps) {
             newAcrossClues.push(newAcrossClue);
           }
         }
-        if (newDirs[index][1] && newDirs[index][1] === "down") {
+        if (
+          clueNumDirection[index][1] &&
+          clueNumDirection[index][1] === "down"
+        ) {
           const newDownClue = createClue(
             currentGridNumbers[index]?.toString(),
-            "",
+            downClueValues[index],
             index,
             "down"
           );
@@ -153,11 +218,76 @@ export default function CreateClues(props: CrosswordClueProps) {
         }
       }
 
-      setAcrossClues(newAcrossClues);
-      setDownClues(newDownClues);
-      setClueNumDirection(newDirs);
+      setAcrossClueInit(newAcrossClues);
+      setDownClueInit(newDownClues);
     }
-  }, [blackSquares, isFocusedClue, isFocusedCell]);
+  }, [isFocusedClue, isFocusedCell]);
+
+  useEffect(() => {
+    if (
+      !hasInitialized.current &&
+      currentGridNumbers.some((num) => num !== null) &&
+      clueNumDirection.some((elem) => elem[0])
+    ) {
+      hasInitialized.current = true;
+      initialize();
+    }
+  }, []);
+
+  // useEffect(() => {
+  //   if (
+  //     !hasInitialized.current &&
+  //     gridSize &&
+  //     currentGridNumbers &&
+  //     blackSquares
+  //   ) {
+  //     hasInitialized.current = true;
+  //   }
+  // }, [gridSize, currentGridNumbers]);
+
+  // useEffect(() => {
+  //   if (
+  //     hasInitialized.current &&
+  //     acrossClues.length > 0 &&
+  //     downClues.length > 0
+  //   ) {
+
+  //     const newDirs: string[][] = createClueNumDirections();
+  //     const newAcrossClues: React.ReactElement[] = [];
+  //     const newDownClues: React.ReactElement[] = [];
+
+  //     for (let index = 0; index < gridSize * gridSize; index++) {
+  //       if (newDirs[index][0] && newDirs[index][0] === "across") {
+  //         const newAcrossClue = createClue(
+  //           currentGridNumbers[index]?.toString(),
+  //           "",
+  //           index,
+  //           "across"
+  //         );
+  //         if (newAcrossClue) {
+  //           newAcrossClues.push(newAcrossClue);
+  //         }
+  //       }
+  //       if (newDirs[index][1] && newDirs[index][1] === "down") {
+  //         const newDownClue = createClue(
+  //           currentGridNumbers[index]?.toString(),
+  //           "",
+  //           index,
+  //           "down"
+  //         );
+  //         if (newDownClue) {
+  //           newDownClues.push(newDownClue);
+  //         }
+  //       }
+  //     }
+
+  //     setAcrossClues(newAcrossClues);
+  //     setDownClues(newDownClues);
+  //     setClueNumDirection(newDirs);
+  //   }
+  // }, [blackSquares, isFocusedClue, isFocusedCell]);
+
+  console.log(acrossClues);
 
   return (
     <div

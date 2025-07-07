@@ -14,7 +14,10 @@ import { useAuth } from "./context/AuthContext";
 
 function App() {
   const { globalUser } = useAuth();
-  const isAuthenticated = globalUser ? true : false;
+  console.log(`App: ${globalUser}`);
+
+  const isAuthenticated = true;
+  // const isAuthenticated = globalUser ? true : false;
   // const isData = globalData && !!Object.keys(globalData || {}).length;
   return (
     <BrowserRouter>
@@ -38,11 +41,11 @@ function App() {
             element={isAuthenticated ? <Account /> : <Navigate to="/" />}
           />
           <Route
-            path="solver"
+            path="solver/:gridId"
             element={isAuthenticated ? <Solver /> : <Navigate to="/" />}
           />
           <Route
-            path="editor"
+            path="editor/:gridId"
             element={isAuthenticated ? <Editor /> : <Navigate to="/" />}
           />
           <Route path="*" element={<NoPage />} />

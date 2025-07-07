@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faLessThan } from "@fortawesome/free-solid-svg-icons";
 import { faGreaterThan } from "@fortawesome/free-solid-svg-icons";
 import { useAuth } from "../../context/AuthContext.tsx";
+import { useParams } from "react-router-dom";
 
 export default function CreateSolverCrossword() {
   const [gridSize, setGridSize] = useState<number>(5);
@@ -48,7 +49,7 @@ export default function CreateSolverCrossword() {
 
   const notServer = useAuth();
   const userId = 1;
-  const gridId = 4;
+  const { gridId } = useParams();
 
   const getCrosswordData = async () => {
     try {

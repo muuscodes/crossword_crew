@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import React from "react";
-import CrosswordGrid from "./CrosswordEditorGrid";
-import CreateClues from "./CreateEditorClues";
+import CrosswordEditorGrid from "./CrosswordEditorGrid";
+import CreateEditorClues from "./CreateEditorClues";
+import { useAuth } from "../../context/AuthContext";
+import { useParams } from "react-router-dom";
 
 export default function CreateCrossword(props: any) {
   const { setIsSaved } = props;
@@ -45,9 +47,9 @@ export default function CreateCrossword(props: any) {
   const [isFocusedOnGrid, setIsFocusedOnGrid] = useState<boolean>(false);
   const [puzzleTitle, setPuzzleTitle] = useState<string>("");
 
-  const notServer: boolean = true;
+  const notServer = useAuth();
   const userId = 1;
-  const gridId = 4;
+  const { gridId } = useParams();
 
   const getCrosswordData = async () => {
     try {
@@ -271,7 +273,21 @@ export default function CreateCrossword(props: any) {
   };
 
   useEffect(() => {
+    if (
+      currentGridNumbers.some((num) => num !== null) &&
+      acrossClueValues.some((str) => str !== "")
+    ) {
+      setIsGridReady(true);
+    } else {
+      setIsGridReady(false);
+    }
+  }, [currentGridNumbers]);
+
+  useEffect(() => {
     getCrosswordData();
+  }, []);
+
+  useEffect(() => {
     window.addEventListener("resize", updateGridDimensions);
     updateGridDimensions();
 
@@ -279,6 +295,8 @@ export default function CreateCrossword(props: any) {
       window.removeEventListener("resize", updateGridDimensions);
     };
   }, []);
+
+  // console.log(acrossClueValues);
 
   return (
     <div className="flex flex-col items-center m-auto border-4 w-fit shadow-2xl h-fit">
@@ -306,7 +324,7 @@ export default function CreateCrossword(props: any) {
         className={`flex flex-col md:flex-row border-y-2 w-fit h-auto`}
         style={{ height: `${gridHeight}` }}
       >
-        <CrosswordGrid
+        <CrosswordEditorGrid
           gridSize={gridSize}
           gridDimensions={gridDimensions}
           positionBlackSquares={positionBlackSquares}
@@ -335,7 +353,7 @@ export default function CreateCrossword(props: any) {
         />
 
         {isGridReady && (
-          <CreateClues
+          <CreateEditorClues
             gridSize={gridSize}
             currentGridNumbers={currentGridNumbers}
             blackSquares={blackSquares}
@@ -346,6 +364,10 @@ export default function CreateCrossword(props: any) {
             setAcrossClues={setAcrossClues}
             downClues={downClues}
             setDownClues={setDownClues}
+            acrossClueValues={acrossClueValues}
+            setAcrossClueValues={setAcrossClueValues}
+            downClueValues={downClueValues}
+            setDownClueValues={setDownClueValues}
             clueNumDirection={clueNumDirection}
             setClueNumDirection={setClueNumDirection}
             handleFocusClue={handleFocusClue}

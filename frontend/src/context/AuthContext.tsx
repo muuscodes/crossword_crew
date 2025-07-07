@@ -2,7 +2,7 @@ import { useState, useContext, createContext } from "react";
 import type { AuthContextType } from "../components/utils/types";
 
 const defaultAuthContext: AuthContextType = {
-  globalUser: 0,
+  globalUser: { username: "Evan Austin" },
   globalData: "",
   setGlobalUser: () => {},
   setGlobalData: () => {},
@@ -21,7 +21,9 @@ export function useAuth() {
 
 export default function AuthProvider(props: any) {
   const { children } = props;
-  const [globalUser, setGlobalUser] = useState<any>(null);
+  const [globalUser, setGlobalUser] = useState<any>({
+    username: "Evan Austin",
+  });
   const [globalData, setGlobalData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const notServer: boolean = true;

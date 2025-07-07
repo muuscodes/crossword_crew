@@ -12,7 +12,8 @@ const client_secret = process.env.GOOGLE_CLIENT_SECRET;
 const callback = process.env.GOOGLE_CALLBACK_URI;
 
 passport.serializeUser((user, done) => {
-  done(null, user.id);
+  console.log(user);
+  done(null, user.userid);
 });
 
 passport.deserializeUser(async (id, done) => {
@@ -72,10 +73,7 @@ router.get("/google", passport.authenticate("google"), (req, res) => {
 router.get(
   "/google/redirect",
   passport.authenticate("google", { failureRedirect: "/failure" }),
-  (req, res, err) => {
-    if (err) {
-      res.sendStatus(500);
-    }
+  (req, res) => {
     res.redirect("/");
   }
 );

@@ -3,13 +3,62 @@ import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { useAuth } from "../../context/AuthContext";
 
+interface UserData {
+  username: string;
+  puzzle_title: string;
+  time_created: string;
+  completed_status: boolean;
+  grid_id: number;
+}
+
 export default function Library() {
-  const [userData, setUserData] = useState<string[]>([]);
+  const [userData, setUserData] = useState<UserData[]>([]);
   const [userCards, setUserCards] = useState<React.ReactNode[]>([]);
+  const [sortOption, setSortOption] = useState("author");
   const notServer = useAuth();
   const userid = 1;
-  const handleSort = () => {
-    userData;
+  const handleSort = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedOption = event.target.value;
+    if (sortOption !== selectedOption) {
+      setSortOption(selectedOption);
+    }
+    const sortedData = [...userData].sort((a, b) => {
+      switch (selectedOption) {
+        case "author":
+          return a.username.localeCompare(b.username);
+        case "dateNewest":
+          return (
+            new Date(b.time_created).getTime() -
+            new Date(a.time_created).getTime()
+          );
+        case "dateOldest":
+          return (
+            new Date(a.time_created).getTime() -
+            new Date(b.time_created).getTime()
+          );
+        case "completionStatus":
+          return a.completed_status === b.completed_status
+            ? 0
+            : a.completed_status
+            ? 1
+            : -1;
+        default:
+          return 0;
+      }
+    });
+
+    const sortedCards = sortedData.map((data, index) => (
+      <LibraryCard
+        author={data.username}
+        name={data.puzzle_title}
+        date={data.time_created}
+        completed={data.completed_status}
+        key={index}
+        gridId={data.grid_id}
+      />
+    ));
+
+    setUserCards(sortedCards);
   };
 
   async function getUserData() {
@@ -22,11 +71,11 @@ export default function Library() {
         }`
       );
       const result = await response.json();
-      const newUserData: string[] = [];
+      const newUserData: UserData[] = [];
       const newCards: React.ReactNode[] = [];
       result.forEach((element: any) => {
         let newData: any = {
-          username: "Test User",
+          username: "Evan Austin",
           time_created: "",
           completed_status: "",
         };
@@ -48,9 +97,11 @@ export default function Library() {
             date={newData.time_created}
             completed={newData.completed_status}
             key={element.grid_id}
+            gridId={element.grid_id}
           />
         );
         newCards.push(newCard);
+        console.log(element.grid_id);
       });
       setUserData(newUserData);
       setUserCards(newCards);
@@ -71,12 +122,12 @@ export default function Library() {
         <select
           name="sort-library"
           id="sort-library"
-          onChange={() => handleSort()}
+          onChange={(e) => handleSort(e)}
         >
           <option value="author">Author</option>
-          <option value="date">Date: ascending</option>
-          <option value="author">Date: descending</option>
-          <option value="author">Completion status</option>
+          <option value="dateNewest">Date: newest</option>
+          <option value="dateOldest">Date: oldest</option>
+          <option value="completionStatus">Completion status</option>
         </select>
       </div>
       <section className="flex flex-row gap-5 mb-15 flex-wrap justify-around">

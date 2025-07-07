@@ -90,8 +90,6 @@ export default function Navbar(props: NavbarProps) {
               {createMenuNavLink("/library", "Library")}
               {createMenuNavLink("/contact", "Contact")}
               {createMenuNavLink("/account", "Account")}
-              {createMenuNavLink("/solver", "Solver")}
-              {createMenuNavLink("/editor", "Editor")}
             </nav>
           </div>
         ) : (

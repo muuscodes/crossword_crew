@@ -1,31 +1,31 @@
 import { useEffect, useRef } from "react";
-import type { CrosswordGridProps } from "../utils/types";
+import type { EditorGridProps } from "../utils/types";
 
-export default function CrosswordGrid(props: CrosswordGridProps) {
+export default function CrosswordEditorGrid(props: EditorGridProps) {
   const {
     gridSize,
     gridDimensions,
     positionBlackSquares,
     addInputs,
     currentGridNumbers,
-    setCurrentGridNumbers,
     blackSquares,
-    setBlackSquares,
     isFocusedCell,
-    setIsFocusedCell,
-    setIsFocusedClue,
     isSecondaryFocusedCell,
-    setIsSecondaryFocusedCell,
     isHighlightAcross,
-    setIsHighlightAcross,
     clueNumDirection,
-    scrollToClue,
     clueToCellHighlight,
     isAcrossClueHighlight,
     isFocusedOnGrid,
-    setIsFocusedOnGrid,
     currentGridValues,
+    setBlackSquares,
+    setCurrentGridNumbers,
     setCurrentGridValues,
+    setIsSecondaryFocusedCell,
+    setIsFocusedCell,
+    setIsFocusedClue,
+    setIsHighlightAcross,
+    scrollToClue,
+    setIsFocusedOnGrid,
     handleClear,
     assignNumbers,
   } = props;
