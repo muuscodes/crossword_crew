@@ -7,23 +7,31 @@ import Contact from "./components/AuthContent/Contact.tsx";
 import Library from "./components/AuthContent/Library.tsx";
 import Create from "./components/AuthContent/Create.tsx";
 import NoPage from "./components/BaseContent/NoPage.tsx";
-import Account from "./components/AuthContent/Account.tsx";
 import Solver from "./components/SolveCrossword/Solver.tsx";
 import Editor from "./components/EditCrossword/Editor.tsx";
 import { useAuth } from "./context/AuthContext";
 
 function App() {
   const { globalUser } = useAuth();
-  console.log(`App: ${globalUser}`);
+  console.log(`App: ${JSON.stringify(globalUser, null, 2)}`);
 
   const isAuthenticated = true;
-  // const isAuthenticated = globalUser ? true : false;
-  // const isData = globalData && !!Object.keys(globalData || {}).length;
+  // const isAuthenticated = globalUser.username ? true : false;
+
   return (
     <BrowserRouter>
       <Layout isAuthenticated={isAuthenticated}>
         <Routes>
-          <Route index element={isAuthenticated ? <Home /> : <LandingPage />} />
+          <Route
+            path="/"
+            element={
+              isAuthenticated ? <Navigate to="/home" /> : <LandingPage />
+            }
+          />
+          <Route
+            path="/home"
+            element={isAuthenticated ? <Home /> : <Navigate to="/" />}
+          />
           <Route
             path="create"
             element={isAuthenticated ? <Create /> : <Navigate to="/" />}
@@ -35,10 +43,6 @@ function App() {
           <Route
             path="contact"
             element={isAuthenticated ? <Contact /> : <Navigate to="/" />}
-          />
-          <Route
-            path="account"
-            element={isAuthenticated ? <Account /> : <Navigate to="/" />}
           />
           <Route
             path="solver/:gridId"

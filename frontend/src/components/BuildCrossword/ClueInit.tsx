@@ -60,12 +60,12 @@ export default function ClueInit(
           cols={30}
           rows={1}
           tabIndex={0}
+          maxLength={50}
           defaultValue={value}
           style={{ resize: "none", fontSize: "1.25rem" }}
           wrap="true"
           className={`border-1 w-7/8 ${isHighlight ? "bg-blue-200" : ""}`}
           onFocus={() => handleFocusClue(index, direction)}
-          // onChange={(e) => handleUserInput(e, parseInt(id))}
           onChange={(e) => handleInputChangeClue(e, direction, index)}
         ></textarea>
       </li>

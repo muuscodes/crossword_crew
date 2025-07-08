@@ -11,18 +11,13 @@ export default function CreateEditorClues(props: EditorClueProps) {
     isFocusedClue,
     isFocusedCell,
     clueNumDirection,
-    acrossClues,
-    downClues,
+    isClear,
     acrossClueValues,
     downClueValues,
-    setAcrossClues,
-    setDownClues,
-    setAcrossClueValues,
-    setDownClueValues,
     setClueNumDirection,
     handleFocusClue,
-    handleUserInputClue,
     handleInputChangeClue,
+    setIsClear,
     mapClues,
   } = props;
 
@@ -75,6 +70,7 @@ export default function CreateEditorClues(props: EditorClueProps) {
           cols={30}
           rows={1}
           tabIndex={0}
+          maxLength={50}
           defaultValue={value}
           style={{ resize: "none", fontSize: "1.25rem" }}
           wrap="soft"
@@ -176,6 +172,9 @@ export default function CreateEditorClues(props: EditorClueProps) {
     }
     setAcrossClueInit(acrossInit);
     setDownClueInit(downInit);
+    if (isClear) {
+      setIsClear(false);
+    }
   };
 
   useEffect(() => {
@@ -186,6 +185,7 @@ export default function CreateEditorClues(props: EditorClueProps) {
     ) {
       const newAcrossClues: React.ReactElement[] = [];
       const newDownClues: React.ReactElement[] = [];
+      const newDirs: string[][] = createClueNumDirections();
 
       for (let index = 0; index < gridSize * gridSize; index++) {
         if (
@@ -194,7 +194,7 @@ export default function CreateEditorClues(props: EditorClueProps) {
         ) {
           const newAcrossClue = createClue(
             currentGridNumbers[index]?.toString(),
-            acrossClueValues[index],
+            acrossClueValues ? acrossClueValues[index] : "",
             index,
             "across"
           );
@@ -208,7 +208,7 @@ export default function CreateEditorClues(props: EditorClueProps) {
         ) {
           const newDownClue = createClue(
             currentGridNumbers[index]?.toString(),
-            downClueValues[index],
+            downClueValues ? downClueValues[index] : "",
             index,
             "down"
           );
@@ -220,8 +220,15 @@ export default function CreateEditorClues(props: EditorClueProps) {
 
       setAcrossClueInit(newAcrossClues);
       setDownClueInit(newDownClues);
+      setClueNumDirection(newDirs);
     }
-  }, [isFocusedClue, isFocusedCell]);
+  }, [blackSquares, isFocusedClue, isFocusedCell]);
+
+  useEffect(() => {
+    if (isClear) {
+      initialize();
+    }
+  }, [isClear]);
 
   useEffect(() => {
     if (
@@ -234,60 +241,7 @@ export default function CreateEditorClues(props: EditorClueProps) {
     }
   }, []);
 
-  // useEffect(() => {
-  //   if (
-  //     !hasInitialized.current &&
-  //     gridSize &&
-  //     currentGridNumbers &&
-  //     blackSquares
-  //   ) {
-  //     hasInitialized.current = true;
-  //   }
-  // }, [gridSize, currentGridNumbers]);
-
-  // useEffect(() => {
-  //   if (
-  //     hasInitialized.current &&
-  //     acrossClues.length > 0 &&
-  //     downClues.length > 0
-  //   ) {
-
-  //     const newDirs: string[][] = createClueNumDirections();
-  //     const newAcrossClues: React.ReactElement[] = [];
-  //     const newDownClues: React.ReactElement[] = [];
-
-  //     for (let index = 0; index < gridSize * gridSize; index++) {
-  //       if (newDirs[index][0] && newDirs[index][0] === "across") {
-  //         const newAcrossClue = createClue(
-  //           currentGridNumbers[index]?.toString(),
-  //           "",
-  //           index,
-  //           "across"
-  //         );
-  //         if (newAcrossClue) {
-  //           newAcrossClues.push(newAcrossClue);
-  //         }
-  //       }
-  //       if (newDirs[index][1] && newDirs[index][1] === "down") {
-  //         const newDownClue = createClue(
-  //           currentGridNumbers[index]?.toString(),
-  //           "",
-  //           index,
-  //           "down"
-  //         );
-  //         if (newDownClue) {
-  //           newDownClues.push(newDownClue);
-  //         }
-  //       }
-  //     }
-
-  //     setAcrossClues(newAcrossClues);
-  //     setDownClues(newDownClues);
-  //     setClueNumDirection(newDirs);
-  //   }
-  // }, [blackSquares, isFocusedClue, isFocusedCell]);
-
-  console.log(acrossClues);
+  console.log(acrossClueInit);
 
   return (
     <div
@@ -304,7 +258,7 @@ export default function CreateEditorClues(props: EditorClueProps) {
           id="scrollableContainerAcross"
           className="border-2 p-2 bg-white overflow-y-auto h-6/8"
         >
-          <ul className="mt-3 list-none">{mapClues(acrossClues)}</ul>
+          <ul className="mt-3 list-none">{mapClues(acrossClueInit)}</ul>
         </div>
       </div>
       <div className="h-1/2">
@@ -317,7 +271,7 @@ export default function CreateEditorClues(props: EditorClueProps) {
           id="scrollableContainerDown"
           className="border-2 p-2 bg-white overflow-y-auto h-6/8"
         >
-          <ul className="mt-3 list-none">{mapClues(downClues)}</ul>
+          <ul className="mt-3 list-none">{mapClues(downClueInit)}</ul>
         </div>
       </div>
     </div>

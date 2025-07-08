@@ -12,7 +12,6 @@ const client_secret = process.env.GOOGLE_CLIENT_SECRET;
 const callback = process.env.GOOGLE_CALLBACK_URI;
 
 passport.serializeUser((user, done) => {
-  console.log(user);
   done(null, user.userid);
 });
 
@@ -66,7 +65,7 @@ passport.use(
 
 // Authentication route
 router.get("/google", passport.authenticate("google"), (req, res) => {
-  res.status(200).send("Authentication initiated");
+  return res.status(200).send("Authentication initiated");
 });
 
 // Redirect route
@@ -74,13 +73,18 @@ router.get(
   "/google/redirect",
   passport.authenticate("google", { failureRedirect: "/failure" }),
   (req, res) => {
-    res.redirect("/");
+    req.login(req.user, (err) => {
+      if (err) {
+        return res.status(500).send({ message: "Login failed" });
+      }
+      return res.json(req.user);
+    });
   }
 );
 
 // Failure route
 router.get("/failure", (req, res) => {
-  res.status(200).send("FAILED");
+  res.status(200).send("Google login failed, please try again");
 });
 
 // Normal user sign up route
@@ -94,7 +98,9 @@ router.post("/signup", async (req, res) => {
       [email, username]
     );
     if (existingUser.rows.length > 0) {
-      res.status(400).send({ message: "Username or email already exists" });
+      return res
+        .status(400)
+        .send({ message: "Username or email already exists" });
     }
 
     // If not, create a new user
@@ -103,36 +109,44 @@ router.post("/signup", async (req, res) => {
       "INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING *",
       [username, email, hashedPassword]
     );
-    res.status(201).send(newUser.rows[0]);
+    return res.status(200).send(newUser.rows[0]);
   } catch (error) {
     console.error("Database error:", error);
+    return res.status(500).send({ message: "Internal server error" });
   }
 });
 
 // Normal user sign in route
 router.post("/signin", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
     // Check if user exists
     const existingUser = await pool.query(
-      "SELECT * FROM users WHERE email = $1 OR username = $1",
-      [email]
+      "SELECT * FROM users WHERE username = $1",
+      [username]
     );
     if (existingUser.rows.length > 0) {
       const user = existingUser.rows[0];
 
       const isMatch = await bcrypt.compare(password, user.password);
       if (isMatch) {
-        return res.status(200).send(user);
+        req.login(user, (err) => {
+          if (err) {
+            return res.status(500).send({ message: "Login failed" });
+          }
+          return res.status(200).send(user);
+        });
       }
     }
 
     // If not, send error
-    res.status(401).send({ message: "Incorrect login, please try again" });
+    return res
+      .status(401)
+      .send({ message: "Incorrect login, please try again" });
   } catch (error) {
     console.error("Database error:", error);
-    res.status(500).send({ message: "Internal server error" });
+    return res.status(500).send({ message: "Internal server error" });
   }
 });
 

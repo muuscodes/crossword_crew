@@ -27,6 +27,10 @@ export default function CrosswordGrid(props: SolverGridProps) {
     setClueIndicatorRight,
     clueIndicatorDown,
     setClueIndicatorDown,
+    isAutocheck,
+    autocheckGrid,
+    setAutocheckGrid,
+    autocheckKey,
   } = props;
   const currentCell = useRef(-1);
   const inputRefs = useRef<(HTMLInputElement | null)[]>(
@@ -44,7 +48,7 @@ export default function CrosswordGrid(props: SolverGridProps) {
     const newGrid: string[] = [...currentGridValues].map((value) => {
       return value;
     });
-    newGrid[index] = value;
+    newGrid[index] = value.toLocaleUpperCase();
     const inputEvent = event.nativeEvent as InputEvent;
     if (isHighlightAcross && inputEvent.inputType !== "deleteContentBackward") {
       let rightIndex: number = index + 1;
@@ -81,6 +85,15 @@ export default function CrosswordGrid(props: SolverGridProps) {
       }
       handleFocus(downIndex, isHighlightAcross, false);
     }
+
+    // Autocheck
+    const newAutocheckGrid = [...autocheckGrid].map((value) => {
+      return value;
+    });
+    if (isAutocheck && !blackSquares[index] && value !== autocheckKey[index]) {
+      newAutocheckGrid[index] = true;
+    }
+    setAutocheckGrid(newAutocheckGrid);
     setCurrentGridValues(newGrid);
   };
 
@@ -299,8 +312,9 @@ export default function CrosswordGrid(props: SolverGridProps) {
     return [direction, newFocusedClues, clueListIndex];
   };
 
-  const handleBgColor = (index: number): string => {
+  const handleColor = (index: number): string => {
     let bgColor: string = "bg-white";
+
     if (blackSquares && blackSquares[index]) {
       bgColor = "bg-black";
     } else if (isFocusedCell[index]) {
@@ -308,13 +322,40 @@ export default function CrosswordGrid(props: SolverGridProps) {
     } else if (isSecondaryFocusedCell[index]) {
       bgColor = "bg-blue-200";
     }
-    return bgColor;
+
+    let border: string = "";
+    if (isAutocheck && autocheckGrid[index]) {
+      border = " border-4 border-red-400";
+    }
+    return bgColor + border;
   };
 
   const handleKeyDown = (event: KeyboardEvent): void => {
     const index: number = currentCell.current;
     event.stopPropagation();
     if (event.key === "Backspace") {
+      // Clear autocheck highlight
+      // const newAutocheckGrid = [...autocheckGrid].map((value) => {
+      //   return value;
+      // });
+      if (isAutocheck && !blackSquares[index] && autocheckGrid[index]) {
+        const newAutocheckGrid = Array(gridSize * gridSize).fill(false);
+
+        for (let index = 0; index < gridSize * gridSize; index++) {
+          if (
+            !blackSquares[index] &&
+            currentGridValues[index] &&
+            currentGridValues[index] !== autocheckKey[index]
+          ) {
+            newAutocheckGrid[index] = true;
+          }
+        }
+        setAutocheckGrid(newAutocheckGrid);
+        // newAutocheckGrid[index] = false;
+        // setAutocheckGrid(newAutocheckGrid);
+      }
+
+      // Handle backspace
       if (currentGridValues[index] === "" && isHighlightAcross) {
         handleArrowLeft(index);
       } else if (currentGridValues[index] === "" && !isHighlightAcross) {
@@ -682,7 +723,7 @@ export default function CrosswordGrid(props: SolverGridProps) {
           tabIndex={0}
           onKeyDown={(e) => handleKeyDown(e as unknown as KeyboardEvent)}
           className={`flex border border-black relative 
-          ${handleBgColor(index)} `}
+          ${handleColor(index)}`}
           style={{
             height: `calc(${gridDimensions}/${gridSize})`,
             width: `calc(${gridDimensions}/${gridSize})`,
@@ -693,6 +734,7 @@ export default function CrosswordGrid(props: SolverGridProps) {
           <div
             style={{
               fontSize: `calc((${gridDimensions} / ${gridSize}) / 4)`,
+              paddingLeft: "2px",
             }}
           >
             {currentGridNumbers[index]}

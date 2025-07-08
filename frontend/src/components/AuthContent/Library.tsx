@@ -1,12 +1,12 @@
 import LibraryCard from "./LibraryCard";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { useAuth } from "../../context/AuthContext";
 
 interface UserData {
   username: string;
   puzzle_title: string;
   time_created: string;
+  formatted_time_created: string;
   completed_status: boolean;
   grid_id: number;
 }
@@ -15,17 +15,20 @@ export default function Library() {
   const [userData, setUserData] = useState<UserData[]>([]);
   const [userCards, setUserCards] = useState<React.ReactNode[]>([]);
   const [sortOption, setSortOption] = useState("author");
-  const notServer = useAuth();
   const userid = 1;
   const handleSort = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedOption = event.target.value;
     if (sortOption !== selectedOption) {
       setSortOption(selectedOption);
     }
+    console.log(selectedOption);
+
     const sortedData = [...userData].sort((a, b) => {
       switch (selectedOption) {
         case "author":
           return a.username.localeCompare(b.username);
+        case "title":
+          return a.puzzle_title.localeCompare(b.puzzle_title);
         case "dateNewest":
           return (
             new Date(b.time_created).getTime() -
@@ -51,7 +54,7 @@ export default function Library() {
       <LibraryCard
         author={data.username}
         name={data.puzzle_title}
-        date={data.time_created}
+        date={data.formatted_time_created}
         completed={data.completed_status}
         key={index}
         gridId={data.grid_id}
@@ -59,54 +62,57 @@ export default function Library() {
     ));
 
     setUserCards(sortedCards);
+    console.log(sortedCards);
   };
 
   async function getUserData() {
     try {
-      const response = await fetch(
-        `${
-          notServer
-            ? `http://localhost:3000/users/${userid}/grids`
-            : `/users/${userid}/grids`
-        }`
-      );
+      const response = await fetch(`/users/${userid}/grids`);
       const result = await response.json();
       const newUserData: UserData[] = [];
       const newCards: React.ReactNode[] = [];
+
+      console.log(result);
+
       result.forEach((element: any) => {
         let newData: any = {
-          username: "Evan Austin",
-          time_created: "",
-          completed_status: "",
+          username: element.username,
+          puzzle_title: "",
+          time_created: element.time_created,
+          formatted_time_created: "",
+          completed_status: element.completed_status,
+          grid_id: element.grid_id,
         };
-
-        newData.completed_status = element.completed_status;
-        newData.puzzle_title = element.puzzle_title;
-        if (newData.puzzle_title === "") {
+        const newTitle = element.puzzle_title;
+        if (newTitle === "") {
           newData.puzzle_title = "Crossword Puzzle";
+        } else {
+          newData.puzzle_title = newTitle;
         }
 
-        const date = element.time_created;
-        const formattedDate = format(date, "MMMM d, yyyy 'at' h:mm a");
-        newData.time_created = formattedDate;
+        const formattedDate = format(
+          element.time_created,
+          "MMMM d, yyyy 'at' h:mm a"
+        );
+        newData.formatted_time_created = formattedDate;
+
         newUserData.push(newData);
         const newCard = (
           <LibraryCard
-            author={"Evan Austin"}
+            author={newData.username}
             name={newData.puzzle_title}
-            date={newData.time_created}
+            date={newData.formatted_time_created}
             completed={newData.completed_status}
             key={element.grid_id}
             gridId={element.grid_id}
           />
         );
         newCards.push(newCard);
-        console.log(element.grid_id);
       });
       setUserData(newUserData);
       setUserCards(newCards);
     } catch (error) {
-      console.log("Server error:", error);
+      throw new Error();
     }
   }
 
@@ -125,6 +131,7 @@ export default function Library() {
           onChange={(e) => handleSort(e)}
         >
           <option value="author">Author</option>
+          <option value="title">Title</option>
           <option value="dateNewest">Date: newest</option>
           <option value="dateOldest">Date: oldest</option>
           <option value="completionStatus">Completion status</option>

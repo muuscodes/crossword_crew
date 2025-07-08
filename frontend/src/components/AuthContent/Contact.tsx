@@ -7,7 +7,7 @@ export default function Contact() {
         className="flex flex-col border-4 shadow-2xl h-100 w-2/3"
       >
         <label htmlFor="username" className="m-1 text-2xl">
-          Username
+          Name
         </label>
         <input
           type="text"

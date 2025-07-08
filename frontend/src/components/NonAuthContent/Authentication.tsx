@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import googleLogo from "../../img/GoogleLogo.png";
+import { useNavigate } from "react-router-dom";
 
 export default function Authentication(props: any) {
   const { handleCloseModal } = props;
   const [isSignUp, setIsSignUp] = useState(false);
+  const navigate = useNavigate();
+
   // const [isAuthenticating, setIsAuthenticating] = useState(false);
 
-  const { signup, login, setGlobalUser, notServer } = useAuth();
+  const { signup, login, setGlobalUser } = useAuth();
 
   const handleSignUpToggle = () => {
     setIsSignUp(!isSignUp);
@@ -19,41 +22,52 @@ export default function Authentication(props: any) {
     const email = formData.get("email") as string;
     const username = isSignUp ? (formData.get("username") as string) : "";
     const password = formData.get("password") as string;
-    let userData = "";
 
     try {
       if (isSignUp) {
         await signup(email, username, password);
-        // Fetch user data after signup
-        const response = await fetch(
-          `${
-            notServer
-              ? `http://localhost:3000/users/${username}`
-              : `/users/${username}`
-          }`
-        );
-        userData = await response.json();
       } else {
         await login(email, password);
-        // Fetch user data after login
-        const response = await fetch(
-          `${
-            notServer
-              ? `http://localhost:3000/users/${email}`
-              : `/users/${email}`
-          }`
-        );
-        userData = await response.json();
       }
-      setGlobalUser(userData);
+      handleCloseModal();
     } catch (error) {
       console.error("Authentication error:", error);
     }
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:3000/auth/google";
+    window.location.href = "/auth/google";
   };
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        console.log("here");
+        const response = await fetch("/auth/google/redirect");
+        if (response.ok) {
+          console.log("Not here");
+
+          const userData = await response.json();
+          console.log(userData);
+          const newGlobalUser = {
+            username: userData.username,
+            userId: userData.userid,
+          };
+          setGlobalUser(newGlobalUser);
+          navigate("/home");
+        } else {
+          console.error("Failed to fetch user data");
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    // Call fetchUserData if the user is redirected back
+    if (window.location.pathname === "/auth/google/redirect") {
+      fetchUserData();
+    }
+  }, [setGlobalUser, navigate]);
 
   return (
     <>
@@ -89,7 +103,7 @@ export default function Authentication(props: any) {
             type="text"
             name="email"
             className="bg-white text-black pl-3 p-0.5 mt-2"
-            placeholder={isSignUp ? "email" : "username/email"}
+            placeholder={isSignUp ? "email" : "username"}
             required
           />
           <input
@@ -105,7 +119,7 @@ export default function Authentication(props: any) {
         </form>
         <button
           onClick={handleGoogleLogin}
-          className={`flex flex-col w-1/3 items-center text-center m-l-3 hover:underline ${
+          className={`flex flex-col w-1/3 items-center text-center m-l-3 hover:underline cursor-pointer ${
             isSignUp ? "mt-7" : ""
           }`}
         >

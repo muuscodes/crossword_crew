@@ -66,7 +66,7 @@ router.delete("/:username", async (req, res) => {
 router.post("/grids", async (req, res) => {
   try {
     const {
-      userid,
+      userId,
       completed,
       puzzleTitle,
       gridSize,
@@ -84,7 +84,7 @@ router.post("/grids", async (req, res) => {
     (userid_creator, completed_status, puzzle_title, grid_size, grid_values, grid_numbers, black_squares, 
         across_clues, down_clues, clue_number_directions) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
       [
-        userid,
+        userId,
         completed,
         puzzleTitle,
         gridSize,
@@ -104,7 +104,7 @@ router.post("/grids", async (req, res) => {
     (userid_creator, completed_status, puzzle_title, grid_size, grid_values, grid_numbers, black_squares, 
         across_clues, down_clues, clue_number_directions) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
       [
-        userid,
+        userId,
         completed,
         puzzleTitle,
         gridSize,
@@ -126,12 +126,39 @@ router.post("/grids", async (req, res) => {
 });
 
 // Get a user's crosswords for library
-router.get("/:userid/grids", async (req, res) => {
+router.get("/:userId/grids", async (req, res) => {
   try {
-    const { userid } = req.params;
+    const { userId } = req.params;
     const result = await pool.query(
-      "SELECT * FROM crossword_grids_test WHERE userid_creator = $1",
-      [userid]
+      `SELECT cg.*, u.username 
+       FROM crossword_grids_test cg
+       JOIN users u ON cg.userid_creator = u.userid
+       WHERE cg.userid_creator = $1`,
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).send("User not found");
+    }
+
+    const gridsWithUsernames = result.rows.map((row) => ({
+      ...row,
+      username: row.username,
+    }));
+    res.json(gridsWithUsernames);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal Server Error");
+  }
+});
+
+// Get the answer key for a specific crossword
+router.get("/:userId/grids/:gridId", async (req, res) => {
+  try {
+    const { userId, gridId } = req.params;
+    const result = await pool.query(
+      "SELECT * FROM crossword_grids_test WHERE userid_creator = $1 AND grid_id = $2",
+      [userId, gridId]
     );
     if (result.rows.length === 0) {
       return res.status(404).send("User not found");

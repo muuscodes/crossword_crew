@@ -5,7 +5,6 @@ import CreateSolverClues from "./CreateSolverClues.tsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faLessThan } from "@fortawesome/free-solid-svg-icons";
 import { faGreaterThan } from "@fortawesome/free-solid-svg-icons";
-import { useAuth } from "../../context/AuthContext.tsx";
 import { useParams } from "react-router-dom";
 
 export default function CreateSolverCrossword() {
@@ -46,20 +45,20 @@ export default function CreateSolverCrossword() {
   const [puzzleTitle, setPuzzleTitle] = useState<string>("");
   const [clueIndicatorRight, setClueIndicatorRight] = useState<number>(0);
   const [clueIndicatorDown, setClueIndicatorDown] = useState<number>(-1);
+  const [isAutocheck, setIsAutocheck] = useState<boolean>(false);
+  const [autocheckGrid, setAutocheckGrid] = useState<boolean[]>(
+    Array(gridSize * gridSize).fill(false)
+  );
+  const [autocheckKey, setAutocheckKey] = useState<string[]>(
+    Array(gridSize * gridSize).fill("")
+  );
 
-  const notServer = useAuth();
   const userId = 1;
   const { gridId } = useParams();
 
   const getCrosswordData = async () => {
     try {
-      const response = await fetch(
-        `${
-          notServer
-            ? `http://localhost:3000/users/${userId}/solver/${gridId}`
-            : `/users/${userId}/solver/${gridId}`
-        }`
-      );
+      const response = await fetch(`/users/${userId}/solver/${gridId}`);
       const result = await response.json();
       setGridSize(result[0].grid_size);
       setCurrentGridNumbers(result[0].grid_numbers);
@@ -74,7 +73,31 @@ export default function CreateSolverCrossword() {
     }
   };
 
-  const handleAutocheck = (): void => {};
+  const getAnswerKey = async () => {
+    try {
+      const response = await fetch(`/users/${userId}/grids/${gridId}`);
+      const result = await response.json();
+      setAutocheckKey(result[0].grid_values);
+    } catch (error) {
+      throw new Error();
+    }
+  };
+
+  const handleAutocheck = (): void => {
+    const newAutocheckGrid = Array(gridSize * gridSize).fill(false);
+
+    for (let index = 0; index < gridSize * gridSize; index++) {
+      if (
+        !blackSquares[index] &&
+        currentGridValues[index] &&
+        currentGridValues[index] !== autocheckKey[index]
+      ) {
+        newAutocheckGrid[index] = true;
+      }
+    }
+    setAutocheckGrid(newAutocheckGrid);
+    setIsAutocheck(!isAutocheck);
+  };
 
   const handleClueIndicator = (): string => {
     let clue: string = "";
@@ -174,23 +197,16 @@ export default function CreateSolverCrossword() {
   async function saveProgress() {
     const completed = false;
     try {
-      await fetch(
-        `${
-          notServer
-            ? `http://localhost:3000/users/solver/${gridId}`
-            : `/users/solver/${gridId}`
-        }`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            currentGridValues,
-            completed,
-          }),
-        }
-      );
+      await fetch(`/users/solver/${gridId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          currentGridValues,
+          completed,
+        }),
+      });
     } catch (error) {
       throw new Error();
     }
@@ -209,6 +225,7 @@ export default function CreateSolverCrossword() {
 
   useEffect(() => {
     getCrosswordData();
+    getAnswerKey();
   }, []);
 
   useEffect(() => {
@@ -224,7 +241,7 @@ export default function CreateSolverCrossword() {
     <section>
       <h1 className="text-center text-5xl my-5">{`Title: ${puzzleTitle}`}</h1>
       <div className="flex flex-col items-center m-auto border-4 w-fit shadow-2xl h-fit">
-        <div className="flex flex-col md:flex-row justify-around items-center w-full bg-gray-200">
+        <div className="flex flex-col md:flex-row justify-around items-center w-full bg-gray-200 border-b-4">
           <div className="flex flex-row justify-between p-2 bg-white w-4/5 my-3 border-2 text-2xl items-center">
             <FontAwesomeIcon
               icon={faLessThan}
@@ -270,6 +287,10 @@ export default function CreateSolverCrossword() {
             setClueIndicatorRight={setClueIndicatorRight}
             clueIndicatorDown={clueIndicatorDown}
             setClueIndicatorDown={setClueIndicatorDown}
+            isAutocheck={isAutocheck}
+            autocheckGrid={autocheckGrid}
+            setAutocheckGrid={setAutocheckGrid}
+            autocheckKey={autocheckKey}
           />
 
           {isGridReady && (

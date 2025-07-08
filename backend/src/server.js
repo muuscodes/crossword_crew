@@ -62,10 +62,6 @@ const startServer = async () => {
     const shutdown = async () => {
       console.log("Shutting down gracefully...");
       await shutdownDatabase();
-      server.close(() => {
-        console.log("Server closed.");
-        process.exit(0);
-      });
     };
 
     process.on("SIGINT", shutdown); // CTRL + C

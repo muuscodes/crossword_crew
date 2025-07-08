@@ -17,7 +17,6 @@ export default function CreateClues(props: CrosswordClueProps) {
     isFocusedCell,
     clueNumDirection,
     setClueNumDirection,
-    handleUserInputClue,
     handleFocusClue,
     handleInputChangeClue,
     mapClues,
@@ -68,12 +67,12 @@ export default function CreateClues(props: CrosswordClueProps) {
           cols={30}
           rows={1}
           tabIndex={0}
+          maxLength={50}
           defaultValue={value}
           style={{ resize: "none", fontSize: "1.25rem" }}
           wrap="soft"
           className={`border-1 w-7/8 ${isHighlight ? "bg-blue-200" : ""}`}
           onFocus={() => handleFocusClue(index, direction)}
-          // onChange={(e) => handleUserInput(e, id, index)}
           onChange={(e) => handleInputChangeClue(e, direction, index)}
         ></textarea>
       </li>
@@ -124,7 +123,6 @@ export default function CreateClues(props: CrosswordClueProps) {
         isFocusedCell,
         clueNumDirection,
         handleFocusClue,
-        handleUserInputClue,
       });
       setAcrossClues(acrossCluesInit);
       setDownClues(downCluesInit);
@@ -172,6 +170,8 @@ export default function CreateClues(props: CrosswordClueProps) {
       setClueNumDirection(newDirs);
     }
   }, [blackSquares, isFocusedClue, isFocusedCell]);
+
+  console.log(acrossClues);
 
   return (
     <div

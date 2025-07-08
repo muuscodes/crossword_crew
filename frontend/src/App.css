@@ -99,6 +99,24 @@
   color: white;
 }
 
+.fancyButtonNoClick {
+  color: black;
+  background-color: white;
+  width: fit-content;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 500;
+  padding: 0.25rem 1.25rem;
+  border: 1.5px solid black;
+  box-shadow: 2px 2px 2px 0 black;
+  transition-duration: 200ms;
+}
+
+.fancyButtonNoClick:active {
+  background-color: black;
+  color: white;
+}
+
 .bigger {
   font-size: 1.25rem;
 }

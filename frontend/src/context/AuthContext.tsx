@@ -1,16 +1,17 @@
 import { useState, useContext, createContext } from "react";
 import type { AuthContextType } from "../components/utils/types";
+import type { globalUserType } from "../components/utils/types";
 
 const defaultAuthContext: AuthContextType = {
-  globalUser: { username: "Evan Austin" },
-  globalData: "",
+  globalUser: {
+    username: "",
+    userId: -1,
+  },
   setGlobalUser: () => {},
-  setGlobalData: () => {},
   isLoading: false,
   signup: async () => {},
   login: async () => {},
   logout: async () => {},
-  notServer: true,
 };
 
 const AuthContext = createContext<AuthContextType>(defaultAuthContext);
@@ -21,33 +22,50 @@ export function useAuth() {
 
 export default function AuthProvider(props: any) {
   const { children } = props;
-  const [globalUser, setGlobalUser] = useState<any>({
-    username: "Evan Austin",
+  const [globalUser, setGlobalUser] = useState<globalUserType>({
+    username: "",
+    userId: -1,
   });
-  const [globalData, setGlobalData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const notServer: boolean = true;
+  const notServer: boolean = false;
+
+  const getUserId = async (username: string) => {
+    try {
+      const response = await fetch(`/users/${username}`);
+      const freshData = await response.json();
+      let newUser: any = {
+        username: username,
+        userId: freshData.userid,
+      };
+      setGlobalUser(newUser);
+    } catch (error) {
+      console.log("Server error:", error);
+    }
+  };
 
   const signup = async (email: string, username: string, password: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `${notServer ? `http://localhost:3000/auth/signup` : `/auth/signup`}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email,
-            username,
-            password,
-          }),
-        }
-      );
+      const response = await fetch(`/auth/signup`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          username,
+          password,
+        }),
+      });
       if (response.ok) {
         const userData = await response.json();
-        setGlobalUser(userData);
+        const newGlobalUser = {
+          username: userData.username,
+          userId: userData.userid,
+        };
+        setGlobalUser(newGlobalUser);
+        getUserId(userData.username);
+        await login(username, password);
       }
     } catch (error) {
       console.error("Signup error:", error);
@@ -56,28 +74,31 @@ export default function AuthProvider(props: any) {
     }
   };
 
-  const login = async (username_email: string, password: string) => {
+  const login = async (username: string, password: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `${notServer ? `http://localhost:3000/auth/login` : `/auth/login`}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            username_email,
-            password,
-          }),
-        }
-      );
+      const response = await fetch(`/auth/signin`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username,
+          password,
+        }),
+        credentials: "include",
+      });
       if (response.ok) {
         const userData = await response.json();
-        setGlobalUser(userData);
+        const newGlobalUser = {
+          username: userData.username,
+          userId: userData.userid,
+        };
+        setGlobalUser(newGlobalUser);
+        getUserId(userData.username);
       }
     } catch (error) {
-      console.error("Signup error:", error);
+      console.error("Login error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -86,9 +107,11 @@ export default function AuthProvider(props: any) {
   const logout = async () => {
     setIsLoading(true);
     try {
-      // await signOut(auth);
-      setGlobalUser(0); // Reset to initial state
-      setGlobalData(null); // Reset global data
+      await fetch(`/auth/logout`, {
+        method: "GET",
+        credentials: "include",
+      });
+      setGlobalUser({ username: "", userId: -1 }); // Reset to initial state
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
@@ -98,9 +121,7 @@ export default function AuthProvider(props: any) {
 
   const value = {
     globalUser,
-    globalData,
     setGlobalUser,
-    setGlobalData,
     isLoading,
     signup,
     login,

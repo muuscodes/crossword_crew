@@ -89,11 +89,6 @@ export interface CrosswordClueProps {
     value: string[][] | ((prevState: string[][]) => string[][])
   ) => void;
   handleFocusClue: (index: number, direction: string) => void;
-  handleUserInputClue: (
-    event: React.ChangeEvent<HTMLTextAreaElement>,
-    direction: string,
-    index: number
-  ) => void;
   handleInputChangeClue: (
     event: React.ChangeEvent<HTMLTextAreaElement>,
     direction: string,
@@ -123,6 +118,9 @@ export interface SolverGridProps {
   currentGridValues: string[];
   clueIndicatorRight: number;
   clueIndicatorDown: number;
+  isAutocheck: boolean;
+  autocheckGrid: boolean[];
+  autocheckKey: string[];
   setIsFocusedCell: (
     value: boolean[] | ((prevState: boolean[]) => boolean[])
   ) => void;
@@ -134,6 +132,9 @@ export interface SolverGridProps {
   ) => void;
   setIsHighlightAcross: (
     value: boolean | ((prevState: boolean) => boolean)
+  ) => void;
+  setAutocheckGrid: (
+    value: boolean[] | ((prevState: boolean[]) => boolean[])
   ) => void;
   setIsFocusedOnGrid: (
     value: boolean | ((prevState: boolean) => boolean)
@@ -220,20 +221,9 @@ export interface EditorClueProps {
   isFocusedClue: boolean[];
   isFocusedCell: boolean[];
   clueNumDirection: string[][];
-  acrossClues: React.ReactElement[];
-  downClues: React.ReactElement[];
   acrossClueValues: string[];
   downClueValues: string[];
-  setAcrossClues: (
-    value:
-      | React.ReactElement[]
-      | ((prevState: React.ReactElement[]) => React.ReactElement[])
-  ) => void;
-  setDownClues: (
-    value:
-      | React.ReactElement[]
-      | ((prevState: React.ReactElement[]) => React.ReactElement[])
-  ) => void;
+  isClear: boolean;
   setAcrossClueValues: React.Dispatch<React.SetStateAction<string[]>>;
   setDownClueValues: React.Dispatch<React.SetStateAction<string[]>>;
   setClueNumDirection: (
@@ -250,6 +240,7 @@ export interface EditorClueProps {
     direction: string,
     index: number
   ) => void;
+  setIsClear: (value: boolean | ((prevState: boolean) => boolean)) => void;
   mapClues: (
     prevState: React.ReactElement<
       unknown,
@@ -260,12 +251,14 @@ export interface EditorClueProps {
 
 export interface AuthContextType {
   globalUser: any;
-  globalData: any;
-  setGlobalData: React.Dispatch<React.SetStateAction<any>>;
   setGlobalUser: React.Dispatch<React.SetStateAction<any>>;
   isLoading: boolean;
   signup: (email: string, username: string, password: string) => Promise<void>;
   login: (username_email: string, password: string) => Promise<void>;
   logout?: () => Promise<void>;
-  notServer: boolean;
+}
+
+export interface globalUserType {
+  username: string;
+  userId: number;
 }

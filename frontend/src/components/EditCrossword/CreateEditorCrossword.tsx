@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import React from "react";
 import CrosswordEditorGrid from "./CrosswordEditorGrid";
 import CreateEditorClues from "./CreateEditorClues";
-import { useAuth } from "../../context/AuthContext";
 import { useParams } from "react-router-dom";
 
 export default function CreateCrossword(props: any) {
@@ -28,8 +27,8 @@ export default function CreateCrossword(props: any) {
     Array(gridSize * gridSize).fill(false)
   );
   const [isHighlightAcross, setIsHighlightAcross] = useState<boolean>(true);
-  const [acrossClues, setAcrossClues] = useState<React.ReactElement[]>([]);
-  const [downClues, setDownClues] = useState<React.ReactElement[]>([]);
+  // const [acrossClues, setAcrossClues] = useState<React.ReactElement[]>([]);
+  // const [downClues, setDownClues] = useState<React.ReactElement[]>([]);
   const [clueNumDirection, setClueNumDirection] = useState<string[][]>([]);
   const [clueToCellHighlight, setClueToCellHighlight] = useState<number>(-1);
   const [isAcrossClueHighlight, setIsAcrossClueHighlight] =
@@ -44,22 +43,16 @@ export default function CreateCrossword(props: any) {
     Array(gridSize * gridSize).fill("")
   );
   const [isGridReady, setIsGridReady] = useState<boolean>(false);
+  const [isClear, setIsClear] = useState<boolean>(false);
   const [isFocusedOnGrid, setIsFocusedOnGrid] = useState<boolean>(false);
   const [puzzleTitle, setPuzzleTitle] = useState<string>("");
 
-  const notServer = useAuth();
   const userId = 1;
   const { gridId } = useParams();
 
   const getCrosswordData = async () => {
     try {
-      const response = await fetch(
-        `${
-          notServer
-            ? `http://localhost:3000/users/${userId}/solver/${gridId}`
-            : `/users/${userId}/solver/${gridId}`
-        }`
-      );
+      const response = await fetch(`/users/${userId}/solver/${gridId}`);
       const result = await response.json();
       setGridSize(result[0].grid_size);
       setCurrentGridNumbers(result[0].grid_numbers);
@@ -166,6 +159,7 @@ export default function CreateCrossword(props: any) {
     setCurrentGridValues(cleanArrayString);
     const newNumbers = assignNumbers(cleanArrayBool);
     setCurrentGridNumbers(newNumbers);
+    setIsClear(true);
   };
 
   const handleFocusClue = (index: number, direction: string): void => {
@@ -234,31 +228,29 @@ export default function CreateCrossword(props: any) {
     const userid = 1;
     const completed = false;
     try {
-      await fetch(
-        `${notServer ? `http://localhost:3000/users/grids` : `/users/grids`}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userid,
-            completed,
-            puzzleTitle,
-            gridSize,
-            currentGridValues,
-            currentGridNumbers,
-            blackSquares,
-            acrossClueValues,
-            downClueValues,
-            clueNumDirection,
-          }),
-        }
-      );
+      await fetch(`/users/grids`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userid,
+          completed,
+          puzzleTitle,
+          gridSize,
+          currentGridValues,
+          currentGridNumbers,
+          blackSquares,
+          acrossClueValues,
+          downClueValues,
+          clueNumDirection,
+        }),
+      });
     } catch (error) {
       throw new Error();
     }
   }
+
   const updateGridDimensions = () => {
     const newWidth: string =
       window.innerWidth < 420
@@ -296,8 +288,6 @@ export default function CreateCrossword(props: any) {
     };
   }, []);
 
-  // console.log(acrossClueValues);
-
   return (
     <div className="flex flex-col items-center m-auto border-4 w-fit shadow-2xl h-fit">
       <div className="flex flex-col md:flex-row justify-around items-center w-full bg-gray-200">
@@ -315,7 +305,8 @@ export default function CreateCrossword(props: any) {
           <input
             type="text"
             id="title"
-            className="m-2 bg-white border-2"
+            defaultValue={puzzleTitle}
+            className="m-2 bg-white border-2 pl-0.5"
             onChange={(e) => handleTitleChange(e)}
           />
         </label>
@@ -360,10 +351,6 @@ export default function CreateCrossword(props: any) {
             gridDimensions={gridDimensions}
             isFocusedCell={isFocusedCell}
             isFocusedClue={isFocusedClue}
-            acrossClues={acrossClues}
-            setAcrossClues={setAcrossClues}
-            downClues={downClues}
-            setDownClues={setDownClues}
             acrossClueValues={acrossClueValues}
             setAcrossClueValues={setAcrossClueValues}
             downClueValues={downClueValues}
@@ -373,6 +360,8 @@ export default function CreateCrossword(props: any) {
             handleFocusClue={handleFocusClue}
             handleUserInputClue={handleUserInputClue}
             handleInputChangeClue={handleInputChangeClue}
+            isClear={isClear}
+            setIsClear={setIsClear}
             mapClues={mapClues}
           />
         )}
@@ -384,7 +373,7 @@ export default function CreateCrossword(props: any) {
         <button className="fancyButton bigger " onClick={() => handleClear()}>
           Clear
         </button>
-        <button className="fancyButton bigger">Share</button>
+        <button className="fancyButton bigger">Delete</button>
       </div>
     </div>
   );

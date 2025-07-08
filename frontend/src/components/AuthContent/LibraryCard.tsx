@@ -20,26 +20,28 @@ export default function LibraryCard(props: LibraryCardProps) {
         target="_self"
         id="library-logo"
         aria-label="Crossword crew library page"
-        className="block w-2/3 h-auto"
+        className="block h-auto"
         tabIndex={-1}
       >
-        <img src={Logo} alt="Crossword Crew Logo" />
+        <img src={Logo} alt="Crossword Crew Logo" className="w-2/3 m-auto" />
+        <div className="items-left mt-2">
+          <p className="m-2">
+            <span className="bg-white text-black p-0.5">Created by</span>{" "}
+            {author}
+          </p>
+          <p className="m-2">
+            <span className="bg-white text-black p-0.5">Puzzle Title</span>{" "}
+            {name}
+          </p>
+          <p className="m-2">
+            <span className="bg-white text-black p-0.5">Created on</span> {date}
+          </p>
+          <p className="m-2">
+            <span className="bg-white text-black p-0.5">Completion status</span>{" "}
+            {completed ? "Completed" : "Unsolved"}
+          </p>
+        </div>
       </Link>
-      <div className="items-left mt-2">
-        <p className="m-2">
-          <span className="bg-white text-black p-0.5">Created by</span> {author}
-        </p>
-        <p className="m-2">
-          <span className="bg-white text-black p-0.5">Puzzle Title</span> {name}
-        </p>
-        <p className="m-2">
-          <span className="bg-white text-black p-0.5">Created on</span> {date}
-        </p>
-        <p className="m-2">
-          <span className="bg-white text-black p-0.5">Completion status</span>{" "}
-          {completed ? "Completed" : "Unsolved"}
-        </p>
-      </div>
     </div>
   );
 }

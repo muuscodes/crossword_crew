@@ -38,7 +38,9 @@ export default function CrosswordEditorGrid(props: EditorGridProps) {
 
     if (positionBlackSquares) {
       // Set black squares
-      const newblackSquares: boolean[] = [...blackSquares];
+      const newblackSquares: boolean[] = [...blackSquares].map((value) => {
+        return value;
+      });
       newblackSquares[index] = !newblackSquares[index];
       setBlackSquares(newblackSquares);
       setCurrentGridNumbers(assignNumbers(newblackSquares));
@@ -58,7 +60,7 @@ export default function CrosswordEditorGrid(props: EditorGridProps) {
     const newGrid: string[] = [...currentGridValues].map((value) => {
       return value;
     });
-    newGrid[index] = value;
+    newGrid[index] = value.toLocaleUpperCase();
     const inputEvent = event.nativeEvent as InputEvent;
     if (isHighlightAcross && inputEvent.inputType !== "deleteContentBackward") {
       let rightIndex: number = index + 1;
