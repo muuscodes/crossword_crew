@@ -3,9 +3,10 @@ import React from "react";
 import CrosswordGrid from "./CrosswordGrid";
 import CreateClues from "./CreateClues";
 import ClueInit from "./ClueInit";
+import { useAuth } from "../../context/AuthContext";
 
 export default function CreateCrossword(props: any) {
-  const { setIsSaved } = props;
+  const { setIsSaved, setUserMessage } = props;
   const [gridSize, setGridSize] = useState<number>(5);
   const [gridDimensions, setGridDimensions] = useState<string>("30vw");
   const [gridHeight, setGridHeight] = useState<string>(gridDimensions + "5px");
@@ -46,6 +47,8 @@ export default function CreateCrossword(props: any) {
   const [isFocusedOnGrid, setIsFocusedOnGrid] = useState<boolean>(false);
   const [puzzleTitle, setPuzzleTitle] = useState<string>("");
 
+  const { globalUser } = useAuth();
+
   const handleGridSizeChange = (
     event: React.ChangeEvent<HTMLSelectElement>
   ): void => {
@@ -55,6 +58,7 @@ export default function CreateCrossword(props: any) {
     setCurrentGridNumbers(Array(value * value).fill(null));
     setBlackSquares(Array(value * value).fill(false));
     setIsGridReady(false);
+    updateGridDimensions();
   };
 
   const handleBlackSquaresChange = (): void => {
@@ -69,19 +73,79 @@ export default function CreateCrossword(props: any) {
   };
 
   const scrollToClue = (index: number, direction: string): void => {
-    if (window.innerWidth > 767) {
-      const containerId: string =
-        direction === "across"
-          ? "scrollableContainerAcross"
-          : "scrollableContainerDown";
-      const container: HTMLElement | null =
-        document.getElementById(containerId);
-      const clueElement: Element | undefined =
-        container?.querySelector("ul")?.children[index];
-      if (clueElement) {
-        clueElement.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      }
+    const containerId: string =
+      direction === "across"
+        ? "scrollableContainerAcross"
+        : "scrollableContainerDown";
+    const container: HTMLElement | null = document.getElementById(containerId);
+    const clueElement: Element | undefined =
+      container?.querySelector("ul")?.children[index];
+    if (clueElement) {
+      clueElement.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
+  };
+
+  const createClue = (
+    id: string,
+    value: string,
+    index: number,
+    direction: string
+  ): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> => {
+    let isHighlight: boolean = false;
+    const focusedCellIndex: number = isFocusedCell.indexOf(true);
+    const indexOf100: number = currentGridNumbers.indexOf(100);
+    const isThreeNumbered: boolean = indexOf100 > 0;
+
+    if (
+      isFocusedClue[index] &&
+      clueNumDirection[index][0] &&
+      clueNumDirection[index][1]
+    ) {
+      if (isFocusedCell[index] == isFocusedClue[index]) {
+        isHighlight = true;
+      } else if (focusedCellIndex < index + gridSize && direction === "down") {
+        isHighlight = false;
+      } else if (
+        focusedCellIndex < index + gridSize &&
+        direction === "across"
+      ) {
+        isHighlight = true;
+      } else if (focusedCellIndex >= index + gridSize && direction === "down") {
+        isHighlight = true;
+      } else if (
+        focusedCellIndex >= index + gridSize &&
+        direction === "across"
+      ) {
+        isHighlight = false;
+      }
+    } else if (isFocusedClue[index]) {
+      isHighlight = true;
+    }
+
+    return (
+      <li className="flex">
+        <p
+          className={`font-bold w-4 text-right ${
+            isThreeNumbered ? "mr-5" : "mr-2"
+          }`}
+        >
+          {id}
+        </p>
+        <textarea
+          id={id + direction}
+          cols={30}
+          rows={1}
+          tabIndex={0}
+          maxLength={50}
+          defaultValue={value}
+          style={{ resize: "none", fontSize: "1.25rem" }}
+          wrap="soft"
+          className={`border-1 ${isHighlight ? "bg-blue-200" : ""}`}
+          onFocus={() => handleFocusClue(index, direction)}
+          onChange={(e) => handleInputChangeClue(e, direction, index)}
+        ></textarea>
+      </li>
+    );
   };
 
   const assignNumbers = (blackSquares: boolean[]): number[] => {
@@ -124,7 +188,7 @@ export default function CreateCrossword(props: any) {
       unknown,
       string | React.JSXElementConstructor<any>
     >[]
-  ) => {
+  ): React.JSX.Element[] => {
     return array.map(
       (
         value: React.ReactElement<
@@ -185,11 +249,12 @@ export default function CreateCrossword(props: any) {
     index: number
   ): void => {
     const value: string = event.target.value;
-    const newAcrossValues: string[] = [...acrossClueValues].map((value) => {
-      return value;
+
+    const newAcrossValues: string[] = [...acrossClueValues].map((val) => {
+      return val;
     });
-    const newDownValues = [...downClueValues].map((value) => {
-      return value;
+    const newDownValues: string[] = [...downClueValues].map((val) => {
+      return val;
     });
 
     if (!isFocusedOnGrid) {
@@ -216,40 +281,64 @@ export default function CreateCrossword(props: any) {
     handleUserInputClue(event, direction, index);
   };
 
-  useEffect(() => {
-    if (currentGridNumbers.some((num) => num !== null)) {
-      setIsGridReady(true);
-    } else {
-      setIsGridReady(false);
+  const handleGridViability = () => {
+    let userMessage = "Please add ";
+    const hasNonNullGridValues: boolean = currentGridValues.some(
+      (value: string) => value !== ""
+    );
+    const hasAcrossClueValues: boolean = acrossClueValues.some(
+      (value: string) => value !== ""
+    );
+    const hasDownClueValues: boolean = downClueValues.some(
+      (value: string) => value !== ""
+    );
+    if (
+      puzzleTitle &&
+      hasNonNullGridValues &&
+      (hasDownClueValues || hasAcrossClueValues)
+    ) {
+      userMessage = "";
+    } else if (!puzzleTitle) {
+      userMessage += "a title ";
+    } else if (!hasNonNullGridValues) {
+      userMessage += "entries to the grid ";
+    } else if (!hasDownClueValues || !hasAcrossClueValues) {
+      userMessage += "clues";
     }
-  }, [currentGridNumbers]);
+    return userMessage;
+  };
 
   async function saveGrid() {
-    setIsSaved(true);
-    const userid = 1;
-    const completed = false;
-    try {
-      await fetch(`/users/grids`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userid,
-          completed,
-          puzzleTitle,
-          gridSize,
-          currentGridValues,
-          currentGridNumbers,
-          blackSquares,
-          acrossClueValues,
-          downClueValues,
-          clueNumDirection,
-        }),
-      });
-    } catch (error) {
-      throw new Error();
+    const message = handleGridViability();
+    if (!message) {
+      setIsSaved(true);
+      const userId = globalUser.user_id;
+      try {
+        await fetch(`/users/${userId}/grids/add`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            credentials: "include",
+          },
+          body: JSON.stringify({
+            puzzleTitle,
+            gridSize,
+            currentGridValues,
+            currentGridNumbers,
+            blackSquares,
+            acrossClueValues,
+            downClueValues,
+            clueNumDirection,
+          }),
+        });
+      } catch (error) {
+        throw new Error();
+      }
     }
+    setUserMessage(message);
+    setTimeout(() => {
+      setUserMessage("");
+    }, 3000);
   }
 
   const updateGridDimensions = () => {
@@ -266,6 +355,14 @@ export default function CreateCrossword(props: any) {
   };
 
   useEffect(() => {
+    if (currentGridNumbers.some((num) => num !== null)) {
+      setIsGridReady(true);
+    } else {
+      setIsGridReady(false);
+    }
+  }, [currentGridNumbers]);
+
+  useEffect(() => {
     window.addEventListener("resize", updateGridDimensions);
     updateGridDimensions();
 
@@ -276,7 +373,7 @@ export default function CreateCrossword(props: any) {
 
   return (
     <div className="flex flex-col items-center m-auto border-4 w-fit shadow-2xl h-fit">
-      <div className="flex flex-col lg:flex-row justify-around items-center w-full bg-gray-200">
+      <div className="flex flex-col lg:flex-row justify-around items-center w-full bg-gray-200 pt-2 lg:pt-0">
         <div>
           <label className="text-xl mr-1" htmlFor="gridSize">
             Grid Size:
@@ -286,7 +383,7 @@ export default function CreateCrossword(props: any) {
             id="gridSize"
             value={gridSize}
             onChange={handleGridSizeChange}
-            className="border-1 text-xl bg-white"
+            className="border-2 text-xl bg-white"
           >
             <option value="5">5</option>
             <option value="7">7</option>
@@ -310,6 +407,7 @@ export default function CreateCrossword(props: any) {
           <input
             type="text"
             id="title"
+            maxLength={50}
             className="m-2 bg-white border-2 pl-0.5"
             onChange={(e) => handleTitleChange(e)}
           />
@@ -355,6 +453,7 @@ export default function CreateCrossword(props: any) {
             gridDimensions={gridDimensions}
             isFocusedCell={isFocusedCell}
             isFocusedClue={isFocusedClue}
+            createClue={createClue}
             acrossClues={acrossClues}
             setAcrossClues={setAcrossClues}
             downClues={downClues}
@@ -371,10 +470,9 @@ export default function CreateCrossword(props: any) {
         <button className="fancyButton bigger" onClick={() => saveGrid()}>
           Save
         </button>
-        <button className="fancyButton bigger " onClick={() => handleClear()}>
+        <button className="fancyButton bigger" onClick={() => handleClear()}>
           Clear
         </button>
-        <button className="fancyButton bigger">Share</button>
       </div>
     </div>
   );

@@ -17,7 +17,7 @@ export interface LibraryCardProps {
   author: string;
   name: string;
   date: string;
-  completed: boolean;
+  completed?: boolean;
   gridId: number;
 }
 
@@ -75,6 +75,12 @@ export interface CrosswordClueProps {
   acrossClues: React.ReactElement[];
   downClues: React.ReactElement[];
   isFocusedClue: boolean[];
+  createClue: (
+    id: string,
+    value: string,
+    index: number,
+    direction: string
+  ) => React.ReactElement<unknown, string | React.JSXElementConstructor<any>>;
   setAcrossClues: (
     value:
       | React.ReactElement[]
@@ -208,7 +214,6 @@ export interface EditorGridProps {
   setCurrentGridValues: (
     value: string[] | ((prevState: string[]) => string[])
   ) => void;
-  handleClear: (prevState: void) => void;
   scrollToClue: (index: number, direction: string) => void;
   assignNumbers: (blackSquares: boolean[]) => number[];
 }
@@ -223,7 +228,7 @@ export interface EditorClueProps {
   clueNumDirection: string[][];
   acrossClueValues: string[];
   downClueValues: string[];
-  isClear: boolean;
+  isClear: React.RefObject<boolean>;
   setAcrossClueValues: React.Dispatch<React.SetStateAction<string[]>>;
   setDownClueValues: React.Dispatch<React.SetStateAction<string[]>>;
   setClueNumDirection: (
@@ -240,13 +245,13 @@ export interface EditorClueProps {
     direction: string,
     index: number
   ) => void;
-  setIsClear: (value: boolean | ((prevState: boolean) => boolean)) => void;
+  assignNumbers: (blackSquares: boolean[]) => number[];
   mapClues: (
     prevState: React.ReactElement<
       unknown,
       string | React.JSXElementConstructor<any>
     >[]
-  ) => React.ReactNode;
+  ) => React.JSX.Element[];
 }
 
 export interface AuthContextType {
@@ -255,10 +260,12 @@ export interface AuthContextType {
   isLoading: boolean;
   signup: (email: string, username: string, password: string) => Promise<void>;
   login: (username_email: string, password: string) => Promise<void>;
-  logout?: () => Promise<void>;
+  logout: () => Promise<void>;
+  isAuthenticated: boolean;
+  setIsAuthenticated: React.Dispatch<React.SetStateAction<any>>;
 }
 
 export interface globalUserType {
   username: string;
-  userId: number;
+  user_id: number;
 }

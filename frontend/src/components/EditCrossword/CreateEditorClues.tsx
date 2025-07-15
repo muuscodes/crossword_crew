@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import React from "react";
 import type { EditorClueProps } from "../utils/types";
+import ClueInit from "../BuildCrossword/ClueInit";
 
 export default function CreateEditorClues(props: EditorClueProps) {
   const {
@@ -14,10 +15,12 @@ export default function CreateEditorClues(props: EditorClueProps) {
     isClear,
     acrossClueValues,
     downClueValues,
+    setAcrossClueValues,
+    setDownClueValues,
     setClueNumDirection,
     handleFocusClue,
     handleInputChangeClue,
-    setIsClear,
+    assignNumbers,
     mapClues,
   } = props;
 
@@ -35,6 +38,8 @@ export default function CreateEditorClues(props: EditorClueProps) {
   ): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> => {
     let isHighlight: boolean = false;
     const focusedCellIndex: number = isFocusedCell.indexOf(true);
+    const indexOf100: number = currentGridNumbers.indexOf(100);
+    const isThreeNumbered: boolean = indexOf100 > 0;
 
     if (
       isFocusedClue[index] &&
@@ -64,7 +69,13 @@ export default function CreateEditorClues(props: EditorClueProps) {
 
     return (
       <li className="flex">
-        <p className="font-bold mr-2 w-4 text-right">{id}</p>
+        <p
+          className={`font-bold w-4 text-right ${
+            isThreeNumbered ? "mr-5" : "mr-2"
+          }`}
+        >
+          {id}
+        </p>
         <textarea
           id={id + direction}
           cols={30}
@@ -74,7 +85,7 @@ export default function CreateEditorClues(props: EditorClueProps) {
           defaultValue={value}
           style={{ resize: "none", fontSize: "1.25rem" }}
           wrap="soft"
-          className={`border-1 w-7/8 ${isHighlight ? "bg-blue-200" : ""}`}
+          className={`border-1 ${isHighlight ? "bg-blue-200" : ""}`}
           onFocus={() => handleFocusClue(index, direction)}
           onChange={(e) => handleInputChangeClue(e, direction, index)}
         ></textarea>
@@ -111,69 +122,101 @@ export default function CreateEditorClues(props: EditorClueProps) {
     return newClueDirs;
   };
 
-  const initialize = (): void => {
+  const initialize = (acrossArray: string[], downArray: string[]): void => {
+    const acrossClueValueArray = acrossArray;
+    const downClueValueArray = downArray;
     let acrossInit: React.ReactElement[] = [];
     let downInit: React.ReactElement[] = [];
 
-    for (let i = 0; i < gridSize; i++) {
-      for (let j = 0; j < gridSize; j++) {
-        const index = i * gridSize + j;
-        if (
-          currentGridNumbers[index] &&
-          clueNumDirection[index][0] === "across" &&
-          clueNumDirection[index][1] === "down"
-        ) {
-          const newAcrossClue = createClue(
-            currentGridNumbers[index]?.toString(),
-            acrossClueValues[index],
-            index,
-            "across"
-          );
-          if (newAcrossClue) {
-            acrossInit.push(newAcrossClue);
+    if (isClear.current) {
+      const cleanArrayBool: boolean[] = Array(gridSize * gridSize).fill(false);
+      const newNumbers = assignNumbers(cleanArrayBool);
+      const cleanIsFocusedClue: boolean[] = Array(gridSize * gridSize).fill(
+        false
+      );
+      const cleanIsFocusedCell: boolean[] = Array(gridSize * gridSize).fill(
+        false
+      );
+      const [acrossCluesInit, downCluesInit, clueDirectionsInit] = ClueInit({
+        gridSize,
+        newNumbers,
+        cleanIsFocusedClue,
+        cleanIsFocusedCell,
+        clueNumDirection,
+        handleFocusClue,
+        handleInputChangeClue,
+      });
+      setAcrossClueInit(mapClues(acrossCluesInit));
+      setDownClueInit(mapClues(downCluesInit));
+      setClueNumDirection(clueDirectionsInit);
+      console.log(clueDirectionsInit);
+
+      isClear.current = false;
+    } else {
+      const nullGrid: boolean = !currentGridNumbers.some(
+        (num: number) => num !== null
+      );
+
+      for (let i = 0; i < gridSize; i++) {
+        for (let j = 0; j < gridSize; j++) {
+          const index = i * gridSize + j;
+          if (nullGrid) {
+            break;
           }
-          const newDownClue = createClue(
-            currentGridNumbers[index]?.toString(),
-            downClueValues[index],
-            index,
-            "down"
-          );
-          if (newDownClue) {
-            downInit.push(newDownClue);
-          }
-        } else if (
-          currentGridNumbers[index] &&
-          clueNumDirection[index][0] === "across"
-        ) {
-          const newAcrossClue = createClue(
-            currentGridNumbers[index]?.toString(),
-            acrossClueValues[index],
-            index,
-            "across"
-          );
-          if (newAcrossClue) {
-            acrossInit.push(newAcrossClue);
-          }
-        } else if (
-          currentGridNumbers[index] &&
-          clueNumDirection[index][1] === "down"
-        ) {
-          const newDownClue = createClue(
-            currentGridNumbers[index]?.toString(),
-            downClueValues[index],
-            index,
-            "down"
-          );
-          if (newDownClue) {
-            downInit.push(newDownClue);
+          if (
+            currentGridNumbers[index] &&
+            clueNumDirection[index][0] === "across" &&
+            clueNumDirection[index][1] === "down"
+          ) {
+            const newAcrossClue = createClue(
+              currentGridNumbers[index]?.toString(),
+              acrossClueValueArray[index],
+              index,
+              "across"
+            );
+            if (newAcrossClue) {
+              acrossInit.push(newAcrossClue);
+            }
+            const newDownClue = createClue(
+              currentGridNumbers[index]?.toString(),
+              downClueValueArray[index],
+              index,
+              "down"
+            );
+            if (newDownClue) {
+              downInit.push(newDownClue);
+            }
+          } else if (
+            currentGridNumbers[index] &&
+            clueNumDirection[index][0] === "across"
+          ) {
+            const newAcrossClue = createClue(
+              currentGridNumbers[index]?.toString(),
+              acrossClueValueArray[index],
+              index,
+              "across"
+            );
+            if (newAcrossClue) {
+              acrossInit.push(newAcrossClue);
+            }
+          } else if (
+            currentGridNumbers[index] &&
+            clueNumDirection[index][1] === "down"
+          ) {
+            const newDownClue = createClue(
+              currentGridNumbers[index]?.toString(),
+              downClueValueArray[index],
+              index,
+              "down"
+            );
+            if (newDownClue) {
+              downInit.push(newDownClue);
+            }
           }
         }
+        setAcrossClueInit(acrossInit);
+        setDownClueInit(downInit);
       }
-    }
-    setAcrossClueInit(acrossInit);
-    setDownClueInit(downInit);
-    if (isClear) {
-      setIsClear(false);
     }
   };
 
@@ -183,52 +226,52 @@ export default function CreateEditorClues(props: EditorClueProps) {
       acrossClueInit.length > 0 &&
       downClueInit.length > 0
     ) {
-      const newAcrossClues: React.ReactElement[] = [];
-      const newDownClues: React.ReactElement[] = [];
-      const newDirs: string[][] = createClueNumDirections();
+      if (isClear.current) {
+        const cleanArray: string[] = Array(gridSize * gridSize).fill("");
+        setAcrossClueValues(cleanArray);
+        setDownClueValues(cleanArray);
+        initialize(cleanArray, cleanArray);
+      } else {
+        const newAcrossClues: React.ReactElement[] = [];
+        const newDownClues: React.ReactElement[] = [];
+        const newDirs: string[][] = createClueNumDirections();
 
-      for (let index = 0; index < gridSize * gridSize; index++) {
-        if (
-          clueNumDirection[index][0] &&
-          clueNumDirection[index][0] === "across"
-        ) {
-          const newAcrossClue = createClue(
-            currentGridNumbers[index]?.toString(),
-            acrossClueValues ? acrossClueValues[index] : "",
-            index,
-            "across"
-          );
-          if (newAcrossClue) {
-            newAcrossClues.push(newAcrossClue);
+        for (let index = 0; index < gridSize * gridSize; index++) {
+          if (
+            clueNumDirection[index][0] &&
+            clueNumDirection[index][0] === "across"
+          ) {
+            const newAcrossClue = createClue(
+              currentGridNumbers[index]?.toString(),
+              acrossClueValues ? acrossClueValues[index] : "",
+              index,
+              "across"
+            );
+            if (newAcrossClue) {
+              newAcrossClues.push(newAcrossClue);
+            }
+          }
+          if (
+            clueNumDirection[index][1] &&
+            clueNumDirection[index][1] === "down"
+          ) {
+            const newDownClue = createClue(
+              currentGridNumbers[index]?.toString(),
+              downClueValues ? downClueValues[index] : "",
+              index,
+              "down"
+            );
+            if (newDownClue) {
+              newDownClues.push(newDownClue);
+            }
           }
         }
-        if (
-          clueNumDirection[index][1] &&
-          clueNumDirection[index][1] === "down"
-        ) {
-          const newDownClue = createClue(
-            currentGridNumbers[index]?.toString(),
-            downClueValues ? downClueValues[index] : "",
-            index,
-            "down"
-          );
-          if (newDownClue) {
-            newDownClues.push(newDownClue);
-          }
-        }
+        setAcrossClueInit(newAcrossClues);
+        setDownClueInit(newDownClues);
+        setClueNumDirection(newDirs);
       }
-
-      setAcrossClueInit(newAcrossClues);
-      setDownClueInit(newDownClues);
-      setClueNumDirection(newDirs);
     }
   }, [blackSquares, isFocusedClue, isFocusedCell]);
-
-  useEffect(() => {
-    if (isClear) {
-      initialize();
-    }
-  }, [isClear]);
 
   useEffect(() => {
     if (
@@ -237,11 +280,9 @@ export default function CreateEditorClues(props: EditorClueProps) {
       clueNumDirection.some((elem) => elem[0])
     ) {
       hasInitialized.current = true;
-      initialize();
+      initialize(acrossClueValues, downClueValues);
     }
   }, []);
-
-  console.log(acrossClueInit);
 
   return (
     <div

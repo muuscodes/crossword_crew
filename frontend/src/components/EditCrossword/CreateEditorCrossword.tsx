@@ -1,14 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import React from "react";
 import CrosswordEditorGrid from "./CrosswordEditorGrid";
 import CreateEditorClues from "./CreateEditorClues";
 import { useParams } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function CreateCrossword(props: any) {
-  const { setIsSaved } = props;
+  const { setIsSaved, setUserMessage } = props;
   const [gridSize, setGridSize] = useState<number>(5);
   const [gridDimensions, setGridDimensions] = useState<string>("30vw");
   const [gridHeight, setGridHeight] = useState<string>(gridDimensions + "5px");
+  const [buttonsWidth, setButtonsWidth] = useState<string>(gridDimensions);
   const [positionBlackSquares, setPositionBlackSquares] =
     useState<boolean>(false);
   const [currentGridNumbers, setCurrentGridNumbers] = useState<number[]>(
@@ -27,8 +30,6 @@ export default function CreateCrossword(props: any) {
     Array(gridSize * gridSize).fill(false)
   );
   const [isHighlightAcross, setIsHighlightAcross] = useState<boolean>(true);
-  // const [acrossClues, setAcrossClues] = useState<React.ReactElement[]>([]);
-  // const [downClues, setDownClues] = useState<React.ReactElement[]>([]);
   const [clueNumDirection, setClueNumDirection] = useState<string[][]>([]);
   const [clueToCellHighlight, setClueToCellHighlight] = useState<number>(-1);
   const [isAcrossClueHighlight, setIsAcrossClueHighlight] =
@@ -43,25 +44,35 @@ export default function CreateCrossword(props: any) {
     Array(gridSize * gridSize).fill("")
   );
   const [isGridReady, setIsGridReady] = useState<boolean>(false);
-  const [isClear, setIsClear] = useState<boolean>(false);
   const [isFocusedOnGrid, setIsFocusedOnGrid] = useState<boolean>(false);
   const [puzzleTitle, setPuzzleTitle] = useState<string>("");
+  const [isShare, setIsShare] = useState<boolean>(false);
+  const [recipientUsername, setRecipientUsername] = useState<string>("");
+  const hasInitialized = useRef(false);
+  const isClear = useRef(false);
 
-  const userId = 1;
+  const { globalUser, isAuthenticated, setIsAuthenticated, setGlobalUser } =
+    useAuth();
+  const globalUserId = globalUser.user_id;
   const { gridId } = useParams();
+  const navigate = useNavigate();
 
-  const getCrosswordData = async () => {
+  const getCrosswordData = async (userId: number) => {
     try {
-      const response = await fetch(`/users/${userId}/solver/${gridId}`);
+      const response = await fetch(`/users/${userId}/editor/${gridId}`, {
+        method: "GET",
+        credentials: "include",
+      });
       const result = await response.json();
-      setGridSize(result[0].grid_size);
-      setCurrentGridNumbers(result[0].grid_numbers);
-      setCurrentGridValues(result[0].grid_values);
-      setBlackSquares(result[0].black_squares);
-      setClueNumDirection(result[0].clue_number_directions);
-      setDownClueValues(result[0].down_clues);
-      setPuzzleTitle(result[0].puzzle_title);
-      setAcrossClueValues(result[0].across_clues);
+      setGridSize(result.grid_size);
+      setCurrentGridNumbers(result.grid_numbers);
+      setCurrentGridValues(result.grid_values);
+      setBlackSquares(result.black_squares);
+      setClueNumDirection(result.clue_number_directions);
+      setDownClueValues(result.down_clues);
+      setPuzzleTitle(result.puzzle_title);
+      setAcrossClueValues(result.across_clues);
+      hasInitialized.current = true;
     } catch (error) {
       throw new Error();
     }
@@ -79,18 +90,15 @@ export default function CreateCrossword(props: any) {
   };
 
   const scrollToClue = (index: number, direction: string): void => {
-    if (window.innerWidth > 767) {
-      const containerId: string =
-        direction === "across"
-          ? "scrollableContainerAcross"
-          : "scrollableContainerDown";
-      const container: HTMLElement | null =
-        document.getElementById(containerId);
-      const clueElement: Element | undefined =
-        container?.querySelector("ul")?.children[index];
-      if (clueElement) {
-        clueElement.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      }
+    const containerId: string =
+      direction === "across"
+        ? "scrollableContainerAcross"
+        : "scrollableContainerDown";
+    const container: HTMLElement | null = document.getElementById(containerId);
+    const clueElement: Element | undefined =
+      container?.querySelector("ul")?.children[index];
+    if (clueElement) {
+      clueElement.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   };
 
@@ -134,7 +142,7 @@ export default function CreateCrossword(props: any) {
       unknown,
       string | React.JSXElementConstructor<any>
     >[]
-  ) => {
+  ): React.JSX.Element[] => {
     return array.map(
       (
         value: React.ReactElement<
@@ -147,19 +155,19 @@ export default function CreateCrossword(props: any) {
   };
 
   const handleClear = (): void => {
+    if (hasInitialized.current) {
+      isClear.current = true;
+    }
     const cleanArrayBool: boolean[] = Array(gridSize * gridSize).fill(false);
     const cleanArrayString: string[] = Array(gridSize * gridSize).fill("");
     setBlackSquares(cleanArrayBool);
     setIsFocusedCell(cleanArrayBool);
     setIsFocusedClue(cleanArrayBool);
     setIsSecondaryFocusedCell(cleanArrayBool);
-    setAcrossClueValues(cleanArrayString);
-    setDownClueValues(cleanArrayString);
     setIsHighlightAcross(true);
     setCurrentGridValues(cleanArrayString);
     const newNumbers = assignNumbers(cleanArrayBool);
     setCurrentGridNumbers(newNumbers);
-    setIsClear(true);
   };
 
   const handleFocusClue = (index: number, direction: string): void => {
@@ -215,41 +223,125 @@ export default function CreateCrossword(props: any) {
     handleUserInputClue(event, direction, index);
   };
 
-  useEffect(() => {
-    if (currentGridNumbers.some((num) => num !== null)) {
-      setIsGridReady(true);
-    } else {
-      setIsGridReady(false);
+  const handleInputSend = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ): void => {
+    const value: string = event.target.value;
+    setRecipientUsername(value);
+  };
+
+  const handleShareToggle = () => {
+    setIsShare(!isShare);
+    let message = "";
+    setUserMessage(message);
+  };
+
+  const handleSendShare = async () => {
+    setIsShare(false);
+    let message = handleGridViability();
+    if (!message) {
+      try {
+        const response = await fetch(
+          `/users/${globalUserId}/grids/${gridId}/share`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              recipientUsername,
+            }),
+            credentials: "include",
+          }
+        );
+        if (response.ok) {
+          message = "Puzzle sent!";
+        }
+      } catch (error: any) {
+        throw new Error(error);
+      }
     }
-  }, [currentGridNumbers]);
+    setUserMessage(message);
+  };
+
+  const handleGridViability = () => {
+    let userMessage = "Please add ";
+    const hasNonNullGridValues: boolean = currentGridValues.some(
+      (value: string) => value !== ""
+    );
+    const hasAcrossClueValues: boolean = acrossClueValues.some(
+      (value: string) => value !== ""
+    );
+    const hasDownClueValues: boolean = downClueValues.some(
+      (value: string) => value !== ""
+    );
+    if (
+      puzzleTitle &&
+      hasNonNullGridValues &&
+      (hasDownClueValues || hasAcrossClueValues)
+    ) {
+      userMessage = "";
+    } else if (!puzzleTitle) {
+      userMessage += "a title ";
+    } else if (!hasNonNullGridValues) {
+      userMessage += "entries to the grid ";
+    } else if (!hasDownClueValues || !hasAcrossClueValues) {
+      userMessage += "clues";
+    }
+    return userMessage;
+  };
 
   async function saveGrid() {
-    setIsSaved(true);
-    const userid = 1;
-    const completed = false;
-    try {
-      await fetch(`/users/grids`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          userid,
-          completed,
-          puzzleTitle,
-          gridSize,
-          currentGridValues,
-          currentGridNumbers,
-          blackSquares,
-          acrossClueValues,
-          downClueValues,
-          clueNumDirection,
-        }),
-      });
-    } catch (error) {
-      throw new Error();
+    let message = handleGridViability();
+    if (!message) {
+      setIsSaved(true);
+      try {
+        const response = await fetch(`/users/editor/${gridId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            puzzleTitle,
+            gridSize,
+            currentGridValues,
+            currentGridNumbers,
+            blackSquares,
+            acrossClueValues,
+            downClueValues,
+            clueNumDirection,
+          }),
+          credentials: "include",
+        });
+        if (!response.ok) {
+          message = "Can not edit a shared crossword";
+        }
+      } catch (error) {
+        throw new Error();
+      }
     }
+    setUserMessage(message);
+    setTimeout(() => {
+      setUserMessage("");
+    }, 3000);
   }
+
+  const handleDelete = async () => {
+    try {
+      const response = await fetch(`/users/${globalUserId}/delete/${gridId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        setUserMessage(errorData);
+        throw new Error(errorData.message || "Failed to delete grid");
+      }
+      if (response.ok) navigate("/library");
+    } catch (error: any) {
+      console.error("Error:", error.message);
+    }
+  };
 
   const updateGridDimensions = () => {
     const newWidth: string =
@@ -258,11 +350,52 @@ export default function CreateCrossword(props: any) {
         : window.innerWidth < 768
         ? "387.5px"
         : gridDimensions;
+    const newButtonWidth: string =
+      window.innerWidth < 420
+        ? " 325px"
+        : window.innerWidth < 768
+        ? "392.5px"
+        : "100%";
     const newHeight: string =
       window.innerWidth < 768 ? "h-fit" : `${gridDimensions} + 5px`;
     setGridDimensions(newWidth);
     setGridHeight(newHeight);
+    setButtonsWidth(newButtonWidth);
   };
+
+  const checkSession = async () => {
+    try {
+      const response = await fetch("/auth/session", {
+        method: "GET",
+        credentials: "include",
+      });
+      const sessionData = await response.json();
+      if (response.ok && sessionData.username && !isAuthenticated) {
+        const newGlobalUser = {
+          username: sessionData.username,
+          user_id: sessionData.user_id,
+        };
+        getCrosswordData(newGlobalUser.user_id);
+        setGlobalUser(newGlobalUser);
+        setIsAuthenticated(true);
+      } else if (isAuthenticated) {
+        getCrosswordData(globalUserId);
+      } else {
+        setIsAuthenticated(false);
+      }
+    } catch (error) {
+      console.error("Error checking session:", error);
+      setIsAuthenticated(false);
+    }
+  };
+
+  useEffect(() => {
+    if (currentGridNumbers.some((num) => num !== null)) {
+      setIsGridReady(true);
+    } else {
+      setIsGridReady(false);
+    }
+  }, [currentGridNumbers]);
 
   useEffect(() => {
     if (
@@ -276,7 +409,7 @@ export default function CreateCrossword(props: any) {
   }, [currentGridNumbers]);
 
   useEffect(() => {
-    getCrosswordData();
+    checkSession();
   }, []);
 
   useEffect(() => {
@@ -305,6 +438,7 @@ export default function CreateCrossword(props: any) {
           <input
             type="text"
             id="title"
+            maxLength={50}
             defaultValue={puzzleTitle}
             className="m-2 bg-white border-2 pl-0.5"
             onChange={(e) => handleTitleChange(e)}
@@ -339,7 +473,6 @@ export default function CreateCrossword(props: any) {
           setIsFocusedOnGrid={setIsFocusedOnGrid}
           currentGridValues={currentGridValues}
           setCurrentGridValues={setCurrentGridValues}
-          handleClear={handleClear}
           assignNumbers={assignNumbers}
         />
 
@@ -360,21 +493,57 @@ export default function CreateCrossword(props: any) {
             handleFocusClue={handleFocusClue}
             handleUserInputClue={handleUserInputClue}
             handleInputChangeClue={handleInputChangeClue}
+            assignNumbers={assignNumbers}
             isClear={isClear}
-            setIsClear={setIsClear}
             mapClues={mapClues}
           />
         )}
       </div>
-      <div className="flex flex-row justify-evenly w-full py-2 bg-gray-200 border-t-3">
-        <button className="fancyButton bigger" onClick={() => saveGrid()}>
-          Save
-        </button>
-        <button className="fancyButton bigger " onClick={() => handleClear()}>
-          Clear
-        </button>
-        <button className="fancyButton bigger">Delete</button>
+      <div
+        className={`bg-gray-200 border-t-3 w-full`}
+        style={{ maxWidth: `${buttonsWidth}` }}
+      >
+        <div className="flex flex-wrap flex-row items-center gap-4 justify-evenly w-4/6 m-auto py-2">
+          <button className="fancyButton bigger" onClick={() => saveGrid()}>
+            Save
+          </button>
+          <button className="fancyButton bigger " onClick={() => handleClear()}>
+            Clear
+          </button>
+          <button className="fancyButton bigger" onClick={() => handleDelete()}>
+            Delete
+          </button>
+          <button
+            className="fancyButton bigger"
+            onClick={() => handleShareToggle()}
+          >
+            Share
+          </button>
+        </div>
       </div>
+      {isShare && (
+        <div className="flex flex-col items-center bg-gray-200 w-full p-5">
+          <p>Please save the grid before sending</p>
+          <label htmlFor="recipient" className="text-xl"></label>
+          <input
+            type="text"
+            name="recipient"
+            placeholder="Recipient's Username"
+            required
+            className="border-2 w-1/2 lg:w-1/3 bg-white p-0.5 m-2"
+            onChange={(e) => {
+              handleInputSend(e);
+            }}
+          />
+          <button
+            className="fancyButton"
+            tabIndex={1}
+            onClick={() => handleSendShare()}
+          >
+            Send
+          </button>
+        </div>
+      )}
     </div>
   );
 }

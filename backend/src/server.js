@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import { shutdownDatabase } from "./db.js";
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import emailRoutes from "./routes/emailRoutes.js";
 import dotenv from "dotenv";
 import {
   corsMiddleware,
@@ -15,16 +16,16 @@ const PORT = process.env.PORT || 3000;
 
 const app = express();
 
+// Basic middleware
+app.use(corsMiddleware);
+app.use(express.json());
 app.use(sessionMiddleware);
+
 app.use(passport.initialize());
 app.use(passport.session());
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
-// Basic middleware
-app.use(express.json());
-app.use(corsMiddleware);
 
 // Serve static files from React app
 app.use(express.static(path.resolve(__dirname, "../../frontend/dist")));
@@ -32,6 +33,7 @@ app.use(express.static(path.resolve(__dirname, "../../frontend/dist")));
 // Routes
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
+app.use("/email", emailRoutes);
 
 app.all("/{*any}", (req, res) => {
   res.sendFile(

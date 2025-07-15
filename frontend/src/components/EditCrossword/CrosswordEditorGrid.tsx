@@ -26,7 +26,6 @@ export default function CrosswordEditorGrid(props: EditorGridProps) {
     setIsHighlightAcross,
     scrollToClue,
     setIsFocusedOnGrid,
-    handleClear,
     assignNumbers,
   } = props;
   const currentCell = useRef(-1);
@@ -317,13 +316,15 @@ export default function CrosswordEditorGrid(props: EditorGridProps) {
 
   const handleBgColor = (index: number): string => {
     let bgColor: string = "bg-white";
-    if (blackSquares && blackSquares[index]) {
+
+    if (blackSquares[index]) {
       bgColor = "bg-black";
     } else if (isFocusedCell[index]) {
       bgColor = "bg-yellow-200";
     } else if (isSecondaryFocusedCell[index]) {
       bgColor = "bg-blue-200";
     }
+
     return bgColor;
   };
 
@@ -651,10 +652,6 @@ export default function CrosswordEditorGrid(props: EditorGridProps) {
     }
   }, [clueToCellHighlight]);
 
-  useEffect(() => {
-    handleClear();
-  }, [gridSize]);
-
   return (
     <div
       className="grid border-y-3 border-r-3 border-x-2 border-black w-40vw"
@@ -695,7 +692,11 @@ export default function CrosswordEditorGrid(props: EditorGridProps) {
                 positionBlackSquares ? "cursor-pointer" : ""
               }`}
               onChange={(e) => handleUserInput(e, index)}
-              value={currentGridValues[index]}
+              value={
+                currentGridValues[index] !== undefined
+                  ? currentGridValues[index]
+                  : ""
+              }
               ref={(el) => {
                 inputRefs.current[index] = el;
               }}

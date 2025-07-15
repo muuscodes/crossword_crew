@@ -9,6 +9,7 @@ export default function CreateClues(props: CrosswordClueProps) {
     currentGridNumbers,
     blackSquares,
     gridDimensions,
+    createClue,
     acrossClues,
     setAcrossClues,
     downClues,
@@ -18,66 +19,10 @@ export default function CreateClues(props: CrosswordClueProps) {
     clueNumDirection,
     setClueNumDirection,
     handleFocusClue,
-    handleInputChangeClue,
     mapClues,
   } = props;
 
   const hasInitialized = useRef(false);
-
-  const createClue = (
-    id: string,
-    value: string,
-    index: number,
-    direction: string
-  ): React.ReactElement<unknown, string | React.JSXElementConstructor<any>> => {
-    let isHighlight: boolean = false;
-    const focusedCellIndex: number = isFocusedCell.indexOf(true);
-
-    if (
-      isFocusedClue[index] &&
-      clueNumDirection[index][0] &&
-      clueNumDirection[index][1]
-    ) {
-      if (isFocusedCell[index] == isFocusedClue[index]) {
-        isHighlight = true;
-      } else if (focusedCellIndex < index + gridSize && direction === "down") {
-        isHighlight = false;
-      } else if (
-        focusedCellIndex < index + gridSize &&
-        direction === "across"
-      ) {
-        isHighlight = true;
-      } else if (focusedCellIndex >= index + gridSize && direction === "down") {
-        isHighlight = true;
-      } else if (
-        focusedCellIndex >= index + gridSize &&
-        direction === "across"
-      ) {
-        isHighlight = false;
-      }
-    } else if (isFocusedClue[index]) {
-      isHighlight = true;
-    }
-
-    return (
-      <li className="flex">
-        <p className="font-bold mr-2 w-4 text-right">{id}</p>
-        <textarea
-          id={id + direction}
-          cols={30}
-          rows={1}
-          tabIndex={0}
-          maxLength={50}
-          defaultValue={value}
-          style={{ resize: "none", fontSize: "1.25rem" }}
-          wrap="soft"
-          className={`border-1 w-7/8 ${isHighlight ? "bg-blue-200" : ""}`}
-          onFocus={() => handleFocusClue(index, direction)}
-          onChange={(e) => handleInputChangeClue(e, direction, index)}
-        ></textarea>
-      </li>
-    );
-  };
 
   const createClueNumDirections = (): string[][] => {
     const newClueDirs: string[][] = Array.from(
@@ -139,9 +84,20 @@ export default function CreateClues(props: CrosswordClueProps) {
       const newDirs: string[][] = createClueNumDirections();
       const newAcrossClues: React.ReactElement[] = [];
       const newDownClues: React.ReactElement[] = [];
+      const nullGrid: boolean = !currentGridNumbers.some(
+        (num: number) => num !== null
+      );
 
       for (let index = 0; index < gridSize * gridSize; index++) {
-        if (newDirs[index][0] && newDirs[index][0] === "across") {
+        if (nullGrid) {
+          break;
+        }
+        if (
+          newDirs[index][0] &&
+          newDirs[index][0] === "across" &&
+          newDirs[index][1] &&
+          newDirs[index][1] === "down"
+        ) {
           const newAcrossClue = createClue(
             currentGridNumbers[index]?.toString(),
             "",
@@ -151,8 +107,34 @@ export default function CreateClues(props: CrosswordClueProps) {
           if (newAcrossClue) {
             newAcrossClues.push(newAcrossClue);
           }
-        }
-        if (newDirs[index][1] && newDirs[index][1] === "down") {
+          const newDownClue = createClue(
+            currentGridNumbers[index]?.toString(),
+            "",
+            index,
+            "down"
+          );
+          if (newDownClue) {
+            newDownClues.push(newDownClue);
+          }
+        } else if (
+          newDirs[index][0] &&
+          newDirs[index][0] === "across" &&
+          newDirs[index][1] !== "down"
+        ) {
+          const newAcrossClue = createClue(
+            currentGridNumbers[index]?.toString(),
+            "",
+            index,
+            "across"
+          );
+          if (newAcrossClue) {
+            newAcrossClues.push(newAcrossClue);
+          }
+        } else if (
+          newDirs[index][1] &&
+          newDirs[index][1] === "down" &&
+          newDirs[index][0] !== "across"
+        ) {
           const newDownClue = createClue(
             currentGridNumbers[index]?.toString(),
             "",
@@ -164,14 +146,11 @@ export default function CreateClues(props: CrosswordClueProps) {
           }
         }
       }
-
       setAcrossClues(newAcrossClues);
       setDownClues(newDownClues);
       setClueNumDirection(newDirs);
     }
   }, [blackSquares, isFocusedClue, isFocusedCell]);
-
-  console.log(acrossClues);
 
   return (
     <div

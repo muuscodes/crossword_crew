@@ -75,6 +75,83 @@
   gap: 1rem;
 }
 
+.modal-container-help {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  color: black;
+  flex-direction: column;
+  text-align: center;
+  align-items: center;
+  z-index: 100;
+  padding: 8rem 1rem;
+}
+
+.modal-underlay-help {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.834);
+  opacity: 0.8;
+  z-index: 9;
+  border: none;
+  width: 100%;
+  box-shadow: unset;
+}
+
+.modal-underlay-help:hover {
+  transform: translate(0);
+  box-shadow: unset;
+  cursor: pointer;
+  opacity: 70%;
+}
+
+.modal-content-help {
+  position: relative;
+  z-index: 101;
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
+  min-height: 400px;
+  border: 10px solid black;
+  background: #ffffff;
+  text-align: center;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto;
+}
+
+.help-modal-button {
+  padding: 5px;
+  border: 2px solid black;
+  background-color: #f8f2f2b6;
+  box-shadow: 0px 2px 2px 0 black;
+  border-radius: 3px;
+  transition-duration: 200ms;
+}
+
+.help-modal-button:hover {
+  box-shadow: 0 0 0 0 black;
+  transform: translate(3px, 3px);
+  cursor: pointer;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .help-modal-button {
+    transform: none;
+    box-shadow: none;
+  }
+  .help-modal-button:hover {
+    box-shadow: none;
+    transform: none;
+    cursor: pointer;
+  }
+}
+
 .fancyButton {
   color: black;
   background-color: white;
@@ -98,23 +175,22 @@
   background-color: black;
   color: white;
 }
-
-.fancyButtonNoClick {
-  color: black;
-  background-color: white;
-  width: fit-content;
-  font-family: inherit;
-  font-size: inherit;
-  font-weight: 500;
-  padding: 0.25rem 1.25rem;
-  border: 1.5px solid black;
-  box-shadow: 2px 2px 2px 0 black;
-  transition-duration: 200ms;
-}
-
-.fancyButtonNoClick:active {
-  background-color: black;
-  color: white;
+@media (hover: none) and (pointer: coarse) {
+  .fancyButton {
+    transform: none;
+    box-shadow: none;
+  }
+  .fancyButton:hover {
+    box-shadow: none;
+    transform: none;
+    cursor: pointer;
+  }
+  .fancyButton:active {
+    background-color: black;
+    color: white;
+    transform: none;
+    box-shadow: none;
+  }
 }
 
 .bigger {

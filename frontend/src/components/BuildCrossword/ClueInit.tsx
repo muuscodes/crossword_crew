@@ -25,6 +25,8 @@ export default function ClueInit(
   ) => {
     let isHighlight: boolean = false;
     const focusedCellIndex: number = isFocusedCell.indexOf(true);
+    const indexOf100: number = currentGridNumbers.indexOf(100);
+    const isThreeNumbered: boolean = indexOf100 > 0;
 
     if (
       isFocusedClue[index] &&
@@ -54,7 +56,13 @@ export default function ClueInit(
 
     return (
       <li className="flex">
-        <p className="font-bold mr-2 w-4 text-right">{id}</p>
+        <p
+          className={`font-bold w-4 text-right ${
+            isThreeNumbered ? "mr-5" : "mr-2"
+          }`}
+        >
+          {id}
+        </p>
         <textarea
           id={id + direction}
           cols={30}
@@ -64,7 +72,9 @@ export default function ClueInit(
           defaultValue={value}
           style={{ resize: "none", fontSize: "1.25rem" }}
           wrap="true"
-          className={`border-1 w-7/8 ${isHighlight ? "bg-blue-200" : ""}`}
+          className={`border-1 ${isThreeNumbered ? "w-6/8" : "w-7/8"} ${
+            isHighlight ? "bg-blue-200" : ""
+          }`}
           onFocus={() => handleFocusClue(index, direction)}
           onChange={(e) => handleInputChangeClue(e, direction, index)}
         ></textarea>
@@ -75,13 +85,18 @@ export default function ClueInit(
   const initialize = (): void => {
     let acrossInit: React.ReactElement[] = [];
     let downInit: React.ReactElement[] = [];
+    const nullGrid: boolean = !currentGridNumbers.some(
+      (num: number) => num !== null
+    );
+
     for (let i = 0; i < gridSize; i++) {
       for (let j = 0; j < gridSize; j++) {
         const index = i * gridSize + j;
 
-        if (currentGridNumbers[0] === null) {
+        if (nullGrid) {
           break;
         }
+
         // Check for horizontal word start
         if (j === 0) {
           clueDirectionsInit[index][0] = "across";

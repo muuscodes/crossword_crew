@@ -234,6 +234,7 @@ export default function CrosswordGrid(props: SolverGridProps) {
     let clueListIndex: number = 0;
     const acrossIndices: number[] = [];
     const downIndices: number[] = [];
+
     clueNumDirection.forEach((item: string[], index: number) => {
       if (item[0] === "across") {
         acrossIndices.push(index);
@@ -315,7 +316,7 @@ export default function CrosswordGrid(props: SolverGridProps) {
   const handleColor = (index: number): string => {
     let bgColor: string = "bg-white";
 
-    if (blackSquares && blackSquares[index]) {
+    if (blackSquares[index]) {
       bgColor = "bg-black";
     } else if (isFocusedCell[index]) {
       bgColor = "bg-yellow-200";
@@ -692,7 +693,7 @@ export default function CrosswordGrid(props: SolverGridProps) {
     ) {
       handleSecondaryFocus(index, false);
     }
-    // Both across and down clue
+    // Both across and down clues
     else if (
       hasNonNullValues &&
       clueNumDirection[index][0] &&

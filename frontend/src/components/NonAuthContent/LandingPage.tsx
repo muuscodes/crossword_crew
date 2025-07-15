@@ -1,4 +1,3 @@
-// import { useState } from "react";
 import editClues from "../../img/edit-clues.jpeg";
 import editHints from "../../img/edit-hints.jpg";
 import shareCw from "../../img/share-cw.jpg";
@@ -33,8 +32,8 @@ export default function LandingPage() {
     <>
       <section className="text-center items-center m-auto">
         <section className="hero">
-          <h1 className=" text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold p-6 text-white bg-black text-nowrap m-auto mt-50">
-            Welcome to Crossword Crew
+          <h1 className=" text-4xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold p-6 text-white bg-black m-auto mt-50 w-fit">
+            Welcome to <span className="text-nowrap">Crossword Crew</span>
           </h1>
         </section>
         <section className="w-full">
@@ -68,7 +67,7 @@ export default function LandingPage() {
               <h3 className="text-5xl font-bold m-atuo pb-15">
                 Edit hints with ease:
               </h3>
-              <div className="border-2 rounded-sm p-2 mb-2 bg-white w-1/2 md:w-1/3 lg:w-2/3 xl:w-2/5 m-auto flex-col items-center">
+              <div className="border-2 rounded-sm p-2 mb-2 bg-white w-2/3 md:w-1/3 lg:w-2/3 xl:w-2/5 m-auto flex-col items-center">
                 <h4 className="font-bold text-3xl">Across:</h4>
                 <ol className="mt-3">
                   {createClue("1", "The man with a cane")}

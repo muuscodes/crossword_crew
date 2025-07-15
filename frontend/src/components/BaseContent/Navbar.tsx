@@ -1,10 +1,14 @@
 import { useState, useEffect } from "react";
 import favicon from "../../img/favicon.jpg";
 import type { NavbarProps } from "../utils/types";
+import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function Navbar(props: NavbarProps) {
   const { setShowModal, isAuthenticated } = props;
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
+  const { logout } = useAuth();
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -36,6 +40,18 @@ export default function Navbar(props: NavbarProps) {
         {value}
       </a>
     );
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      if (isMenuOpen) {
+        setIsMenuOpen(false);
+      }
+      navigate("/");
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   useEffect(() => {
@@ -89,6 +105,16 @@ export default function Navbar(props: NavbarProps) {
               {createMenuNavLink("/create", "Create")}
               {createMenuNavLink("/library", "Library")}
               {createMenuNavLink("/contact", "Contact")}
+              <button
+                onClick={handleLogout}
+                className={`text-white hover:scale-120 ${
+                  isMenuOpen
+                    ? "text-6xl w-full text-center py-8 hover:opacity-50"
+                    : "text-3xl p-3 hover:cursor-pointer hover:opacity-50 focus:opacity-70"
+                }`}
+              >
+                Logout
+              </button>
             </nav>
           </div>
         ) : (
@@ -114,6 +140,17 @@ export default function Navbar(props: NavbarProps) {
           {createMenuNavLink("/library", "Library")}
           <hr className="text-white w-5/6" />
           {createMenuNavLink("/contact", "Contact")}
+          <hr className="text-white w-5/6" />
+          <button
+            onClick={handleLogout}
+            className={`text-white hover:scale-120 ${
+              isMenuOpen
+                ? "text-6xl text-white w-5/6 text-center py-8 hover:opacity-50"
+                : "text-3xl p-3 hover:cursor-pointer hover:opacity-50 focus:opacity-70"
+            }`}
+          >
+            Logout
+          </button>
         </nav>
       </section>
     </header>

@@ -317,7 +317,7 @@ export default function CrosswordGrid(props: CrosswordGridProps) {
 
   const handleBgColor = (index: number): string => {
     let bgColor: string = "bg-white";
-    if (blackSquares && blackSquares[index]) {
+    if (blackSquares[index]) {
       bgColor = "bg-black";
     } else if (isFocusedCell[index]) {
       bgColor = "bg-yellow-200";
@@ -695,7 +695,11 @@ export default function CrosswordGrid(props: CrosswordGridProps) {
                 positionBlackSquares ? "cursor-pointer" : ""
               }`}
               onChange={(e) => handleUserInput(e, index)}
-              value={currentGridValues[index]}
+              value={
+                currentGridValues[index] !== undefined
+                  ? currentGridValues[index]
+                  : ""
+              }
               ref={(el) => {
                 inputRefs.current[index] = el;
               }}

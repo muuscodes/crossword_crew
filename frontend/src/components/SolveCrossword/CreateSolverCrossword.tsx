@@ -6,8 +6,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faLessThan } from "@fortawesome/free-solid-svg-icons";
 import { faGreaterThan } from "@fortawesome/free-solid-svg-icons";
 import { useParams } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext.tsx";
 
-export default function CreateSolverCrossword() {
+export default function CreateSolverCrossword(props: any) {
+  const { setIsSolved } = props;
   const [gridSize, setGridSize] = useState<number>(5);
   const [gridDimensions, setGridDimensions] = useState<string>("30vw");
   const [gridHeight, setGridHeight] = useState<string>(gridDimensions + "5px");
@@ -53,12 +55,17 @@ export default function CreateSolverCrossword() {
     Array(gridSize * gridSize).fill("")
   );
 
-  const userId = 1;
+  const { globalUser, isAuthenticated, setIsAuthenticated, setGlobalUser } =
+    useAuth();
+  const globalUserId = globalUser.user_id;
   const { gridId } = useParams();
 
-  const getCrosswordData = async () => {
+  const getCrosswordData = async (userId: number) => {
     try {
-      const response = await fetch(`/users/${userId}/solver/${gridId}`);
+      const response = await fetch(`/users/${userId}/solver/${gridId}`, {
+        method: "GET",
+        credentials: "include",
+      });
       const result = await response.json();
       setGridSize(result[0].grid_size);
       setCurrentGridNumbers(result[0].grid_numbers);
@@ -68,17 +75,22 @@ export default function CreateSolverCrossword() {
       setDownClueValues(result[0].down_clues);
       setPuzzleTitle(result[0].puzzle_title);
       setAcrossClueValues(result[0].across_clues);
+      getAnswerKey(result[0].user_id);
     } catch (error) {
       throw new Error();
     }
   };
 
-  const getAnswerKey = async () => {
+  const getAnswerKey = async (userId: number) => {
     try {
-      const response = await fetch(`/users/${userId}/grids/${gridId}`);
+      const response = await fetch(`/users/${userId}/grids/${gridId}`, {
+        method: "GET",
+        credentials: "include",
+      });
       const result = await response.json();
-      setAutocheckKey(result[0].grid_values);
-    } catch (error) {
+      setAutocheckKey(result.grid_values);
+    } catch (error: any) {
+      console.log(error);
       throw new Error();
     }
   };
@@ -133,18 +145,15 @@ export default function CreateSolverCrossword() {
   };
 
   const scrollToClue = (index: number, direction: string): void => {
-    if (window.innerWidth > 767) {
-      const containerId: string =
-        direction === "across"
-          ? "scrollableContainerAcross"
-          : "scrollableContainerDown";
-      const container: HTMLElement | null =
-        document.getElementById(containerId);
-      const clueElement: Element | undefined =
-        container?.querySelector("ul")?.children[index];
-      if (clueElement) {
-        clueElement.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      }
+    const containerId: string =
+      direction === "across"
+        ? "scrollableContainerAcross"
+        : "scrollableContainerDown";
+    const container: HTMLElement | null = document.getElementById(containerId);
+    const clueElement: Element | undefined =
+      container?.querySelector("ul")?.children[index];
+    if (clueElement) {
+      clueElement.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   };
 
@@ -195,10 +204,15 @@ export default function CreateSolverCrossword() {
   };
 
   async function saveProgress() {
-    const completed = false;
+    const arraysEqual: boolean = currentGridValues.every(
+      (val, index) => val === autocheckKey[index]
+    );
+    const completed: boolean = arraysEqual;
+    setIsSolved(arraysEqual);
+
     try {
       await fetch(`/users/solver/${gridId}`, {
-        method: "POST",
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
@@ -206,11 +220,38 @@ export default function CreateSolverCrossword() {
           currentGridValues,
           completed,
         }),
+        credentials: "include",
       });
     } catch (error) {
       throw new Error();
     }
   }
+
+  const checkSession = async () => {
+    try {
+      const response = await fetch("/auth/session", {
+        method: "GET",
+        credentials: "include",
+      });
+      const sessionData = await response.json();
+      if (response.ok && sessionData.username && !isAuthenticated) {
+        const newGlobalUser = {
+          username: sessionData.username,
+          user_id: sessionData.user_id,
+        };
+        getCrosswordData(newGlobalUser.user_id);
+        setGlobalUser(newGlobalUser);
+        setIsAuthenticated(true);
+      } else if (isAuthenticated) {
+        getCrosswordData(globalUserId);
+      } else {
+        setIsAuthenticated(false);
+      }
+    } catch (error) {
+      console.error("Error checking session:", error);
+      setIsAuthenticated(false);
+    }
+  };
 
   useEffect(() => {
     if (
@@ -224,8 +265,7 @@ export default function CreateSolverCrossword() {
   }, [currentGridNumbers]);
 
   useEffect(() => {
-    getCrosswordData();
-    getAnswerKey();
+    checkSession();
   }, []);
 
   useEffect(() => {
@@ -312,7 +352,7 @@ export default function CreateSolverCrossword() {
           <button className="fancyButton bigger" onClick={() => saveProgress()}>
             Save Progress
           </button>
-          <label className="text-xl flex items-center">
+          <label className="text-xl items-center hidden">
             Autocheck
             <input
               type="checkbox"
