@@ -2,6 +2,7 @@ import { Router } from "express";
 import { pool } from "../db.js";
 const router = Router();
 import {
+  jwtMiddleware,
   handleValidationErrors,
   validateAddCrosswordGrid,
   validateShareCrossword,
@@ -28,6 +29,7 @@ router.get("/:username", async (req, res) => {
 // Add crossword grid to database
 router.post(
   "/:userId/grids/add",
+  jwtMiddleware,
   validateAddCrosswordGrid,
   handleValidationErrors,
   async (req, res) => {
@@ -83,6 +85,7 @@ router.post(
 // Share crossword grid with a friend
 router.post(
   "/:userId/grids/:gridId/share",
+  jwtMiddleware,
   validateShareCrossword,
   handleValidationErrors,
   async (req, res) => {
@@ -157,7 +160,7 @@ router.post(
 );
 
 // Home page count number of grids
-router.get("/:userId/grids/count", async (req, res) => {
+router.get("/:userId/grids/count", jwtMiddleware, async (req, res) => {
   try {
     const { userId } = req.params;
     const totalPuzzles = await pool.query(
@@ -191,7 +194,7 @@ router.get("/:userId/grids/count", async (req, res) => {
 });
 
 // Get a user's crosswords for library
-router.get("/:userId/grids", async (req, res) => {
+router.get("/:userId/grids", jwtMiddleware, async (req, res) => {
   try {
     const { userId } = req.params;
     const result = await pool.query(
@@ -231,7 +234,7 @@ router.get("/:userId/grids", async (req, res) => {
 });
 
 // Get an editor's crossword
-router.get("/:userId/editor/:gridId", async (req, res) => {
+router.get("/:userId/editor/:gridId", jwtMiddleware, async (req, res) => {
   try {
     const { userId, gridId } = req.params;
     const result = await pool.query(
@@ -251,6 +254,7 @@ router.get("/:userId/editor/:gridId", async (req, res) => {
 // Save editor progress
 router.put(
   "/editor/:gridId",
+  jwtMiddleware,
   validateAddCrosswordGrid,
   handleValidationErrors,
   async (req, res) => {
@@ -303,7 +307,7 @@ router.put(
 );
 
 // Get a solver's crosswords for solving
-router.get("/:userId/solver/:gridId", async (req, res) => {
+router.get("/:userId/solver/:gridId", jwtMiddleware, async (req, res) => {
   try {
     const { userId, gridId } = req.params;
     const result = await pool.query(
@@ -323,7 +327,7 @@ router.get("/:userId/solver/:gridId", async (req, res) => {
 });
 
 // Get the answer key for a specific crossword
-router.get("/:userId/grids/:gridId", async (req, res) => {
+router.get("/:userId/grids/:gridId", jwtMiddleware, async (req, res) => {
   try {
     const { userId, gridId } = req.params;
 
@@ -359,7 +363,7 @@ router.get("/:userId/grids/:gridId", async (req, res) => {
 });
 
 // Save solver progress
-router.patch("/solver/:gridId", async (req, res) => {
+router.patch("/solver/:gridId", jwtMiddleware, async (req, res) => {
   try {
     const { gridId } = req.params;
     const { currentGridValues, completed } = req.body;
@@ -381,7 +385,7 @@ router.patch("/solver/:gridId", async (req, res) => {
 });
 
 // Delete a grid by grid id
-router.delete("/:userId/delete/:gridId", async (req, res) => {
+router.delete("/:userId/delete/:gridId", jwtMiddleware, async (req, res) => {
   try {
     const { userId, gridId } = req.params;
 

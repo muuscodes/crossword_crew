@@ -12,7 +12,7 @@ export default function Authentication(props: any) {
   const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
-  const { signup, login, setGlobalUser } = useAuth();
+  const { signup, login, setGlobalUser, isLoading } = useAuth();
 
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
@@ -157,6 +157,7 @@ export default function Authentication(props: any) {
           {isSignUp ? "Login" : "Sign up"}
         </button>
       </div>
+      {isLoading && <p className="text-2xl text-center">Loading...</p>}
     </>
   );
 }

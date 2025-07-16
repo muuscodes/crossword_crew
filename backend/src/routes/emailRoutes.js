@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 const usernameAdmin = process.env.EMAIL_USER;
 const password = process.env.EMAIL_APP_PASS;
+import { jwtMiddleware } from "../middleware/validationMiddleware.js";
 
 const router = express.Router();
 
@@ -21,11 +22,14 @@ export const sendWelcomeEmail = async (username, email) => {
     from: usernameAdmin,
     to: email,
     subject: `Welcome to Crossword Crew, ${username}!`,
-    text: `Hi ${username}, \n\n 
-      Thanks for signing up for Crossword Crew. In the Create tab, you can create new crosswords without limits! In the Library tab you'll find all the crosswords others have shared with you as well as your own crosswords. You can edit your crosswords and solve those shared with you, all from the Library tab.\n
-      If you encounter any issues, please let the Crossword Crew Team know in the Contact tab. Enjoy crosswording!\n\n
-      
-      -Crossword Crew Team`,
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.5;">
+        <p>Hi ${username},</p>
+        <p>Thanks for signing up for Crossword Crew. In the Create tab, you can create new crosswords without limits! In the Library tab you'll find all the crosswords others have shared with you as well as your own crosswords. You can edit your crosswords and solve those shared with you, all from the Library tab.</p>
+        <p>If you encounter any issues, please let the Crossword Crew Team know in the Contact tab. Enjoy crosswording!</p>
+        <p>- Crossword Crew Team</p>
+      </div>
+    `,
   };
 
   try {
@@ -38,7 +42,7 @@ export const sendWelcomeEmail = async (username, email) => {
 };
 
 // Send email to admin from contact form
-router.post("/contact", async (req, res) => {
+router.post("/contact", jwtMiddleware, async (req, res) => {
   const { username, email, message } = req.body;
 
   const mailOptions = {

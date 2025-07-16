@@ -50,16 +50,16 @@ export default function Help() {
           When writing clues, try to think from your intended solver's
           perspective.{" "}
           <a
-            href="https://www.xwordinfo.com/Finder"
+            href="https://www.xwordinfo.com/"
             target="_blank"
             className="underline text-blue-600 visited:text-purple-600 hover:text-gray-500 active:text-red-500"
           >
             Xwordinfo
           </a>{" "}
-          has a great resource to use when searching for good clues for common
-          words. Be sure to include a title, a fully filled out grid, and clues
-          before saving your creation! You can always go back to the grid in
-          your Library, but keep in mind{" "}
+          has a great resource called "Clue and Answer Finder" to use when
+          searching for good clues for common words. Be sure to include a title,
+          a fully filled out grid, and clues before saving your creation! You
+          can always go back to the grid in your Library, but keep in mind{" "}
           <em>grids cannot be edited once shared</em>! <br />
           <br />
           Crossword Crew is by no means perfect and I am actively trying to

@@ -51,18 +51,26 @@ export default function CreateCrossword(props: any) {
   const hasInitialized = useRef(false);
   const isClear = useRef(false);
 
-  const { globalUser, isAuthenticated, setIsAuthenticated, setGlobalUser } =
-    useAuth();
+  const {
+    globalUser,
+    isAuthenticated,
+    setIsAuthenticated,
+    setGlobalUser,
+    fetchWithAuth,
+  } = useAuth();
   const globalUserId = globalUser.user_id;
   const { gridId } = useParams();
   const navigate = useNavigate();
 
   const getCrosswordData = async (userId: number) => {
     try {
-      const response = await fetch(`/users/${userId}/editor/${gridId}`, {
-        method: "GET",
-        credentials: "include",
-      });
+      const response = await fetchWithAuth(
+        `/users/${userId}/editor/${gridId}`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
       const result = await response.json();
       setGridSize(result.grid_size);
       setCurrentGridNumbers(result.grid_numbers);
@@ -241,7 +249,7 @@ export default function CreateCrossword(props: any) {
     let message = handleGridViability();
     if (!message) {
       try {
-        const response = await fetch(
+        const response = await fetchWithAuth(
           `/users/${globalUserId}/grids/${gridId}/share`,
           {
             method: "POST",
@@ -296,7 +304,7 @@ export default function CreateCrossword(props: any) {
     if (!message) {
       setIsSaved(true);
       try {
-        const response = await fetch(`/users/editor/${gridId}`, {
+        const response = await fetchWithAuth(`/users/editor/${gridId}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -328,10 +336,13 @@ export default function CreateCrossword(props: any) {
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(`/users/${globalUserId}/delete/${gridId}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
+      const response = await fetchWithAuth(
+        `/users/${globalUserId}/delete/${gridId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
       if (!response.ok) {
         const errorData = await response.json();
         setUserMessage(errorData);
@@ -365,7 +376,7 @@ export default function CreateCrossword(props: any) {
 
   const checkSession = async () => {
     try {
-      const response = await fetch("/auth/session", {
+      const response = await fetchWithAuth("/auth/session", {
         method: "GET",
         credentials: "include",
       });

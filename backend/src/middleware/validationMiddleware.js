@@ -1,5 +1,23 @@
 import { body, validationResult } from "express-validator";
 import rateLimit from "express-rate-limit";
+import jwt from "jsonwebtoken";
+
+// JWT middleware
+export const jwtMiddleware = (req, res, next) => {
+  const token = req.header("Authorization")?.split(" ")[1];
+
+  if (token) {
+    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+      if (err) {
+        return res.status(403).send({ message: "Token not verified" });
+      }
+      req.user = user;
+      next();
+    });
+  } else {
+    return res.status(401).send({ message: "User unauthorized " });
+  }
+};
 
 // Middleware to handle validation errors
 export const handleValidationErrors = (req, res, next) => {
@@ -93,7 +111,7 @@ export const loginLimiter = rateLimit({
   },
 });
 
-export const isAuthenticated = (req, res, next) => {
+export const validateSession = (req, res, next) => {
   if (req.session && req.session.user) {
     return next();
   } else {

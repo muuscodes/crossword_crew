@@ -55,17 +55,25 @@ export default function CreateSolverCrossword(props: any) {
     Array(gridSize * gridSize).fill("")
   );
 
-  const { globalUser, isAuthenticated, setIsAuthenticated, setGlobalUser } =
-    useAuth();
+  const {
+    globalUser,
+    isAuthenticated,
+    setIsAuthenticated,
+    setGlobalUser,
+    fetchWithAuth,
+  } = useAuth();
   const globalUserId = globalUser.user_id;
   const { gridId } = useParams();
 
   const getCrosswordData = async (userId: number) => {
     try {
-      const response = await fetch(`/users/${userId}/solver/${gridId}`, {
-        method: "GET",
-        credentials: "include",
-      });
+      const response = await fetchWithAuth(
+        `/users/${userId}/solver/${gridId}`,
+        {
+          method: "GET",
+          credentials: "include",
+        }
+      );
       const result = await response.json();
       setGridSize(result[0].grid_size);
       setCurrentGridNumbers(result[0].grid_numbers);
@@ -83,7 +91,7 @@ export default function CreateSolverCrossword(props: any) {
 
   const getAnswerKey = async (userId: number) => {
     try {
-      const response = await fetch(`/users/${userId}/grids/${gridId}`, {
+      const response = await fetchWithAuth(`/users/${userId}/grids/${gridId}`, {
         method: "GET",
         credentials: "include",
       });
@@ -211,7 +219,7 @@ export default function CreateSolverCrossword(props: any) {
     setIsSolved(arraysEqual);
 
     try {
-      await fetch(`/users/solver/${gridId}`, {
+      await fetchWithAuth(`/users/solver/${gridId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

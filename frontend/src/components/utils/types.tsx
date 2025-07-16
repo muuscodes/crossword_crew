@@ -1,6 +1,5 @@
 export interface LayoutProps {
   children: React.ReactNode;
-  isAuthenticated: boolean;
 }
 
 export interface NavbarProps {
@@ -263,6 +262,11 @@ export interface AuthContextType {
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   setIsAuthenticated: React.Dispatch<React.SetStateAction<any>>;
+  librarySortSetting: string;
+  setLibrarySortSetting: React.Dispatch<React.SetStateAction<any>>;
+  handleGoogleRedirect: () => Promise<void>;
+  getToken: () => string | null;
+  fetchWithAuth: (url: string, options?: RequestInit) => Promise<Response>;
 }
 
 export interface globalUserType {

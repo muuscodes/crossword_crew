@@ -70,7 +70,7 @@ export default function Navbar(props: NavbarProps) {
       <section className="p-4 flex justify-between items-center">
         <div>
           <a
-            href="/"
+            href={isAuthenticated ? "/home" : "/"}
             target="_self"
             id="home-logo"
             aria-label="Crossword crew home page"
@@ -83,7 +83,7 @@ export default function Navbar(props: NavbarProps) {
           </a>
 
           <a
-            href="/"
+            href={isAuthenticated ? "/home" : "/"}
             target="_self"
             id="home-words"
             aria-label="Crossword crew home page"
@@ -133,7 +133,7 @@ export default function Navbar(props: NavbarProps) {
           className="flex flex-col min-h-screen items-center py-8"
           aria-label="mobile"
         >
-          {createMenuNavLink("/", "Home")}
+          {createMenuNavLink("/home", "Home")}
           <hr className="text-white w-5/6" />
           {createMenuNavLink("/create", "Create")}
           <hr className="text-white w-5/6" />

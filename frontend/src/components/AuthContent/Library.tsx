@@ -15,14 +15,22 @@ interface UserData {
 export default function Library() {
   const [userData, setUserData] = useState<UserData[]>([]);
   const [userCards, setUserCards] = useState<React.ReactNode[]>([]);
-  const [sortOption, setSortOption] = useState("dateNewest");
-  const { globalUser, isAuthenticated, setIsAuthenticated, setGlobalUser } =
-    useAuth();
+
+  const {
+    globalUser,
+    isAuthenticated,
+    setIsAuthenticated,
+    setGlobalUser,
+    librarySortSetting,
+    setLibrarySortSetting,
+    fetchWithAuth,
+  } = useAuth();
+  const [sortOption, setSortOption] = useState(librarySortSetting);
   const globalUserId = globalUser.user_id;
 
   async function getUserData(userId: number) {
     try {
-      const response = await fetch(`/users/${userId}/grids`, {
+      const response = await fetchWithAuth(`/users/${userId}/grids`, {
         method: "GET",
         credentials: "include",
       });
@@ -106,7 +114,7 @@ export default function Library() {
         });
       }
       setUserData(newUserData);
-      handleSort("dateNewest", newUserData);
+      handleSort(librarySortSetting, newUserData);
     } catch (error) {
       console.error(error);
       throw new Error();
@@ -128,6 +136,7 @@ export default function Library() {
     if (sortOption !== selectedOption) {
       setSortOption(selectedOption);
     }
+    setLibrarySortSetting(selectedOption);
 
     const sortedData = [...userData].sort((a, b) => {
       switch (selectedOption) {
@@ -143,18 +152,36 @@ export default function Library() {
           return (
             new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
           );
+        case "created":
+          const isACreatedByUser = a.username === globalUser.username;
+          const isBCreatedByUser = b.username === globalUser.username;
+          return isACreatedByUser === isBCreatedByUser
+            ? 0
+            : isACreatedByUser
+            ? -1
+            : 1;
+        case "received":
+          const isAReceived = a.username !== globalUser.username;
+          const isBReceived = b.username !== globalUser.username;
+          return isAReceived === isBReceived ? 0 : isAReceived ? -1 : 1;
+        case "completed":
+          return b.completed_status === a.completed_status
+            ? 0
+            : b.completed_status
+            ? 1
+            : -1;
         default:
           return 0;
       }
     });
 
-    const sortedCards = sortedData.map((data, index) => (
+    const sortedCards = sortedData.map((data) => (
       <LibraryCard
         author={data.username}
         name={data.puzzle_title}
         date={data.formatted_created_at}
         completed={data.completed_status}
-        key={index}
+        key={data.grid_id}
         gridId={data.grid_id}
       />
     ));
@@ -200,13 +227,16 @@ export default function Library() {
         <select
           name="sort-library"
           id="sort-library"
-          defaultValue={"dateNewest"}
-          onChange={(e) => handleSort("dateNewest", userData, e)}
+          defaultValue={librarySortSetting}
+          onChange={(e) => handleSort(librarySortSetting, userData, e)}
         >
           <option value="author">Author</option>
           <option value="title">Title</option>
           <option value="dateNewest">Date: newest</option>
           <option value="dateOldest">Date: oldest</option>
+          <option value="created">Puzzles created</option>
+          <option value="received">Puzzles recieved</option>
+          <option value="completed">Completion status</option>
         </select>
       </div>
       <section className="flex flex-row gap-5 mb-15 flex-wrap justify-around">

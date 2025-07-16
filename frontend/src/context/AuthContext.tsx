@@ -14,6 +14,16 @@ const defaultAuthContext: AuthContextType = {
   logout: async () => {},
   isAuthenticated: false,
   setIsAuthenticated: () => {},
+  librarySortSetting: "dateNewest",
+  setLibrarySortSetting: () => {},
+  handleGoogleRedirect: async () => {},
+  getToken: () => "",
+  fetchWithAuth: async (
+    url: string,
+    options?: RequestInit
+  ): Promise<Response> => {
+    return fetch(url, options);
+  },
 };
 
 const AuthContext = createContext<AuthContextType>(defaultAuthContext);
@@ -30,6 +40,8 @@ export default function AuthProvider(props: any) {
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [librarySortSetting, setLibrarySortSetting] =
+    useState<string>("dateNewest");
 
   const getUserId = async (username: string) => {
     try {
@@ -66,14 +78,7 @@ export default function AuthProvider(props: any) {
         const errorData = await response.json();
         throw new Error(errorData.message);
       }
-      const userData = await response.json();
-      const newGlobalUser = {
-        username: userData.username,
-        user_id: userData.user_id,
-      };
-      setGlobalUser(newGlobalUser);
-      getUserId(userData.username);
-      setIsAuthenticated(true);
+
       await login(username, password);
     } catch (error) {
       console.error("Signup error:", error);
@@ -103,12 +108,14 @@ export default function AuthProvider(props: any) {
       }
       const userData = await response.json();
       const newGlobalUser = {
-        username: userData.username,
-        user_id: userData.user_id,
+        username: userData.user.username,
+        user_id: userData.user.user_id,
       };
       setGlobalUser(newGlobalUser);
-      getUserId(userData.username);
+      getUserId(userData.user.username);
       setIsAuthenticated(true);
+
+      localStorage.setItem("token", userData.token);
     } catch (error) {
       console.error("Login error:", error);
       throw error;
@@ -120,18 +127,67 @@ export default function AuthProvider(props: any) {
   const logout = async (): Promise<void> => {
     setIsLoading(true);
     try {
-      await fetch(`/auth/logout`, {
+      await fetchWithAuth(`/auth/logout`, {
         method: "GET",
         credentials: "include",
       });
       setGlobalUser({ username: "", user_id: -1 });
       setIsAuthenticated(false);
+      localStorage.removeItem("token");
     } catch (error) {
       console.error("Logout error:", error);
       throw error;
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleGoogleRedirect = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/auth/google/user`, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch user data");
+      }
+
+      const userData = await response.json();
+      const newGlobalUser = {
+        username: userData.user.username,
+        user_id: userData.user.user_id,
+      };
+      setGlobalUser(newGlobalUser);
+      getUserId(userData.user.username);
+      setIsAuthenticated(true);
+
+      localStorage.setItem("token", userData.token);
+    } catch (error) {
+      console.error("Google redirect error:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getToken = () => {
+    return localStorage.getItem("token");
+  };
+
+  const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
+    const token = getToken();
+    const headers = {
+      ...options.headers,
+      Authorization: `Bearer ${token}`,
+    };
+
+    const response = fetch(url, {
+      ...options,
+      headers,
+    });
+
+    return response;
   };
 
   const value = {
@@ -143,6 +199,11 @@ export default function AuthProvider(props: any) {
     logout,
     isAuthenticated,
     setIsAuthenticated,
+    librarySortSetting,
+    setLibrarySortSetting,
+    handleGoogleRedirect,
+    getToken,
+    fetchWithAuth,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

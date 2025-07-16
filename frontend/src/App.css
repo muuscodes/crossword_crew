@@ -152,6 +152,58 @@
   }
 }
 
+.modal-container-solved {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  color: black;
+  flex-direction: column;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+}
+
+.modal-underlay-solved {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.834);
+  opacity: 0.8;
+  z-index: 9;
+  border: none;
+  width: 100%;
+  box-shadow: unset;
+}
+
+.modal-underlay-solved:hover {
+  transform: translate(0);
+  box-shadow: unset;
+  cursor: pointer;
+  opacity: 70%;
+}
+
+.modal-content-solved {
+  position: relative;
+  z-index: 101;
+  margin: 0 auto;
+  min-height: 200px;
+  min-width: 200px;
+  border: 10px solid black;
+  background: #ffffff;
+  text-align: center;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto;
+  font-size: 3rem;
+  font-weight: bolder;
+}
+
 .fancyButton {
   color: black;
   background-color: white;

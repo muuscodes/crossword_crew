@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 
 export default function Contact() {
-  const { isAuthenticated, setIsAuthenticated, setGlobalUser } = useAuth();
+  const { isAuthenticated, setIsAuthenticated, setGlobalUser, fetchWithAuth } =
+    useAuth();
 
   const [formData, setFormData] = useState({
     username: "",
@@ -22,7 +23,7 @@ export default function Contact() {
     e.preventDefault();
 
     try {
-      const response = await fetch("/email/contact", {
+      const response = await fetchWithAuth("/email/contact", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

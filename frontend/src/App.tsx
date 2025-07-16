@@ -9,43 +9,15 @@ import Create from "./components/AuthContent/Create.tsx";
 import NoPage from "./components/BaseContent/NoPage.tsx";
 import Solver from "./components/SolveCrossword/Solver.tsx";
 import Editor from "./components/EditCrossword/Editor.tsx";
-import { useEffect } from "react";
 import { useAuth } from "./context/AuthContext";
 
 function App() {
-  const { setGlobalUser, isAuthenticated, setIsAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   // console.log(`App user: ${JSON.stringify(globalUser, null, 2)}`);
-
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const response = await fetch("/auth/session", {
-          method: "GET",
-          credentials: "include",
-        });
-        const sessionData = await response.json();
-        if (response.ok && sessionData.username && !isAuthenticated) {
-          const newGlobalUser = {
-            username: sessionData.username,
-            user_id: sessionData.user_id,
-          };
-          setGlobalUser(newGlobalUser);
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
-        }
-      } catch (error) {
-        console.error("Error checking session:", error);
-        setIsAuthenticated(false);
-      }
-    };
-
-    checkSession();
-  }, []);
 
   return (
     <BrowserRouter>
-      <Layout isAuthenticated={isAuthenticated}>
+      <Layout>
         <Routes>
           <Route
             path="/"

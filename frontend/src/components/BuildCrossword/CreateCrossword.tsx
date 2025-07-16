@@ -47,7 +47,7 @@ export default function CreateCrossword(props: any) {
   const [isFocusedOnGrid, setIsFocusedOnGrid] = useState<boolean>(false);
   const [puzzleTitle, setPuzzleTitle] = useState<string>("");
 
-  const { globalUser } = useAuth();
+  const { globalUser, fetchWithAuth } = useAuth();
 
   const handleGridSizeChange = (
     event: React.ChangeEvent<HTMLSelectElement>
@@ -314,7 +314,7 @@ export default function CreateCrossword(props: any) {
       setIsSaved(true);
       const userId = globalUser.user_id;
       try {
-        await fetch(`/users/${userId}/grids/add`, {
+        await fetchWithAuth(`/users/${userId}/grids/add`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -338,7 +338,7 @@ export default function CreateCrossword(props: any) {
     setUserMessage(message);
     setTimeout(() => {
       setUserMessage("");
-    }, 3000);
+    }, 10000);
   }
 
   const updateGridDimensions = () => {

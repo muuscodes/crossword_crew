@@ -1,16 +1,18 @@
 import { Router } from "express";
 import passport from "passport";
+import jwt from "jsonwebtoken";
 const router = Router();
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import dotenv from "dotenv";
 import { pool } from "../db.js";
 import bcrypt from "bcrypt";
 import {
+  jwtMiddleware,
   handleValidationErrors,
   validateAddUser,
   validateGetUser,
   loginLimiter,
-  isAuthenticated,
+  validateSession,
 } from "../middleware/validationMiddleware.js";
 import { sendWelcomeEmail } from "./emailRoutes.js";
 
@@ -36,7 +38,7 @@ passport.deserializeUser(async (id, done) => {
 });
 
 // Get the session
-router.get("/session", isAuthenticated, (req, res) => {
+router.get("/session", validateSession, (req, res) => {
   if (req.session && req.session.user) {
     return res.json({
       user_id: req.session.user.user_id,
@@ -57,13 +59,13 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        const { id, displayName, emails } = profile;
+        const { googleId, displayName, emails } = profile;
         const email = emails[0].value;
 
         // Check if user already exists in the database
         const existingUser = await pool.query(
-          "SELECT * FROM users_dev WHERE google_id = $1",
-          [id]
+          "SELECT * FROM users_dev WHERE google_id = $1 OR email = $2",
+          [googleId, email]
         );
         if (existingUser.rows.length > 0) {
           return done(null, existingUser.rows[0]); // User exists, return user
@@ -72,7 +74,7 @@ passport.use(
         // If not, create a new user
         const newUser = await pool.query(
           "INSERT INTO users_dev (google_id, username, email) VALUES ($1, $2, $3) RETURNING *",
-          [id, displayName, email]
+          [googleId, displayName, email]
         );
 
         const newUserData = newUser.rows[0];
@@ -167,7 +169,14 @@ router.get(
 // Get google user data
 router.get("/google/user", (req, res) => {
   if (req.isAuthenticated()) {
-    return res.json(req.user);
+    // Create JWT
+    const token = jwt.sign(
+      { user_id: req.user.user_id, username: req.user.username },
+      process.env.JWT_SECRET,
+      { expiresIn: "2h" }
+    );
+
+    return res.json({ user: req.user, token });
   } else {
     return res.status(401).send({ message: "User not authenticated" });
   }
@@ -205,6 +214,13 @@ router.post(
         [username, email, hashedPassword]
       );
       const newUserData = newUser.rows[0];
+
+      // Create JWT
+      const token = jwt.sign(
+        { user_id: newUserData.user_id, username: newUserData.username },
+        process.env.JWT_SECRET,
+        { expiresIn: "2h" }
+      );
 
       // Add the welcome grid
 
@@ -257,7 +273,7 @@ router.post(
       // Send welcome email
       await sendWelcomeEmail(username, email);
 
-      return res.status(200).send(newUserData);
+      return res.status(200).send({ user: newUserData, token });
     } catch (error) {
       console.error("Database error:", error);
       return res.status(500).send({ message: "Internal server error" });
@@ -284,6 +300,12 @@ router.post(
         const user = existingUser.rows[0];
         const isMatch = await bcrypt.compare(password, user.password);
         if (isMatch) {
+          const token = jwt.sign(
+            { user_id: user.user_id, username: user.username },
+            process.env.JWT_SECRET,
+            { expiresIn: "2h" }
+          );
+
           req.login(user, (err) => {
             if (err) {
               console.error("Login error:", err);
@@ -294,7 +316,7 @@ router.post(
               user_id: req.user.user_id,
             };
             req.session.user = userData;
-            return res.status(200).send(user);
+            return res.status(200).send({ user: userData, token });
           });
         } else {
           return res.status(401).send({ message: "Incorrect password" });
@@ -310,7 +332,7 @@ router.post(
 );
 
 // Logout route
-router.get("/logout", (req, res) => {
+router.get("/logout", jwtMiddleware, (req, res) => {
   if (req.session) {
     req.session.destroy((err) => {
       if (err) {

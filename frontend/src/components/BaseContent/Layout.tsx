@@ -4,9 +4,11 @@ import Modal from "../NonAuthContent/Modal";
 import Authentication from "../NonAuthContent/Authentication";
 import { useState, useEffect } from "react";
 import type { LayoutProps } from "../utils/types";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Layout(props: LayoutProps) {
-  const { children, isAuthenticated } = props;
+  const { children } = props;
+  const { isAuthenticated } = useAuth();
   const [showModal, setShowModal] = useState<boolean>(false);
 
   const handleCloseModal = () => {

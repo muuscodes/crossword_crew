@@ -67,7 +67,7 @@ export default function Create() {
           ?
         </button>
         <h1 className="text-center text-7xl my-5">Create</h1>
-        <p className="text-xl m-auto mb-3 h-fit">
+        <p className="text-xl m-auto mb-3 h-fit text-red-600">
           {isSaved ? `Puzzle Saved!` : ""}
           {userMessage ? userMessage : ""}
         </p>
