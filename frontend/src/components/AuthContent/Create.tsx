@@ -3,12 +3,15 @@ import CreateCrossword from "../BuildCrossword/CreateCrossword";
 import HelpModal from "./HelpModal";
 import Help from "./Help";
 import { useAuth } from "../../context/AuthContext";
+// import { useNavigate } from "react-router-dom";
 
 export default function Create() {
   const [isSaved, setIsSaved] = useState<boolean>(false);
   const [userMessage, setUserMessage] = useState<string>("");
   const [showHelpModal, setShowHelpModal] = useState<boolean>(false);
-  const { setGlobalUser, isAuthenticated, setIsAuthenticated } = useAuth();
+  const { setGlobalUser, isAuthenticated, setIsAuthenticated, setError } =
+    useAuth();
+  // const navigate = useNavigate();
 
   const handleCloseHelpModal = () => {
     setShowHelpModal(false);
@@ -42,10 +45,18 @@ export default function Create() {
           setIsAuthenticated(true);
         } else {
           setIsAuthenticated(false);
+          setError(sessionData.message || "Session check failed");
+          // navigate("/errorpage");
+          return;
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error checking session:", error);
         setIsAuthenticated(false);
+        setError(
+          error.message ||
+            "An unexpected error occurred while checking the session"
+        );
+        // navigate("/errorpage");
       }
     };
 
@@ -67,7 +78,11 @@ export default function Create() {
           ?
         </button>
         <h1 className="text-center text-7xl my-5">Create</h1>
-        <p className="text-xl m-auto mb-3 h-fit text-red-600">
+        <p
+          className={`text-2xl m-auto mb-3 h-fit ${
+            userMessage ? "text-red-600" : ""
+          }`}
+        >
           {isSaved ? `Puzzle Saved!` : ""}
           {userMessage ? userMessage : ""}
         </p>

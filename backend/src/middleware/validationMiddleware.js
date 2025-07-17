@@ -15,7 +15,7 @@ export const jwtMiddleware = (req, res, next) => {
       next();
     });
   } else {
-    return res.status(401).send({ message: "User unauthorized " });
+    return res.status(401).send({ message: "User unauthorized" });
   }
 };
 
@@ -106,8 +106,10 @@ export const validateContactForm = [
 export const loginLimiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5 minutes
   max: 5,
-  message: {
-    message: "Too many login attempts, please try again in 5 minutes.",
+  handler: (req, res) => {
+    return res.status(429).json({
+      message: "Too many login attempts, please try again in 5 minutes.",
+    });
   },
 });
 

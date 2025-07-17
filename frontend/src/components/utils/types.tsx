@@ -267,6 +267,8 @@ export interface AuthContextType {
   handleGoogleRedirect: () => Promise<void>;
   getToken: () => string | null;
   fetchWithAuth: (url: string, options?: RequestInit) => Promise<Response>;
+  error: string;
+  setError: React.Dispatch<React.SetStateAction<any>>;
 }
 
 export interface globalUserType {

@@ -4,6 +4,7 @@ import CrosswordGrid from "./CrosswordGrid";
 import CreateClues from "./CreateClues";
 import ClueInit from "./ClueInit";
 import { useAuth } from "../../context/AuthContext";
+// import { useNavigate } from "react-router-dom";
 
 export default function CreateCrossword(props: any) {
   const { setIsSaved, setUserMessage } = props;
@@ -46,8 +47,9 @@ export default function CreateCrossword(props: any) {
   const [isGridReady, setIsGridReady] = useState<boolean>(false);
   const [isFocusedOnGrid, setIsFocusedOnGrid] = useState<boolean>(false);
   const [puzzleTitle, setPuzzleTitle] = useState<string>("");
+  // const navigate = useNavigate();
 
-  const { globalUser, fetchWithAuth } = useAuth();
+  const { globalUser, fetchWithAuth, setError } = useAuth();
 
   const handleGridSizeChange = (
     event: React.ChangeEvent<HTMLSelectElement>
@@ -282,7 +284,7 @@ export default function CreateCrossword(props: any) {
   };
 
   const handleGridViability = () => {
-    let userMessage = "Please add ";
+    const messages: string[] = [];
     const hasNonNullGridValues: boolean = currentGridValues.some(
       (value: string) => value !== ""
     );
@@ -292,20 +294,30 @@ export default function CreateCrossword(props: any) {
     const hasDownClueValues: boolean = downClueValues.some(
       (value: string) => value !== ""
     );
-    if (
-      puzzleTitle &&
-      hasNonNullGridValues &&
-      (hasDownClueValues || hasAcrossClueValues)
-    ) {
-      userMessage = "";
-    } else if (!puzzleTitle) {
-      userMessage += "a title ";
-    } else if (!hasNonNullGridValues) {
-      userMessage += "entries to the grid ";
-    } else if (!hasDownClueValues || !hasAcrossClueValues) {
-      userMessage += "clues";
+
+    if (!puzzleTitle) {
+      messages.push("a title");
     }
-    return userMessage;
+    if (!hasNonNullGridValues) {
+      messages.push("entries to the grid");
+    }
+    if (!hasDownClueValues) {
+      messages.push("down clues");
+    }
+    if (!hasAcrossClueValues) {
+      messages.push("across clues");
+    }
+
+    if (messages.length > 0) {
+      if (messages.length === 1) {
+        return "Please add " + messages[0];
+      } else {
+        const lastMessage = messages.pop();
+        return "Please add " + messages.join(", ") + ", and " + lastMessage;
+      }
+    } else {
+      return "";
+    }
   };
 
   async function saveGrid() {
@@ -314,7 +326,7 @@ export default function CreateCrossword(props: any) {
       setIsSaved(true);
       const userId = globalUser.user_id;
       try {
-        await fetchWithAuth(`/users/${userId}/grids/add`, {
+        const response = await fetchWithAuth(`/users/${userId}/grids/add`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -331,8 +343,15 @@ export default function CreateCrossword(props: any) {
             clueNumDirection,
           }),
         });
-      } catch (error) {
-        throw new Error();
+        const result = await response.json();
+        if (!response.ok) {
+          setError(result.message || "An error occurred while fetching data.");
+          // navigate("/errorpage");
+          return;
+        }
+      } catch (error: any) {
+        setError(error.message || "An unexpected error occurred");
+        // navigate("/errorpage");
       }
     }
     setUserMessage(message);

@@ -4,6 +4,7 @@ import SolvedModal from "./SolvedModal";
 
 export default function Solver() {
   const [isSolved, setIsSolved] = useState<boolean>(false);
+  const [userMessage, setUserMessage] = useState<string>("");
   const [showSolvedModal, setShowSolvedModal] = useState<boolean>(false);
 
   const handleCloseSolvedModal = () => {
@@ -33,7 +34,13 @@ export default function Solver() {
         <SolvedModal handleCloseSolvedModal={handleCloseSolvedModal} />
       )}
       <div className="min-h-[80vh] items-center text-center mb-15">
-        <CreateSolverCrossword setIsSolved={setIsSolved} />
+        <p className="text-2xl m-auto mb-3 h-fit">
+          {userMessage ? userMessage : ""}
+        </p>
+        <CreateSolverCrossword
+          setIsSolved={setIsSolved}
+          setUserMessage={setUserMessage}
+        />
       </div>
     </>
   );

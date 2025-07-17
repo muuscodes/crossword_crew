@@ -45,7 +45,7 @@ router.get("/session", validateSession, (req, res) => {
       username: req.session.user.username,
     });
   } else {
-    return res.json({ message: "Not authenticated" });
+    return res.status(401).send({ message: "Not authenticated" });
   }
 });
 

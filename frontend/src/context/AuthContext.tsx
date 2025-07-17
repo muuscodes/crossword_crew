@@ -1,6 +1,7 @@
 import { useState, useContext, createContext } from "react";
 import type { AuthContextType } from "../components/utils/types";
 import type { globalUserType } from "../components/utils/types";
+// import { useNavigate } from "react-router-dom";
 
 const defaultAuthContext: AuthContextType = {
   globalUser: {
@@ -24,6 +25,8 @@ const defaultAuthContext: AuthContextType = {
   ): Promise<Response> => {
     return fetch(url, options);
   },
+  error: "",
+  setError: () => {},
 };
 
 const AuthContext = createContext<AuthContextType>(defaultAuthContext);
@@ -42,6 +45,8 @@ export default function AuthProvider(props: any) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [librarySortSetting, setLibrarySortSetting] =
     useState<string>("dateNewest");
+  const [error, setError] = useState<string>("");
+  // const navigate = useNavigate();
 
   const getUserId = async (username: string) => {
     try {
@@ -50,13 +55,20 @@ export default function AuthProvider(props: any) {
         credentials: "include",
       });
       const freshData = await response.json();
-      let newUser: any = {
-        username: username,
-        user_id: freshData.user_id,
-      };
-      setGlobalUser(newUser);
-    } catch (error) {
-      console.log("Server error:", error);
+      if (response.ok) {
+        let newUser: any = {
+          username: username,
+          user_id: freshData.user_id,
+        };
+        setGlobalUser(newUser);
+      } else {
+        setError(freshData.message || "An error occurred while fetching data.");
+        // navigate("/errorpage");
+        return;
+      }
+    } catch (error: any) {
+      setError(error.message || "An unexpected error occurred");
+      // navigate("/errorpage");
     }
   };
 
@@ -78,7 +90,6 @@ export default function AuthProvider(props: any) {
         const errorData = await response.json();
         throw new Error(errorData.message);
       }
-
       await login(username, password);
     } catch (error) {
       console.error("Signup error:", error);
@@ -204,6 +215,8 @@ export default function AuthProvider(props: any) {
     handleGoogleRedirect,
     getToken,
     fetchWithAuth,
+    error,
+    setError,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

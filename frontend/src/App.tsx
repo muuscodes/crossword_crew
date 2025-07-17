@@ -6,14 +6,14 @@ import Home from "./components/AuthContent/Home.tsx";
 import Contact from "./components/AuthContent/Contact.tsx";
 import Library from "./components/AuthContent/Library.tsx";
 import Create from "./components/AuthContent/Create.tsx";
-import NoPage from "./components/BaseContent/NoPage.tsx";
 import Solver from "./components/SolveCrossword/Solver.tsx";
 import Editor from "./components/EditCrossword/Editor.tsx";
+import ErrorPage from "./components/BaseContent/ErrorPage.tsx";
+import NoPage from "./components/BaseContent/NoPage.tsx";
 import { useAuth } from "./context/AuthContext";
 
 function App() {
   const { isAuthenticated } = useAuth();
-  // console.log(`App user: ${JSON.stringify(globalUser, null, 2)}`);
 
   return (
     <BrowserRouter>
@@ -25,12 +25,13 @@ function App() {
               !isAuthenticated ? <LandingPage /> : <Navigate to="/home" />
             }
           />
-          <Route path="/home" element={<Home />} />
+          <Route path="home" element={<Home />} />
           <Route path="create" element={<Create />} />
           <Route path="library" element={<Library />} />
           <Route path="contact" element={<Contact />} />
           <Route path="solver/:gridId" element={<Solver />} />
           <Route path="editor/:gridId" element={<Editor />} />
+          <Route path="errorpage" element={<ErrorPage />} />
           <Route path="*" element={<NoPage />} />
         </Routes>
       </Layout>

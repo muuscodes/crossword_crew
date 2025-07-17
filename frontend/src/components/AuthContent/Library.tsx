@@ -2,6 +2,7 @@ import LibraryCard from "./LibraryCard";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { useAuth } from "../../context/AuthContext";
+// import { useNavigate } from "react-router-dom";
 
 interface UserData {
   username: string;
@@ -15,6 +16,7 @@ interface UserData {
 export default function Library() {
   const [userData, setUserData] = useState<UserData[]>([]);
   const [userCards, setUserCards] = useState<React.ReactNode[]>([]);
+  // const navigate = useNavigate();
 
   const {
     globalUser,
@@ -24,6 +26,7 @@ export default function Library() {
     librarySortSetting,
     setLibrarySortSetting,
     fetchWithAuth,
+    setError,
   } = useAuth();
   const [sortOption, setSortOption] = useState(librarySortSetting);
   const globalUserId = globalUser.user_id;
@@ -35,89 +38,95 @@ export default function Library() {
         credentials: "include",
       });
       const data = await response.json();
-      const crossword_grids = data.crossword_grids;
-      const solver_grids = data.solver_grids;
-      const newUserData: UserData[] = [];
-      const newCards: React.ReactNode[] = [];
+      if (response.ok) {
+        const crossword_grids = data.crossword_grids;
+        const solver_grids = data.solver_grids;
+        const newUserData: UserData[] = [];
+        const newCards: React.ReactNode[] = [];
 
-      if (crossword_grids) {
-        crossword_grids.forEach((element: any) => {
-          let newData: any = {
-            username: element.username,
-            puzzle_title: "",
-            created_at: element.created_at,
-            formatted_created_at: "",
-            grid_id: element.grid_id,
-          };
-          const newTitle = element.puzzle_title;
-          if (newTitle === "") {
-            newData.puzzle_title = "Crossword Puzzle";
-          } else {
-            newData.puzzle_title = newTitle;
-          }
+        if (crossword_grids) {
+          crossword_grids.forEach((element: any) => {
+            let newData: any = {
+              username: element.username,
+              puzzle_title: "",
+              created_at: element.created_at,
+              formatted_created_at: "",
+              grid_id: element.grid_id,
+            };
+            const newTitle = element.puzzle_title;
+            if (newTitle === "") {
+              newData.puzzle_title = "Crossword Puzzle";
+            } else {
+              newData.puzzle_title = newTitle;
+            }
 
-          const formattedDate = format(
-            element.created_at,
-            "MMMM d, yyyy 'at' h:mm a"
-          );
-          newData.formatted_created_at = formattedDate;
+            const formattedDate = format(
+              element.created_at,
+              "MMMM d, yyyy 'at' h:mm a"
+            );
+            newData.formatted_created_at = formattedDate;
 
-          newUserData.push(newData);
-          const newCard = (
-            <LibraryCard
-              author={newData.username}
-              name={newData.puzzle_title}
-              date={newData.formatted_created_at}
-              key={"cw_grid: " + element.grid_id.toString()}
-              gridId={element.grid_id}
-            />
-          );
-          newCards.push(newCard);
-        });
+            newUserData.push(newData);
+            const newCard = (
+              <LibraryCard
+                author={newData.username}
+                name={newData.puzzle_title}
+                date={newData.formatted_created_at}
+                key={"cw_grid: " + element.grid_id.toString()}
+                gridId={element.grid_id}
+              />
+            );
+            newCards.push(newCard);
+          });
+        }
+
+        if (solver_grids) {
+          solver_grids.forEach((element: any) => {
+            let newData: any = {
+              username: element.creator_username,
+              puzzle_title: "",
+              created_at: element.created_at,
+              formatted_created_at: "",
+              completed_status: element.completed_status,
+              grid_id: element.grid_id,
+            };
+            const newTitle = element.puzzle_title;
+            if (newTitle === "") {
+              newData.puzzle_title = "Crossword Puzzle";
+            } else {
+              newData.puzzle_title = newTitle;
+            }
+
+            const formattedDate = format(
+              element.created_at,
+              "MMMM d, yyyy 'at' h:mm a"
+            );
+            newData.formatted_created_at = formattedDate;
+
+            newUserData.push(newData);
+            const newCard = (
+              <LibraryCard
+                author={newData.username}
+                name={newData.puzzle_title}
+                date={newData.formatted_created_at}
+                completed={newData.completed_status}
+                key={"solver_grid: " + element.grid_id.toString()}
+                gridId={element.grid_id}
+              />
+            );
+            newCards.push(newCard);
+          });
+        }
+        setUserData(newUserData);
+        handleSort(librarySortSetting, newUserData);
+      } else {
+        setError(data.message || "An error occurred while fetching data.");
+        // navigate("/errorpage");
+        return;
       }
-
-      if (solver_grids) {
-        solver_grids.forEach((element: any) => {
-          let newData: any = {
-            username: element.creator_username,
-            puzzle_title: "",
-            created_at: element.created_at,
-            formatted_created_at: "",
-            completed_status: element.completed_status,
-            grid_id: element.grid_id,
-          };
-          const newTitle = element.puzzle_title;
-          if (newTitle === "") {
-            newData.puzzle_title = "Crossword Puzzle";
-          } else {
-            newData.puzzle_title = newTitle;
-          }
-
-          const formattedDate = format(
-            element.created_at,
-            "MMMM d, yyyy 'at' h:mm a"
-          );
-          newData.formatted_created_at = formattedDate;
-
-          newUserData.push(newData);
-          const newCard = (
-            <LibraryCard
-              author={newData.username}
-              name={newData.puzzle_title}
-              date={newData.formatted_created_at}
-              completed={newData.completed_status}
-              key={"solver_grid: " + element.grid_id.toString()}
-              gridId={element.grid_id}
-            />
-          );
-          newCards.push(newCard);
-        });
-      }
-      setUserData(newUserData);
-      handleSort(librarySortSetting, newUserData);
-    } catch (error) {
-      console.error(error);
-      throw new Error();
+    } catch (error: any) {
+      setError(error.message || "An unexpected error occurred");
+      // navigate("/errorpage");
     }
   }
 
@@ -208,10 +217,18 @@ export default function Library() {
         getUserData(globalUserId);
       } else {
         setIsAuthenticated(false);
+        setError(sessionData.message || "Session check failed");
+        // navigate("/errorpage");
+        return;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error checking session:", error);
       setIsAuthenticated(false);
+      setError(
+        error.message ||
+          "An unexpected error occurred while checking the session"
+      );
+      // navigate("/errorpage");
     }
   };
 

@@ -7,9 +7,10 @@ import { faLessThan } from "@fortawesome/free-solid-svg-icons";
 import { faGreaterThan } from "@fortawesome/free-solid-svg-icons";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.tsx";
+// import { useNavigate } from "react-router-dom";
 
 export default function CreateSolverCrossword(props: any) {
-  const { setIsSolved } = props;
+  const { setIsSolved, setUserMessage } = props;
   const [gridSize, setGridSize] = useState<number>(5);
   const [gridDimensions, setGridDimensions] = useState<string>("30vw");
   const [gridHeight, setGridHeight] = useState<string>(gridDimensions + "5px");
@@ -61,9 +62,11 @@ export default function CreateSolverCrossword(props: any) {
     setIsAuthenticated,
     setGlobalUser,
     fetchWithAuth,
+    setError,
   } = useAuth();
   const globalUserId = globalUser.user_id;
   const { gridId } = useParams();
+  // const navigate = useNavigate();
 
   const getCrosswordData = async (userId: number) => {
     try {
@@ -75,17 +78,24 @@ export default function CreateSolverCrossword(props: any) {
         }
       );
       const result = await response.json();
-      setGridSize(result[0].grid_size);
-      setCurrentGridNumbers(result[0].grid_numbers);
-      setCurrentGridValues(result[0].grid_values);
-      setBlackSquares(result[0].black_squares);
-      setClueNumDirection(result[0].clue_number_directions);
-      setDownClueValues(result[0].down_clues);
-      setPuzzleTitle(result[0].puzzle_title);
-      setAcrossClueValues(result[0].across_clues);
-      getAnswerKey(result[0].user_id);
-    } catch (error) {
-      throw new Error();
+      if (response.ok) {
+        setGridSize(result[0].grid_size);
+        setCurrentGridNumbers(result[0].grid_numbers);
+        setCurrentGridValues(result[0].grid_values);
+        setBlackSquares(result[0].black_squares);
+        setClueNumDirection(result[0].clue_number_directions);
+        setDownClueValues(result[0].down_clues);
+        setPuzzleTitle(result[0].puzzle_title);
+        setAcrossClueValues(result[0].across_clues);
+        getAnswerKey(result[0].user_id);
+      } else {
+        setError(result.message || "An error occurred while fetching data.");
+        // navigate("/errorpage");
+        return;
+      }
+    } catch (error: any) {
+      setError(error.message || "An unexpected error occurred");
+      // navigate("/errorpage");
     }
   };
 
@@ -96,10 +106,16 @@ export default function CreateSolverCrossword(props: any) {
         credentials: "include",
       });
       const result = await response.json();
-      setAutocheckKey(result.grid_values);
+      if (response.ok) {
+        setAutocheckKey(result.grid_values);
+      } else {
+        setError(result.message || "An error occurred while fetching data.");
+        // navigate("/errorpage");
+        return;
+      }
     } catch (error: any) {
-      console.log(error);
-      throw new Error();
+      setError(error.message || "An unexpected error occurred");
+      // navigate("/errorpage");
     }
   };
 
@@ -217,9 +233,10 @@ export default function CreateSolverCrossword(props: any) {
     );
     const completed: boolean = arraysEqual;
     setIsSolved(arraysEqual);
+    let message = "";
 
     try {
-      await fetchWithAuth(`/users/solver/${gridId}`, {
+      const response = await fetchWithAuth(`/users/solver/${gridId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -230,9 +247,17 @@ export default function CreateSolverCrossword(props: any) {
         }),
         credentials: "include",
       });
-    } catch (error) {
-      throw new Error();
+      if (response.ok) {
+        message = "Puzzle saved!";
+      }
+    } catch (error: any) {
+      setError(error.message || "An unexpected error occurred");
+      // navigate("/errorpage");
     }
+    setUserMessage(message);
+    setTimeout(() => {
+      setUserMessage("");
+    }, 3000);
   }
 
   const checkSession = async () => {
@@ -254,10 +279,18 @@ export default function CreateSolverCrossword(props: any) {
         getCrosswordData(globalUserId);
       } else {
         setIsAuthenticated(false);
+        setError(sessionData.message || "Session check failed");
+        // navigate("/errorpage");
+        return;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error checking session:", error);
       setIsAuthenticated(false);
+      setError(
+        error.message ||
+          "An unexpected error occurred while checking the session"
+      );
+      // navigate("/errorpage");
     }
   };
 

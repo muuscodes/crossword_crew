@@ -57,6 +57,7 @@ export default function CreateCrossword(props: any) {
     setIsAuthenticated,
     setGlobalUser,
     fetchWithAuth,
+    setError,
   } = useAuth();
   const globalUserId = globalUser.user_id;
   const { gridId } = useParams();
@@ -72,17 +73,24 @@ export default function CreateCrossword(props: any) {
         }
       );
       const result = await response.json();
-      setGridSize(result.grid_size);
-      setCurrentGridNumbers(result.grid_numbers);
-      setCurrentGridValues(result.grid_values);
-      setBlackSquares(result.black_squares);
-      setClueNumDirection(result.clue_number_directions);
-      setDownClueValues(result.down_clues);
-      setPuzzleTitle(result.puzzle_title);
-      setAcrossClueValues(result.across_clues);
-      hasInitialized.current = true;
-    } catch (error) {
-      throw new Error();
+      if (response.ok) {
+        setGridSize(result.grid_size);
+        setCurrentGridNumbers(result.grid_numbers);
+        setCurrentGridValues(result.grid_values);
+        setBlackSquares(result.black_squares);
+        setClueNumDirection(result.clue_number_directions);
+        setDownClueValues(result.down_clues);
+        setPuzzleTitle(result.puzzle_title);
+        setAcrossClueValues(result.across_clues);
+        hasInitialized.current = true;
+      } else {
+        setError(result.message || "An error occurred while fetching data.");
+        // navigate("/errorpage");
+        return;
+      }
+    } catch (error: any) {
+      setError(error.message || "An unexpected error occurred");
+      // navigate("/errorpage");
     }
   };
 
@@ -262,18 +270,24 @@ export default function CreateCrossword(props: any) {
             credentials: "include",
           }
         );
+        const result = await response.json();
         if (response.ok) {
           message = "Puzzle sent!";
+        } else {
+          setError(result.message || "An error occurred while fetching data.");
+          // navigate("/errorpage");
+          return;
         }
       } catch (error: any) {
-        throw new Error(error);
+        setError(error.message || "An unexpected error occurred");
+        // navigate("/errorpage");
       }
     }
     setUserMessage(message);
   };
 
   const handleGridViability = () => {
-    let userMessage = "Please add ";
+    const messages: string[] = [];
     const hasNonNullGridValues: boolean = currentGridValues.some(
       (value: string) => value !== ""
     );
@@ -283,20 +297,30 @@ export default function CreateCrossword(props: any) {
     const hasDownClueValues: boolean = downClueValues.some(
       (value: string) => value !== ""
     );
-    if (
-      puzzleTitle &&
-      hasNonNullGridValues &&
-      (hasDownClueValues || hasAcrossClueValues)
-    ) {
-      userMessage = "";
-    } else if (!puzzleTitle) {
-      userMessage += "a title ";
-    } else if (!hasNonNullGridValues) {
-      userMessage += "entries to the grid ";
-    } else if (!hasDownClueValues || !hasAcrossClueValues) {
-      userMessage += "clues";
+
+    if (!puzzleTitle) {
+      messages.push("a title");
     }
-    return userMessage;
+    if (!hasNonNullGridValues) {
+      messages.push("entries to the grid");
+    }
+    if (!hasDownClueValues) {
+      messages.push("down clues");
+    }
+    if (!hasAcrossClueValues) {
+      messages.push("across clues");
+    }
+
+    if (messages.length > 0) {
+      if (messages.length === 1) {
+        return "Please add " + messages[0];
+      } else {
+        const lastMessage = messages.pop();
+        return "Please add " + messages.join(", ") + ", and " + lastMessage;
+      }
+    } else {
+      return "";
+    }
   };
 
   async function saveGrid() {
@@ -324,8 +348,9 @@ export default function CreateCrossword(props: any) {
         if (!response.ok) {
           message = "Can not edit a shared crossword";
         }
-      } catch (error) {
-        throw new Error();
+      } catch (error: any) {
+        setError(error.message || "An unexpected error occurred");
+        // navigate("/errorpage");
       }
     }
     setUserMessage(message);
@@ -343,14 +368,16 @@ export default function CreateCrossword(props: any) {
           credentials: "include",
         }
       );
-      if (!response.ok) {
-        const errorData = await response.json();
-        setUserMessage(errorData);
-        throw new Error(errorData.message || "Failed to delete grid");
-      }
+      const result = await response.json();
       if (response.ok) navigate("/library");
+      else {
+        setError(result.message || "An error occurred while fetching data.");
+        // navigate("/errorpage");
+        return;
+      }
     } catch (error: any) {
-      console.error("Error:", error.message);
+      setError(error.message || "An unexpected error occurred");
+      // navigate("/errorpage");
     }
   };
 
@@ -393,10 +420,18 @@ export default function CreateCrossword(props: any) {
         getCrosswordData(globalUserId);
       } else {
         setIsAuthenticated(false);
+        setError(sessionData.message || "Session check failed");
+        // navigate("/errorpage");
+        return;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error checking session:", error);
       setIsAuthenticated(false);
+      setError(
+        error.message ||
+          "An unexpected error occurred while checking the session"
+      );
+      // navigate("/errorpage");
     }
   };
 

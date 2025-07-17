@@ -1,10 +1,14 @@
-import { useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
-// import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
-export default function NoPage() {
-  const { setError, setIsAuthenticated, setGlobalUser } = useAuth();
-  // const navigate = useNavigate();
+export default function ErrorPage() {
+  const {
+    isAuthenticated,
+    setIsAuthenticated,
+    setGlobalUser,
+    error,
+    setError,
+  } = useAuth();
 
   const checkSession = async () => {
     try {
@@ -13,23 +17,16 @@ export default function NoPage() {
         credentials: "include",
       });
       const sessionData = await response.json();
-
-      if (response.ok) {
-        if (sessionData.username) {
-          const newGlobalUser = {
-            username: sessionData.username,
-            user_id: sessionData.user_id,
-          };
-          setGlobalUser(newGlobalUser);
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
-        }
+      if (response.ok && sessionData.username && !isAuthenticated) {
+        const newGlobalUser = {
+          username: sessionData.username,
+          user_id: sessionData.user_id,
+        };
+        setGlobalUser(newGlobalUser);
+        setIsAuthenticated(true);
       } else {
         setIsAuthenticated(false);
         setError(sessionData.message || "Session check failed");
-        // navigate("/errorpage");
-        return;
       }
     } catch (error: any) {
       console.error("Error checking session:", error);
@@ -38,7 +35,6 @@ export default function NoPage() {
         error.message ||
           "An unexpected error occurred while checking the session"
       );
-      // navigate("/errorpage");
     }
   };
 
@@ -48,13 +44,13 @@ export default function NoPage() {
 
   return (
     <div className="min-h-screen justify-center text-center">
-      <h1 className="md:text-6xl text-2xl mt-50 mx-auto">Page not found!</h1>
+      <h1 className="md:text-6xl text-2xl mt-50 mx-auto">{error}</h1>
       <a
         href={"/"}
         target="_self"
         id={"home"}
         key={"home"}
-        aria-label={"home" + " page"}
+        aria-label={"home page"}
       >
         <h2 className="md:text-4xl text-xl underline mt-10">Homepage</h2>
       </a>

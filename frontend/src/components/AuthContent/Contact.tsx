@@ -1,9 +1,16 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function Contact() {
-  const { isAuthenticated, setIsAuthenticated, setGlobalUser, fetchWithAuth } =
-    useAuth();
+  const {
+    isAuthenticated,
+    setIsAuthenticated,
+    setGlobalUser,
+    fetchWithAuth,
+    setError,
+  } = useAuth();
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     username: "",
@@ -44,29 +51,38 @@ export default function Contact() {
     }
   };
 
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const response = await fetch("/auth/session", {
-          method: "GET",
-          credentials: "include",
-        });
-        const sessionData = await response.json();
-        if (response.ok && sessionData.username && !isAuthenticated) {
-          const newGlobalUser = {
-            username: sessionData.username,
-            user_id: sessionData.user_id,
-          };
-          setGlobalUser(newGlobalUser);
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
-        }
-      } catch (error) {
-        console.error("Error checking session:", error);
+  const checkSession = async () => {
+    try {
+      const response = await fetch("/auth/session", {
+        method: "GET",
+        credentials: "include",
+      });
+      const sessionData = await response.json();
+      if (response.ok && sessionData.username && !isAuthenticated) {
+        const newGlobalUser = {
+          username: sessionData.username,
+          user_id: sessionData.user_id,
+        };
+        setGlobalUser(newGlobalUser);
+        setIsAuthenticated(true);
+      } else {
         setIsAuthenticated(false);
+        setError(sessionData.message || "Session check failed");
+        navigate("/errorpage");
+        return;
       }
-    };
+    } catch (error: any) {
+      console.error("Error checking session:", error);
+      setIsAuthenticated(false);
+      setError(
+        error.message ||
+          "An unexpected error occurred while checking the session"
+      );
+      // navigate("/errorpage");
+    }
+  };
+
+  useEffect(() => {
     checkSession();
   }, []);
 
