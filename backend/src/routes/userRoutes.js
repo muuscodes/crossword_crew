@@ -7,6 +7,7 @@ import {
   validateAddCrosswordGrid,
   validateShareCrossword,
 } from "../middleware/validationMiddleware.js";
+import { sendSharingEmail } from "./emailRoutes.js";
 
 // Get user by username
 router.get("/:username", async (req, res) => {
@@ -26,7 +27,7 @@ router.get("/:username", async (req, res) => {
   }
 });
 
-// Add crossword grid to database
+// Add crossword grid to database from create
 router.post(
   "/:userId/grids/add",
   jwtMiddleware,
@@ -111,6 +112,18 @@ router.post(
       const completed = false;
       const cleanGridValues = Array(gridSize * gridSize).fill("");
 
+      // Get the sender's username
+      const senderResult = await pool.query(
+        `SELECT * FROM users_dev WHERE user_id = $1`,
+        [userId]
+      );
+
+      if (senderResult.rows.length === 0) {
+        return res.status(404).send("User not found");
+      }
+
+      const senderUsername = senderResult.rows[0].username;
+
       // Get the recipient's user_id
       const recipientResult = await pool.query(
         `SELECT * FROM users_dev WHERE username = $1`,
@@ -122,6 +135,7 @@ router.post(
       }
 
       const recipientUserId = recipientResult.rows[0].user_id;
+      const recipientEmail = recipientResult.rows[0].email;
 
       // Insert into the solver_grids table
       const result = await pool.query(
@@ -149,8 +163,11 @@ router.post(
         [recipientUserId, gridId]
       );
 
-      return res.status(201).send({
-        message: "Successfully added solver grid",
+      // Send email to notify recipient
+      await sendSharingEmail(senderUsername, recipientEmail, recipientUsername);
+
+      return res.status(200).send({
+        message: "Successfully shared grid",
       });
     } catch (error) {
       console.log("Something is amiss", error);

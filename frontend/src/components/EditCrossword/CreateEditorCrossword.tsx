@@ -7,7 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 export default function CreateCrossword(props: any) {
-  const { setIsSaved, setUserMessage } = props;
+  const { setIsSaved, setUserMessage, setIsShared } = props;
   const [gridSize, setGridSize] = useState<number>(5);
   const [gridDimensions, setGridDimensions] = useState<string>("30vw");
   const [gridHeight, setGridHeight] = useState<string>(gridDimensions + "5px");
@@ -46,7 +46,7 @@ export default function CreateCrossword(props: any) {
   const [isGridReady, setIsGridReady] = useState<boolean>(false);
   const [isFocusedOnGrid, setIsFocusedOnGrid] = useState<boolean>(false);
   const [puzzleTitle, setPuzzleTitle] = useState<string>("");
-  const [isShare, setIsShare] = useState<boolean>(false);
+  const [isShowShare, setIsShowShare] = useState<boolean>(false);
   const [recipientUsername, setRecipientUsername] = useState<string>("");
   const hasInitialized = useRef(false);
   const isClear = useRef(false);
@@ -247,15 +247,14 @@ export default function CreateCrossword(props: any) {
   };
 
   const handleShareToggle = () => {
-    setIsShare(!isShare);
-    let message = "";
-    setUserMessage(message);
+    setIsShowShare(!isShowShare);
   };
 
   const handleSendShare = async () => {
-    setIsShare(false);
+    setIsShowShare(false);
     let message = handleGridViability();
     if (!message) {
+      setIsShared(true);
       try {
         const response = await fetchWithAuth(
           `/users/${globalUserId}/grids/${gridId}/share`,
@@ -271,9 +270,7 @@ export default function CreateCrossword(props: any) {
           }
         );
         const result = await response.json();
-        if (response.ok) {
-          message = "Puzzle sent!";
-        } else {
+        if (!response.ok) {
           setError(result.message || "An error occurred while fetching data.");
           // navigate("/errorpage");
           return;
@@ -283,7 +280,6 @@ export default function CreateCrossword(props: any) {
         // navigate("/errorpage");
       }
     }
-    setUserMessage(message);
   };
 
   const handleGridViability = () => {
@@ -567,7 +563,7 @@ export default function CreateCrossword(props: any) {
           </button>
         </div>
       </div>
-      {isShare && (
+      {isShowShare && (
         <div className="flex flex-col items-center bg-gray-200 w-full p-5">
           <p>Please save the grid before sending</p>
           <label htmlFor="recipient" className="text-xl"></label>

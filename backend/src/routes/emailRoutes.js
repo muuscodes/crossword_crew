@@ -34,7 +34,36 @@ export const sendWelcomeEmail = async (username, email) => {
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log("Welcome email sent successfully");
+    res.status(200).json({ message: "Email sent successfully" });
+  } catch (error) {
+    console.error("Error sending email:", error);
+    throw new Error("Error sending email");
+  }
+};
+
+// Send sharing email to new users
+export const sendSharingEmail = async (
+  senderUsername,
+  recipientEmail,
+  recipientUsername
+) => {
+  const mailOptions = {
+    from: usernameAdmin,
+    to: recipientEmail,
+    subject: `A crossword was shared with you`,
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.5;">
+        <p>Hi ${recipientUsername},</p>
+        <p>You've received a new crossword from ${senderUsername}! Login to your account now to get solving!
+        </p>
+        <p>- Crossword Crew Team</p>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    res.status(200).json({ message: "Email sent successfully" });
   } catch (error) {
     console.error("Error sending email:", error);
     throw new Error("Error sending email");

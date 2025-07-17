@@ -10,7 +10,7 @@ import { useAuth } from "../../context/AuthContext.tsx";
 // import { useNavigate } from "react-router-dom";
 
 export default function CreateSolverCrossword(props: any) {
-  const { setIsSolved, setUserMessage } = props;
+  const { setIsSolved, setIsSaved } = props;
   const [gridSize, setGridSize] = useState<number>(5);
   const [gridDimensions, setGridDimensions] = useState<string>("30vw");
   const [gridHeight, setGridHeight] = useState<string>(gridDimensions + "5px");
@@ -233,7 +233,7 @@ export default function CreateSolverCrossword(props: any) {
     );
     const completed: boolean = arraysEqual;
     setIsSolved(arraysEqual);
-    let message = "";
+    setIsSaved(true);
 
     try {
       const response = await fetchWithAuth(`/users/solver/${gridId}`, {
@@ -247,17 +247,14 @@ export default function CreateSolverCrossword(props: any) {
         }),
         credentials: "include",
       });
-      if (response.ok) {
-        message = "Puzzle saved!";
+      if (!response.ok) {
+        setError("Unable to save progress");
+        // navigate("/errorpage");
       }
     } catch (error: any) {
       setError(error.message || "An unexpected error occurred");
       // navigate("/errorpage");
     }
-    setUserMessage(message);
-    setTimeout(() => {
-      setUserMessage("");
-    }, 3000);
   }
 
   const checkSession = async () => {
