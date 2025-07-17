@@ -9,28 +9,28 @@ export default function CrosswordGrid(props: SolverGridProps) {
     currentGridNumbers,
     blackSquares,
     isFocusedCell,
-    setIsFocusedCell,
-    setIsFocusedClue,
     isSecondaryFocusedCell,
-    setIsSecondaryFocusedCell,
     isHighlightAcross,
-    setIsHighlightAcross,
     clueNumDirection,
-    scrollToClue,
     clueToCellHighlight,
     isAcrossClueHighlight,
     isFocusedOnGrid,
-    setIsFocusedOnGrid,
     currentGridValues,
-    setCurrentGridValues,
     clueIndicatorRight,
-    setClueIndicatorRight,
     clueIndicatorDown,
-    setClueIndicatorDown,
     isAutocheck,
     autocheckGrid,
-    setAutocheckGrid,
     autocheckKey,
+    setIsFocusedCell,
+    setIsFocusedClue,
+    setIsSecondaryFocusedCell,
+    setIsHighlightAcross,
+    scrollToClue,
+    setIsFocusedOnGrid,
+    setCurrentGridValues,
+    setClueIndicatorRight,
+    setClueIndicatorDown,
+    setAutocheckGrid,
   } = props;
   const currentCell = useRef(-1);
   const inputRefs = useRef<(HTMLInputElement | null)[]>(
@@ -335,10 +335,6 @@ export default function CrosswordGrid(props: SolverGridProps) {
     const index: number = currentCell.current;
     event.stopPropagation();
     if (event.key === "Backspace") {
-      // Clear autocheck highlight
-      // const newAutocheckGrid = [...autocheckGrid].map((value) => {
-      //   return value;
-      // });
       if (isAutocheck && !blackSquares[index] && autocheckGrid[index]) {
         const newAutocheckGrid = Array(gridSize * gridSize).fill(false);
 
@@ -352,8 +348,6 @@ export default function CrosswordGrid(props: SolverGridProps) {
           }
         }
         setAutocheckGrid(newAutocheckGrid);
-        // newAutocheckGrid[index] = false;
-        // setAutocheckGrid(newAutocheckGrid);
       }
 
       // Handle backspace

@@ -1,6 +1,7 @@
 import ReactDom from "react-dom";
+import type { SharedModalProps } from "../utils/types";
 
-export default function SharedModal(props: any) {
+export default function SharedModal(props: SharedModalProps) {
   const { handleCloseSharedModal } = props;
   return ReactDom.createPortal(
     <div className="modal-container-solved">

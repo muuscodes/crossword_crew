@@ -13,17 +13,16 @@ import { sendSharingEmail } from "./emailRoutes.js";
 router.get("/:username", async (req, res) => {
   try {
     const { username } = req.params;
-    const result = await pool.query(
-      "SELECT * FROM users_dev WHERE username = $1",
-      [username]
-    );
+    const result = await pool.query("SELECT * FROM users WHERE username = $1", [
+      username,
+    ]);
     if (result.rows.length === 0) {
-      return res.status(404).send("User not found");
+      return res.status(404).send({ message: "User not found" });
     }
-    return res.json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
-    return res.status(500).send("Internal Server Error");
+    return res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({ message: "Internal server error" });
   }
 });
 
@@ -49,7 +48,7 @@ router.post(
 
       // Insert into the crossword_grids table
       const result = await pool.query(
-        `INSERT INTO crossword_grids_dev
+        `INSERT INTO crossword_grids
     (user_id, puzzle_title, grid_size, grid_values, grid_numbers, black_squares,
         across_clues, down_clues, clue_number_directions) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
         RETURNING grid_id`,
@@ -68,7 +67,7 @@ router.post(
 
       // Insert into the user's library
       await pool.query(
-        `INSERT INTO user_library_dev
+        `INSERT INTO user_library
     (user_id, crossword_grid_id) VALUES ($1, $2)`,
         [userId, result.rows[0].grid_id]
       );
@@ -77,8 +76,8 @@ router.post(
         message: "Successfully added crossword grid",
       });
     } catch (error) {
-      console.log("Something is amiss", error);
-      return res.sendStatus(500);
+      console.error(error);
+      return res.status(500).send({ message: "Internal server error" });
     }
   }
 );
@@ -96,11 +95,11 @@ router.post(
 
       // Get grid data from the crossword_grids table
       const gridData = await pool.query(
-        "SELECT * FROM crossword_grids_dev WHERE user_id = $1 AND grid_id = $2",
+        "SELECT * FROM crossword_grids WHERE user_id = $1 AND grid_id = $2",
         [userId, gridId]
       );
       if (gridData.rows.length === 0) {
-        return res.status(404).send("Grid not found");
+        return res.status(404).send({ message: "Grid data not found" });
       }
       const puzzleTitle = gridData.rows[0].puzzle_title;
       const gridSize = gridData.rows[0].grid_size;
@@ -114,24 +113,24 @@ router.post(
 
       // Get the sender's username
       const senderResult = await pool.query(
-        `SELECT * FROM users_dev WHERE user_id = $1`,
+        `SELECT * FROM users WHERE user_id = $1`,
         [userId]
       );
 
       if (senderResult.rows.length === 0) {
-        return res.status(404).send("User not found");
+        return res.status(404).send({ message: "Sender user not found" });
       }
 
       const senderUsername = senderResult.rows[0].username;
 
       // Get the recipient's user_id
       const recipientResult = await pool.query(
-        `SELECT * FROM users_dev WHERE username = $1`,
+        `SELECT * FROM users WHERE username = $1`,
         [recipientUsername]
       );
 
       if (recipientResult.rows.length === 0) {
-        return res.status(404).send("User not found");
+        return res.status(404).send({ message: "Recipient user not found" });
       }
 
       const recipientUserId = recipientResult.rows[0].user_id;
@@ -139,7 +138,7 @@ router.post(
 
       // Insert into the solver_grids table
       const result = await pool.query(
-        `INSERT INTO solver_grids_dev 
+        `INSERT INTO solver_grids
         (grid_id, user_id, completed_status, puzzle_title, grid_size, grid_values, grid_numbers, black_squares, across_clues, down_clues, clue_number_directions) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
         [
           gridId,
@@ -158,7 +157,7 @@ router.post(
 
       // Insert into the user's library
       await pool.query(
-        `INSERT INTO user_library_dev
+        `INSERT INTO user_library
     (user_id, solver_grid_id) VALUES ($1, $2)`,
         [recipientUserId, gridId]
       );
@@ -170,30 +169,30 @@ router.post(
         message: "Successfully shared grid",
       });
     } catch (error) {
-      console.log("Something is amiss", error);
-      return res.sendStatus(500);
+      console.error(error);
+      return res.status(500).send({ message: "Internal server error" });
     }
   }
 );
 
 // Home page count number of grids
-router.get("/:userId/grids/count", jwtMiddleware, async (req, res) => {
+router.get("/:userId/grids/count", async (req, res) => {
   try {
     const { userId } = req.params;
     const totalPuzzles = await pool.query(
-      "SELECT COUNT(*) FROM user_library_dev WHERE user_id = $1",
+      "SELECT COUNT(*) FROM user_library WHERE user_id = $1",
       [userId]
     );
     const createdByUser = await pool.query(
-      "SELECT COUNT(*) FROM user_library_dev WHERE user_id = $1 AND crossword_grid_id IS NOT NULL",
+      "SELECT COUNT(*) FROM user_library WHERE user_id = $1 AND crossword_grid_id IS NOT NULL",
       [userId]
     );
     const createdByOther = await pool.query(
-      "SELECT COUNT(*) FROM user_library_dev WHERE user_id = $1 AND solver_grid_id IS NOT NULL",
+      "SELECT COUNT(*) FROM user_library WHERE user_id = $1 AND solver_grid_id IS NOT NULL",
       [userId]
     );
     const solvedPuzzles = await pool.query(
-      "SELECT COUNT(*) FROM solver_grids_dev WHERE user_id = $1 AND completed_status = $2",
+      "SELECT COUNT(*) FROM solver_grids WHERE user_id = $1 AND completed_status = $2",
       [userId, true]
     );
 
@@ -204,9 +203,10 @@ router.get("/:userId/grids/count", jwtMiddleware, async (req, res) => {
       solvedPuzzleCount: solvedPuzzles.rows[0].count,
     };
 
-    return res.json(result);
+    return res.status(200).send(result);
   } catch (error) {
-    console.error("Error counting grids: ", error);
+    console.error(error);
+    return res.status(500).send({ message: "Internal server error" });
   }
 });
 
@@ -218,18 +218,18 @@ router.get("/:userId/grids", jwtMiddleware, async (req, res) => {
       `WITH
       crossword_grid_data AS (
         SELECT cg.*, u.username
-        FROM user_library_dev l
-        JOIN crossword_grids_dev cg ON l.crossword_grid_id = cg.grid_id
-        JOIN users_dev u ON l.user_id = u.user_id
+        FROM user_library l
+        JOIN crossword_grids cg ON l.crossword_grid_id = cg.grid_id
+        JOIN users u ON l.user_id = u.user_id
         WHERE l.user_id = $1 AND l.crossword_grid_id IS NOT NULL
       ),
       solver_grid_data AS (
         SELECT sg.*, creator.username AS creator_username 
-        FROM user_library_dev l
-        JOIN solver_grids_dev sg ON l.solver_grid_id = sg.grid_id AND sg.user_id = $1
-        JOIN users_dev solver ON sg.user_id = solver.user_id 
-        JOIN user_library_dev creator_lib ON sg.grid_id = creator_lib.crossword_grid_id AND creator_lib.solver_grid_id IS NULL
-        JOIN users_dev creator ON creator_lib.user_id = creator.user_id 
+        FROM user_library l
+        JOIN solver_grids sg ON l.solver_grid_id = sg.grid_id AND sg.user_id = $1
+        JOIN users solver ON sg.user_id = solver.user_id 
+        JOIN user_library creator_lib ON sg.grid_id = creator_lib.crossword_grid_id AND creator_lib.solver_grid_id IS NULL
+        JOIN users creator ON creator_lib.user_id = creator.user_id 
         WHERE l.user_id = $1 AND l.solver_grid_id IS NOT NULL
       )
       SELECT
@@ -241,12 +241,14 @@ router.get("/:userId/grids", jwtMiddleware, async (req, res) => {
     const crosswordData = result.rows[0];
 
     if (result.rows.length === 0) {
-      return res.status(404).send("Unable to retrieve data");
+      return res
+        .status(404)
+        .send({ message: "Unable to retrieve crossword data" });
     }
-    return res.json(crosswordData);
-  } catch (err) {
-    console.error(err);
-    return res.status(500).send("Internal Server Error");
+    return res.status(200).send(crosswordData);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({ message: "Internal server error" });
   }
 });
 
@@ -255,16 +257,16 @@ router.get("/:userId/editor/:gridId", jwtMiddleware, async (req, res) => {
   try {
     const { userId, gridId } = req.params;
     const result = await pool.query(
-      "SELECT * FROM crossword_grids_dev WHERE user_id = $1 AND grid_id = $2",
+      "SELECT * FROM crossword_grids WHERE user_id = $1 AND grid_id = $2",
       [userId, gridId]
     );
     if (result.rows.length === 0) {
-      return res.status(404).send("User not found");
+      return res.status(404).send({ message: "Crossword not found" });
     }
-    return res.json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
-    return res.status(500).send("Internal Server Error");
+    return res.status(200).send(result.rows[0]);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({ message: "Internal server error" });
   }
 });
 
@@ -289,15 +291,17 @@ router.put(
       } = req.body;
 
       const result = await pool.query(
-        `SELECT * FROM solver_grids_dev WHERE grid_id = $1`,
+        `SELECT * FROM solver_grids WHERE grid_id = $1`,
         [gridId]
       );
 
       if (result.rows.length !== 0) {
-        return res.status(403).send("Cannot edit a shared crossword");
+        return res
+          .status(403)
+          .send({ message: "Cannot edit a shared crossword" });
       }
       await pool.query(
-        `UPDATE crossword_grids_dev
+        `UPDATE crossword_grids
       SET puzzle_title = $1, grid_size = $2, grid_values = $3, grid_numbers = $4, black_squares = $5,
         across_clues = $6, down_clues = $7, clue_number_directions = $8
       WHERE grid_id = $9`,
@@ -313,12 +317,12 @@ router.put(
           gridId,
         ]
       );
-      return res.status(201).send({
+      return res.status(200).send({
         message: "Successfully updated crossword grid",
       });
     } catch (error) {
-      console.log("Something is amiss", error);
-      return res.sendStatus(500);
+      console.error(error);
+      return res.status(500).send({ message: "Internal server error" });
     }
   }
 );
@@ -329,17 +333,17 @@ router.get("/:userId/solver/:gridId", jwtMiddleware, async (req, res) => {
     const { userId, gridId } = req.params;
     const result = await pool.query(
       `SELECT *
-        FROM solver_grids_dev
+        FROM solver_grids
         WHERE user_id = $1 AND grid_id = $2`,
       [userId, gridId]
     );
     if (result.rows.length === 0) {
-      return res.status(404).send("Grid not found");
+      return res.status(404).send({ message: "Grid not found" });
     }
-    return res.json(result.rows);
-  } catch (err) {
-    console.error(err);
-    return res.status(500).send("Internal Server Error");
+    return res.status(200).send(result.rows);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({ message: "Internal server error" });
   }
 });
 
@@ -351,31 +355,33 @@ router.get("/:userId/grids/:gridId", jwtMiddleware, async (req, res) => {
     // Find the creator's user_id using the gridId
     const creatorResult = await pool.query(
       `SELECT l.user_id
-       FROM user_library_dev l
+       FROM user_library l
        WHERE l.crossword_grid_id = $1 AND l.solver_grid_id IS NULL`,
       [gridId]
     );
 
     if (creatorResult.rows.length === 0) {
-      return res.status(404).send("Creator not found for this grid");
+      return res
+        .status(404)
+        .send({ message: "Creator not found for this grid" });
     }
 
     const creatorUserId = creatorResult.rows[0].user_id;
 
     // Use creator's user_id to get the crossword grid
     const gridResult = await pool.query(
-      `SELECT * FROM crossword_grids_dev WHERE user_id = $1 AND grid_id = $2`,
+      `SELECT * FROM crossword_grids WHERE user_id = $1 AND grid_id = $2`,
       [creatorUserId, gridId]
     );
 
     if (gridResult.rows.length === 0) {
-      return res.status(404).send("Grid not found");
+      return res.status(404).send({ message: "Grid not found" });
     }
 
-    return res.json(gridResult.rows[0]);
-  } catch (err) {
-    console.error(err);
-    return res.status(500).send("Internal Server Error");
+    return res.status(200).send(gridResult.rows[0]);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send({ message: "Internal server error" });
   }
 });
 
@@ -387,7 +393,7 @@ router.patch("/solver/:gridId", jwtMiddleware, async (req, res) => {
 
     // Update the solver_grids table
     await pool.query(
-      `UPDATE solver_grids_dev 
+      `UPDATE solver_grids 
       SET completed_status = $1, grid_values = $2
       WHERE grid_id = $3`,
       [completed, currentGridValues, gridId]
@@ -396,8 +402,8 @@ router.patch("/solver/:gridId", jwtMiddleware, async (req, res) => {
       message: "Successfully added crossword grid",
     });
   } catch (error) {
-    console.log("Something is amiss", error);
-    return res.sendStatus(500);
+    console.error(error);
+    return res.status(500).send({ message: "Internal server error" });
   }
 });
 
@@ -408,7 +414,7 @@ router.delete("/:userId/delete/:gridId", jwtMiddleware, async (req, res) => {
 
     // Check if the grid exists
     const checkGridExists = await pool.query(
-      `SELECT * FROM crossword_grids_dev WHERE grid_id = $1`,
+      `SELECT * FROM crossword_grids WHERE grid_id = $1`,
       [gridId]
     );
 
@@ -418,31 +424,33 @@ router.delete("/:userId/delete/:gridId", jwtMiddleware, async (req, res) => {
 
     // Check if grid was shared
     const result = await pool.query(
-      `SELECT * FROM solver_grids_dev WHERE grid_id = $1`,
+      `SELECT * FROM solver_grids WHERE grid_id = $1`,
       [gridId]
     );
 
     if (result.rows.length !== 0) {
-      return res.status(403).send("Can not delete a shared crossword");
+      return res
+        .status(403)
+        .send({ message: "Can not delete a shared crossword" });
     }
 
     // Delete from crossword grids
-    await pool.query(`DELETE FROM crossword_grids_dev WHERE grid_id = $1`, [
+    await pool.query(`DELETE FROM crossword_grids WHERE grid_id = $1`, [
       gridId,
     ]);
 
     // Delete from user library
     await pool.query(
-      `DELETE FROM user_library_dev WHERE user_id = $1 AND crossword_grid_id = $2`,
+      `DELETE FROM user_library WHERE user_id = $1 AND crossword_grid_id = $2`,
       [userId, gridId]
     );
 
-    return res.json({
+    return res.status(200).send({
       message: "Record deleted successfully",
     });
   } catch (error) {
-    console.log("Error deleting grid", error);
-    return res.sendStatus(500);
+    console.error(error);
+    return res.status(500).send({ message: "Internal server error" });
   }
 });
 

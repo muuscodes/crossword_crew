@@ -34,10 +34,8 @@ export const sendWelcomeEmail = async (username, email) => {
 
   try {
     await transporter.sendMail(mailOptions);
-    res.status(200).json({ message: "Email sent successfully" });
   } catch (error) {
     console.error("Error sending email:", error);
-    throw new Error("Error sending email");
   }
 };
 
@@ -63,10 +61,8 @@ export const sendSharingEmail = async (
 
   try {
     await transporter.sendMail(mailOptions);
-    res.status(200).json({ message: "Email sent successfully" });
   } catch (error) {
     console.error("Error sending email:", error);
-    throw new Error("Error sending email");
   }
 };
 
@@ -83,10 +79,10 @@ router.post("/contact", jwtMiddleware, async (req, res) => {
 
   try {
     await transporter.sendMail(mailOptions);
-    res.status(200).json({ message: "Email sent successfully" });
+    res.status(200).send({ message: "Email sent successfully" });
   } catch (error) {
     console.error("Error sending email:", error);
-    res.status(500).json({ message: "Error sending email" });
+    return res.status(500).send({ message: "Internal server error" });
   }
 });
 

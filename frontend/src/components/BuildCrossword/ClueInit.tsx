@@ -1,5 +1,7 @@
+import type { ClueInitProps } from "../utils/types";
+
 export default function ClueInit(
-  props: any
+  props: ClueInitProps
 ): [React.ReactElement[], React.ReactElement[], string[][]] {
   const {
     gridSize,

@@ -1,6 +1,7 @@
 import ReactDom from "react-dom";
+import type { HelpModalProps } from "../utils/types";
 
-export default function HelpModal(props: any) {
+export default function HelpModal(props: HelpModalProps) {
   const { children, handleCloseHelpModal } = props;
   return ReactDom.createPortal(
     <div className="modal-container-help">

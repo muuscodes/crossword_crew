@@ -2,10 +2,18 @@ import LibraryCard from "./LibraryCard";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { useAuth } from "../../context/AuthContext";
-// import { useNavigate } from "react-router-dom";
 
 interface UserData {
   username: string;
+  puzzle_title: string;
+  created_at: string;
+  formatted_created_at: string;
+  completed_status?: boolean;
+  grid_id: number;
+}
+
+interface UserDataSolver {
+  creator_username: string;
   puzzle_title: string;
   created_at: string;
   formatted_created_at: string;
@@ -16,7 +24,6 @@ interface UserData {
 export default function Library() {
   const [userData, setUserData] = useState<UserData[]>([]);
   const [userCards, setUserCards] = useState<React.ReactNode[]>([]);
-  // const navigate = useNavigate();
 
   const {
     globalUser,
@@ -26,7 +33,6 @@ export default function Library() {
     librarySortSetting,
     setLibrarySortSetting,
     fetchWithAuth,
-    setError,
   } = useAuth();
   const [sortOption, setSortOption] = useState(librarySortSetting);
   const globalUserId = globalUser.user_id;
@@ -45,8 +51,8 @@ export default function Library() {
         const newCards: React.ReactNode[] = [];
 
         if (crossword_grids) {
-          crossword_grids.forEach((element: any) => {
-            let newData: any = {
+          crossword_grids.forEach((element: UserData) => {
+            let newData: UserData = {
               username: element.username,
               puzzle_title: "",
               created_at: element.created_at,
@@ -81,8 +87,8 @@ export default function Library() {
         }
 
         if (solver_grids) {
-          solver_grids.forEach((element: any) => {
-            let newData: any = {
+          solver_grids.forEach((element: UserDataSolver) => {
+            let newData: UserData = {
               username: element.creator_username,
               puzzle_title: "",
               created_at: element.created_at,
@@ -120,13 +126,10 @@ export default function Library() {
         setUserData(newUserData);
         handleSort(librarySortSetting, newUserData);
       } else {
-        setError(data.message || "An error occurred while fetching data.");
-        // navigate("/errorpage");
-        return;
+        throw new Error(data.message);
       }
     } catch (error: any) {
-      setError(error.message || "An unexpected error occurred");
-      // navigate("/errorpage");
+      alert(error.message);
     }
   }
 
@@ -217,18 +220,12 @@ export default function Library() {
         getUserData(globalUserId);
       } else {
         setIsAuthenticated(false);
-        setError(sessionData.message || "Session check failed");
-        // navigate("/errorpage");
-        return;
+        throw new Error("Unauthorized access");
       }
     } catch (error: any) {
       console.error("Error checking session:", error);
       setIsAuthenticated(false);
-      setError(
-        error.message ||
-          "An unexpected error occurred while checking the session"
-      );
-      // navigate("/errorpage");
+      alert(error.message);
     }
   };
 

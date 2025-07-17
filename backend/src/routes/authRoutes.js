@@ -27,10 +27,9 @@ passport.serializeUser((user, done) => {
 
 passport.deserializeUser(async (id, done) => {
   try {
-    const user = await pool.query(
-      "SELECT * FROM users_dev WHERE user_id = $1",
-      [id]
-    );
+    const user = await pool.query("SELECT * FROM users WHERE user_id = $1", [
+      id,
+    ]);
     return done(null, user.rows[0]);
   } catch (error) {
     return done(error, null);
@@ -40,7 +39,7 @@ passport.deserializeUser(async (id, done) => {
 // Get the session
 router.get("/session", validateSession, (req, res) => {
   if (req.session && req.session.user) {
-    return res.json({
+    return res.status(200).send({
       user_id: req.session.user.user_id,
       username: req.session.user.username,
     });
@@ -64,7 +63,7 @@ passport.use(
 
         // Check if user already exists in the database
         const existingUser = await pool.query(
-          "SELECT * FROM users_dev WHERE google_id = $1 OR email = $2",
+          "SELECT * FROM users WHERE google_id = $1 OR email = $2",
           [googleId, email]
         );
         if (existingUser.rows.length > 0) {
@@ -73,7 +72,7 @@ passport.use(
 
         // If not, create a new user
         const newUser = await pool.query(
-          "INSERT INTO users_dev (google_id, username, email) VALUES ($1, $2, $3) RETURNING *",
+          "INSERT INTO users (google_id, username, email) VALUES ($1, $2, $3) RETURNING *",
           [googleId, displayName, email]
         );
 
@@ -83,11 +82,11 @@ passport.use(
 
         // Get grid data from the crossword_grids table
         const gridData = await pool.query(
-          "SELECT * FROM crossword_grids_dev WHERE user_id = $1 AND grid_id = $2",
+          "SELECT * FROM crossword_grids WHERE user_id = $1 AND grid_id = $2",
           [1, 1]
         );
         if (gridData.rows.length === 0) {
-          return res.status(404).send("Grid not found");
+          return res.status(404).send({ message: "Grid not found" });
         }
         const puzzleTitle = gridData.rows[0].puzzle_title;
         const gridSize = gridData.rows[0].grid_size;
@@ -103,7 +102,7 @@ passport.use(
 
         // Insert into the solver_grids table
         await pool.query(
-          `INSERT INTO solver_grids_dev 
+          `INSERT INTO solver_grids
         (grid_id, user_id, completed_status, puzzle_title, grid_size, grid_values, grid_numbers, black_squares, across_clues, down_clues, clue_number_directions) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
           [
             1,
@@ -122,7 +121,7 @@ passport.use(
 
         // Add welcome grid to their library
         await pool.query(
-          `INSERT INTO user_library_dev (user_id, solver_grid_id) VALUES ($1, $2)
+          `INSERT INTO user_library (user_id, solver_grid_id) VALUES ($1, $2)
       `,
           [newUserData.user_id, 1]
         );
@@ -141,7 +140,7 @@ passport.use(
 
 // Authentication route
 router.get("/google", passport.authenticate("google"), (req, res) => {
-  return res.status(200).send("Authentication initiated");
+  return res.status(200).send({ message: "Authentication initiated" });
 });
 
 // Redirect route
@@ -176,7 +175,7 @@ router.get("/google/user", (req, res) => {
       { expiresIn: "2h" }
     );
 
-    return res.json({ user: req.user, token });
+    return res.status(200).send({ user: req.user, token });
   } else {
     return res.status(401).send({ message: "User not authenticated" });
   }
@@ -184,7 +183,9 @@ router.get("/google/user", (req, res) => {
 
 // Failure route
 router.get("/failure", (req, res) => {
-  return res.status(400).send("Google login failed, please try again");
+  return res
+    .status(400)
+    .send({ message: "Google login failed, please try again" });
 });
 
 // Normal user sign up route
@@ -198,7 +199,7 @@ router.post(
 
       // Check if user already exists in the database
       const existingUser = await pool.query(
-        "SELECT * FROM users_dev WHERE email = $1 OR username = $2",
+        "SELECT * FROM users WHERE email = $1 OR username = $2",
         [email, username]
       );
       if (existingUser.rows.length > 0) {
@@ -210,7 +211,7 @@ router.post(
       // If not, create a new user
       const hashedPassword = await bcrypt.hash(password, 10);
       const newUser = await pool.query(
-        "INSERT INTO users_dev (username, email, password) VALUES ($1, $2, $3) RETURNING *",
+        "INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING *",
         [username, email, hashedPassword]
       );
       const newUserData = newUser.rows[0];
@@ -226,11 +227,11 @@ router.post(
 
       // Get grid data from the crossword_grids table
       const gridData = await pool.query(
-        "SELECT * FROM crossword_grids_dev WHERE user_id = $1 AND grid_id = $2",
+        "SELECT * FROM crossword_grids WHERE user_id = $1 AND grid_id = $2",
         [1, 1]
       );
       if (gridData.rows.length === 0) {
-        return res.status(404).send("Grid not found");
+        return res.status(404).send({ message: "Grid not found" });
       }
       const puzzleTitle = gridData.rows[0].puzzle_title;
       const gridSize = gridData.rows[0].grid_size;
@@ -246,7 +247,7 @@ router.post(
 
       // Insert into the solver_grids table
       const result = await pool.query(
-        `INSERT INTO solver_grids_dev 
+        `INSERT INTO solver_grids
         (grid_id, user_id, completed_status, puzzle_title, grid_size, grid_values, grid_numbers, black_squares, across_clues, down_clues, clue_number_directions) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
         [
           1,
@@ -265,7 +266,7 @@ router.post(
 
       // Add welcome grid to their library
       await pool.query(
-        `INSERT INTO user_library_dev (user_id, solver_grid_id) VALUES ($1, $2)
+        `INSERT INTO user_library (user_id, solver_grid_id) VALUES ($1, $2)
       `,
         [newUserData.user_id, 1]
       );
@@ -281,7 +282,7 @@ router.post(
   }
 );
 
-// Normal user sign in route
+// Normal user login route
 router.post(
   "/login",
   loginLimiter,
@@ -293,7 +294,7 @@ router.post(
 
       // Check if user exists
       const existingUser = await pool.query(
-        "SELECT * FROM users_dev WHERE username = $1",
+        "SELECT * FROM users WHERE username = $1",
         [username]
       );
       if (existingUser.rows.length > 0) {
@@ -341,6 +342,8 @@ router.get("/logout", jwtMiddleware, (req, res) => {
       }
       return res.status(200).send({ message: "User logged out" });
     });
+  } else {
+    return res.status(500).send({ message: "Internal server error" });
   }
 });
 

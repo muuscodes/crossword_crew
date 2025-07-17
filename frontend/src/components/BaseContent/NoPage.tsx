@@ -1,10 +1,8 @@
 import { useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
-// import { useNavigate } from "react-router-dom";
 
 export default function NoPage() {
-  const { setError, setIsAuthenticated, setGlobalUser } = useAuth();
-  // const navigate = useNavigate();
+  const { setIsAuthenticated, setGlobalUser } = useAuth();
 
   const checkSession = async () => {
     try {
@@ -27,18 +25,12 @@ export default function NoPage() {
         }
       } else {
         setIsAuthenticated(false);
-        setError(sessionData.message || "Session check failed");
-        // navigate("/errorpage");
-        return;
+        throw new Error("Unauthorized access");
       }
     } catch (error: any) {
       console.error("Error checking session:", error);
       setIsAuthenticated(false);
-      setError(
-        error.message ||
-          "An unexpected error occurred while checking the session"
-      );
-      // navigate("/errorpage");
+      alert(error.message);
     }
   };
 

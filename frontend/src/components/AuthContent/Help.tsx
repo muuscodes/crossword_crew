@@ -1,3 +1,11 @@
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faArrowUp,
+  faArrowDown,
+  faArrowLeft,
+  faArrowRight,
+} from "@fortawesome/free-solid-svg-icons";
+
 export default function Help() {
   return (
     <>
@@ -9,11 +17,20 @@ export default function Help() {
           For controls, you can use your mouse or keyboard. <br />
           For keyboard navigation: <br />
           <br />
-          <span className="help-modal-button">up</span>{" "}
-          <span className="help-modal-button">down</span>{" "}
-          <span className="help-modal-button">left</span>{" "}
-          <span className="help-modal-button">right</span> to move around the
-          board
+          <span className="help-modal-button">
+            {" "}
+            <FontAwesomeIcon icon={faArrowUp} />
+          </span>{" "}
+          <span className="help-modal-button">
+            <FontAwesomeIcon icon={faArrowDown} />
+          </span>{" "}
+          <span className="help-modal-button">
+            <FontAwesomeIcon icon={faArrowLeft} />
+          </span>{" "}
+          <span className="help-modal-button">
+            <FontAwesomeIcon icon={faArrowRight} />
+          </span>{" "}
+          to move around the board
           <br />
           <br />
           <span className="help-modal-button">Tab</span> to the next clue <br />

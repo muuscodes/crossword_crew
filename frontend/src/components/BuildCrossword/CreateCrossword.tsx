@@ -4,9 +4,9 @@ import CrosswordGrid from "./CrosswordGrid";
 import CreateClues from "./CreateClues";
 import ClueInit from "./ClueInit";
 import { useAuth } from "../../context/AuthContext";
-// import { useNavigate } from "react-router-dom";
+import type { CreateCrosswordProps } from "../utils/types";
 
-export default function CreateCrossword(props: any) {
+export default function CreateCrossword(props: CreateCrosswordProps) {
   const { setIsSaved, setUserMessage } = props;
   const [gridSize, setGridSize] = useState<number>(5);
   const [gridDimensions, setGridDimensions] = useState<string>("30vw");
@@ -47,9 +47,8 @@ export default function CreateCrossword(props: any) {
   const [isGridReady, setIsGridReady] = useState<boolean>(false);
   const [isFocusedOnGrid, setIsFocusedOnGrid] = useState<boolean>(false);
   const [puzzleTitle, setPuzzleTitle] = useState<string>("");
-  // const navigate = useNavigate();
 
-  const { globalUser, fetchWithAuth, setError } = useAuth();
+  const { globalUser, fetchWithAuth } = useAuth();
 
   const handleGridSizeChange = (
     event: React.ChangeEvent<HTMLSelectElement>
@@ -345,13 +344,10 @@ export default function CreateCrossword(props: any) {
         });
         const result = await response.json();
         if (!response.ok) {
-          setError(result.message || "An error occurred while fetching data.");
-          // navigate("/errorpage");
-          return;
+          throw new Error(result.message);
         }
       } catch (error: any) {
-        setError(error.message || "An unexpected error occurred");
-        // navigate("/errorpage");
+        alert(error.message);
       }
     }
     setUserMessage(message);
@@ -442,25 +438,25 @@ export default function CreateCrossword(props: any) {
           positionBlackSquares={positionBlackSquares}
           addInputs={true}
           currentGridNumbers={currentGridNumbers}
-          setCurrentGridNumbers={setCurrentGridNumbers}
           blackSquares={blackSquares}
-          setBlackSquares={setBlackSquares}
           isFocusedCell={isFocusedCell}
-          setIsFocusedCell={setIsFocusedCell}
-          setIsFocusedClue={setIsFocusedClue}
           isSecondaryFocusedCell={isSecondaryFocusedCell}
-          setIsSecondaryFocusedCell={setIsSecondaryFocusedCell}
           isHighlightAcross={isHighlightAcross}
-          setIsHighlightAcross={setIsHighlightAcross}
           clueNumDirection={clueNumDirection}
-          scrollToClue={scrollToClue}
           clueToCellHighlight={clueToCellHighlight}
           isAcrossClueHighlight={isAcrossClueHighlight}
           isFocusedOnGrid={isFocusedOnGrid}
-          setIsFocusedOnGrid={setIsFocusedOnGrid}
           currentGridValues={currentGridValues}
+          setCurrentGridNumbers={setCurrentGridNumbers}
+          setBlackSquares={setBlackSquares}
+          setIsFocusedCell={setIsFocusedCell}
+          setIsFocusedClue={setIsFocusedClue}
+          setIsSecondaryFocusedCell={setIsSecondaryFocusedCell}
+          setIsHighlightAcross={setIsHighlightAcross}
+          setIsFocusedOnGrid={setIsFocusedOnGrid}
           setCurrentGridValues={setCurrentGridValues}
           handleClear={handleClear}
+          scrollToClue={scrollToClue}
           assignNumbers={assignNumbers}
         />
 

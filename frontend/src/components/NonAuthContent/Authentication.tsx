@@ -4,8 +4,9 @@ import googleLogo from "../../img/GoogleLogo.png";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+import type { AuthenticationProps } from "../utils/types";
 
-export default function Authentication(props: any) {
+export default function Authentication(props: AuthenticationProps) {
   const { handleCloseModal } = props;
   const [isSignUp, setIsSignUp] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
@@ -53,17 +54,17 @@ export default function Authentication(props: any) {
           method: "GET",
           credentials: "include",
         });
+        const result = await response.json();
         if (response.ok) {
-          const userData = await response.json();
-
           const newGlobalUser = {
-            username: userData.username,
-            user_id: userData.user_id,
+            username: result.username,
+            user_id: result.user_id,
           };
           setGlobalUser(newGlobalUser);
           navigate("/home");
         } else {
           console.error("Failed to fetch user data");
+          throw new Error(result.message);
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -157,7 +158,7 @@ export default function Authentication(props: any) {
           {isSignUp ? "Login" : "Sign up"}
         </button>
       </div>
-      {isLoading && <p className="text-2xl text-center">Loading...</p>}
+      {isLoading && <p className="text-4xl text-center">Loading...</p>}
     </>
   );
 }

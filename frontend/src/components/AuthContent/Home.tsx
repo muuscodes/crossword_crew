@@ -1,7 +1,6 @@
 import { useAuth } from "../../context/AuthContext";
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-// import { useNavigate } from "react-router-dom";
 
 export default function Home() {
   const {
@@ -12,12 +11,10 @@ export default function Home() {
     setLibrarySortSetting,
     fetchWithAuth,
     handleGoogleRedirect,
-    setError,
   } = useAuth();
   const location = useLocation();
   const [countData, setCountData] = useState<number[]>([0, 0, 0, 0]);
   const globalUserId = globalUser.user_id;
-  // const navigate = useNavigate();
 
   async function getUserData(userId: number) {
     try {
@@ -32,15 +29,12 @@ export default function Home() {
         newCountData[1] = result.createdByUserCount;
         newCountData[2] = result.createdByOtherCount;
         newCountData[3] = result.solvedPuzzleCount;
+        setCountData(newCountData);
       } else {
-        setError(result.message || "An error occurred while fetching data.");
-        // navigate("/errorpage");
-        return;
+        throw new Error(result.message);
       }
-      setCountData(newCountData);
     } catch (error: any) {
-      setError(error.message || "An unexpected error occurred");
-      // navigate("/errorpage");
+      alert(error.message);
     }
   }
 
@@ -73,15 +67,15 @@ export default function Home() {
           getUserData(newGlobalUser.user_id);
           setGlobalUser(newGlobalUser);
           setIsAuthenticated(true);
+        } else {
+          if (response.status === 401) {
+            throw new Error("Unauthorized access");
+          }
         }
       } catch (error: any) {
         console.error("Error checking session:", error);
         setIsAuthenticated(false);
-        setError(
-          error.message ||
-            "An unexpected error occurred while checking the session"
-        );
-        // navigate("/errorpage");
+        alert(error.message);
       }
     } else {
       getUserData(globalUserId);

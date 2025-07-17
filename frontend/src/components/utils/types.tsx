@@ -20,6 +20,32 @@ export interface LibraryCardProps {
   gridId: number;
 }
 
+export interface HelpModalProps {
+  children: React.ReactNode;
+  handleCloseHelpModal: () => void;
+}
+
+export interface SavedModalProps {
+  handleCloseSavedModal: () => void;
+}
+
+export interface SharedModalProps {
+  handleCloseSharedModal: () => void;
+}
+
+export interface SolvedModalProps {
+  handleCloseSolvedModal: () => void;
+}
+export interface ModalProps {
+  children: React.ReactNode;
+  handleCloseModal: () => void;
+}
+
+export interface CreateCrosswordProps {
+  setIsSaved: React.Dispatch<React.SetStateAction<boolean>>;
+  setUserMessage: React.Dispatch<React.SetStateAction<string>>;
+}
+
 export interface CrosswordGridProps {
   gridSize: number;
   gridDimensions: string;
@@ -107,6 +133,105 @@ export interface CrosswordClueProps {
   ) => React.ReactNode;
 }
 
+export interface ClueInitProps {
+  gridSize: number;
+  currentGridNumbers: number[];
+  isFocusedClue: boolean[];
+  isFocusedCell: boolean[];
+  clueNumDirection: string[][];
+  handleFocusClue: (index: number, direction: string) => void;
+  handleInputChangeClue: (
+    event: React.ChangeEvent<HTMLTextAreaElement>,
+    direction: string,
+    index: number
+  ) => void;
+}
+
+export interface CreateEditorCrosswordProps {
+  setIsSaved: React.Dispatch<React.SetStateAction<boolean>>;
+  setUserMessage: React.Dispatch<React.SetStateAction<string>>;
+  setIsShared: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+export interface EditorGridProps {
+  gridSize: number;
+  gridDimensions: string;
+  positionBlackSquares: boolean;
+  addInputs: boolean;
+  currentGridNumbers: number[];
+  blackSquares: boolean[];
+  isFocusedCell: boolean[];
+  isSecondaryFocusedCell: boolean[];
+  isHighlightAcross: boolean;
+  clueNumDirection: string[][];
+  clueToCellHighlight: number;
+  isAcrossClueHighlight: boolean;
+  isFocusedOnGrid: boolean;
+  currentGridValues: string[];
+  setCurrentGridNumbers: (
+    value: number[] | ((prevState: number[]) => number[])
+  ) => void;
+  setBlackSquares: (
+    value: boolean[] | ((prevState: boolean[]) => boolean[])
+  ) => void;
+  setIsFocusedCell: (
+    value: boolean[] | ((prevState: boolean[]) => boolean[])
+  ) => void;
+  setIsFocusedClue: (
+    value: boolean[] | ((prevState: boolean[]) => boolean[])
+  ) => void;
+  setIsSecondaryFocusedCell: (
+    value: boolean[] | ((prevState: boolean[]) => boolean[])
+  ) => void;
+  setIsHighlightAcross: (
+    value: boolean | ((prevState: boolean) => boolean)
+  ) => void;
+  setIsFocusedOnGrid: (
+    value: boolean | ((prevState: boolean) => boolean)
+  ) => void;
+  setCurrentGridValues: (
+    value: string[] | ((prevState: string[]) => string[])
+  ) => void;
+  scrollToClue: (index: number, direction: string) => void;
+  assignNumbers: (blackSquares: boolean[]) => number[];
+}
+
+export interface EditorClueProps {
+  gridSize: number;
+  currentGridNumbers: number[];
+  blackSquares: boolean[];
+  gridDimensions: string;
+  isFocusedClue: boolean[];
+  isFocusedCell: boolean[];
+  clueNumDirection: string[][];
+  acrossClueValues: string[];
+  downClueValues: string[];
+  isClear: React.RefObject<boolean>;
+  setAcrossClueValues: React.Dispatch<React.SetStateAction<string[]>>;
+  setDownClueValues: React.Dispatch<React.SetStateAction<string[]>>;
+  setClueNumDirection: (
+    value: string[][] | ((prevState: string[][]) => string[][])
+  ) => void;
+  handleFocusClue: (index: number, direction: string) => void;
+  handleInputChangeClue: (
+    event: React.ChangeEvent<HTMLTextAreaElement>,
+    direction: string,
+    index: number
+  ) => void;
+  assignNumbers: (blackSquares: boolean[]) => number[];
+  mapClues: (
+    prevState: React.ReactElement<
+      unknown,
+      string | React.JSXElementConstructor<any>
+    >[]
+  ) => React.JSX.Element[];
+}
+
+export interface CreateSolverCrosswordProps {
+  setIsSaved: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsSolved: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
 export interface SolverGridProps {
   gridSize: number;
   gridDimensions: string;
@@ -174,83 +299,12 @@ export interface SolverClueProps {
   ) => React.ReactNode;
 }
 
-export interface EditorGridProps {
-  gridSize: number;
-  gridDimensions: string;
-  positionBlackSquares: boolean;
-  addInputs: boolean;
-  currentGridNumbers: number[];
-  blackSquares: boolean[];
-  isFocusedCell: boolean[];
-  isSecondaryFocusedCell: boolean[];
-  isHighlightAcross: boolean;
-  clueNumDirection: string[][];
-  clueToCellHighlight: number;
-  isAcrossClueHighlight: boolean;
-  isFocusedOnGrid: boolean;
-  currentGridValues: string[];
-  setCurrentGridNumbers: (
-    value: number[] | ((prevState: number[]) => number[])
-  ) => void;
-  setBlackSquares: (
-    value: boolean[] | ((prevState: boolean[]) => boolean[])
-  ) => void;
-  setIsFocusedCell: (
-    value: boolean[] | ((prevState: boolean[]) => boolean[])
-  ) => void;
-  setIsFocusedClue: (
-    value: boolean[] | ((prevState: boolean[]) => boolean[])
-  ) => void;
-  setIsSecondaryFocusedCell: (
-    value: boolean[] | ((prevState: boolean[]) => boolean[])
-  ) => void;
-  setIsHighlightAcross: (
-    value: boolean | ((prevState: boolean) => boolean)
-  ) => void;
-  setIsFocusedOnGrid: (
-    value: boolean | ((prevState: boolean) => boolean)
-  ) => void;
-  setCurrentGridValues: (
-    value: string[] | ((prevState: string[]) => string[])
-  ) => void;
-  scrollToClue: (index: number, direction: string) => void;
-  assignNumbers: (blackSquares: boolean[]) => number[];
+export interface AuthProviderProps {
+  children: React.ReactNode;
 }
 
-export interface EditorClueProps {
-  gridSize: number;
-  currentGridNumbers: number[];
-  blackSquares: boolean[];
-  gridDimensions: string;
-  isFocusedClue: boolean[];
-  isFocusedCell: boolean[];
-  clueNumDirection: string[][];
-  acrossClueValues: string[];
-  downClueValues: string[];
-  isClear: React.RefObject<boolean>;
-  setAcrossClueValues: React.Dispatch<React.SetStateAction<string[]>>;
-  setDownClueValues: React.Dispatch<React.SetStateAction<string[]>>;
-  setClueNumDirection: (
-    value: string[][] | ((prevState: string[][]) => string[][])
-  ) => void;
-  handleFocusClue: (index: number, direction: string) => void;
-  handleUserInputClue: (
-    event: React.ChangeEvent<HTMLTextAreaElement>,
-    direction: string,
-    index: number
-  ) => void;
-  handleInputChangeClue: (
-    event: React.ChangeEvent<HTMLTextAreaElement>,
-    direction: string,
-    index: number
-  ) => void;
-  assignNumbers: (blackSquares: boolean[]) => number[];
-  mapClues: (
-    prevState: React.ReactElement<
-      unknown,
-      string | React.JSXElementConstructor<any>
-    >[]
-  ) => React.JSX.Element[];
+export interface AuthenticationProps {
+  handleCloseModal: () => void;
 }
 
 export interface AuthContextType {
@@ -267,8 +321,6 @@ export interface AuthContextType {
   handleGoogleRedirect: () => Promise<void>;
   getToken: () => string | null;
   fetchWithAuth: (url: string, options?: RequestInit) => Promise<Response>;
-  error: string;
-  setError: React.Dispatch<React.SetStateAction<any>>;
 }
 
 export interface globalUserType {

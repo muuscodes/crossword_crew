@@ -1,6 +1,7 @@
 import ReactDom from "react-dom";
+import type { ModalProps } from "../utils/types";
 
-export default function Modal(props: any) {
+export default function Modal(props: ModalProps) {
   const { children, handleCloseModal } = props;
   return ReactDom.createPortal(
     <div className="modal-container">

@@ -4,16 +4,13 @@ import HelpModal from "./HelpModal";
 import Help from "./Help";
 import { useAuth } from "../../context/AuthContext";
 import SavedModal from "./SavedModal";
-// import { useNavigate } from "react-router-dom";
 
 export default function Create() {
   const [isSaved, setIsSaved] = useState<boolean>(false);
   const [userMessage, setUserMessage] = useState<string>("");
   const [showHelpModal, setShowHelpModal] = useState<boolean>(false);
   const [showSavedModal, setShowSavedModal] = useState<boolean>(false);
-  const { setGlobalUser, isAuthenticated, setIsAuthenticated, setError } =
-    useAuth();
-  // const navigate = useNavigate();
+  const { setGlobalUser, isAuthenticated, setIsAuthenticated } = useAuth();
 
   const handleCloseHelpModal = () => {
     setShowHelpModal(false);
@@ -69,18 +66,12 @@ export default function Create() {
           setIsAuthenticated(true);
         } else {
           setIsAuthenticated(false);
-          setError(sessionData.message || "Session check failed");
-          // navigate("/errorpage");
-          return;
+          throw new Error("Unauthorized access");
         }
       } catch (error: any) {
         console.error("Error checking session:", error);
         setIsAuthenticated(false);
-        setError(
-          error.message ||
-            "An unexpected error occurred while checking the session"
-        );
-        // navigate("/errorpage");
+        alert(error.message);
       }
     };
 

@@ -1,7 +1,7 @@
 import { useState, useContext, createContext } from "react";
 import type { AuthContextType } from "../components/utils/types";
 import type { globalUserType } from "../components/utils/types";
-// import { useNavigate } from "react-router-dom";
+import type { AuthProviderProps } from "../components/utils/types";
 
 const defaultAuthContext: AuthContextType = {
   globalUser: {
@@ -25,9 +25,12 @@ const defaultAuthContext: AuthContextType = {
   ): Promise<Response> => {
     return fetch(url, options);
   },
-  error: "",
-  setError: () => {},
 };
+
+interface newUserType {
+  username: string;
+  user_id: number;
+}
 
 const AuthContext = createContext<AuthContextType>(defaultAuthContext);
 
@@ -35,7 +38,7 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
-export default function AuthProvider(props: any) {
+export default function AuthProvider(props: AuthProviderProps) {
   const { children } = props;
   const [globalUser, setGlobalUser] = useState<globalUserType>({
     username: "",
@@ -45,8 +48,6 @@ export default function AuthProvider(props: any) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [librarySortSetting, setLibrarySortSetting] =
     useState<string>("dateNewest");
-  const [error, setError] = useState<string>("");
-  // const navigate = useNavigate();
 
   const getUserId = async (username: string) => {
     try {
@@ -56,19 +57,16 @@ export default function AuthProvider(props: any) {
       });
       const freshData = await response.json();
       if (response.ok) {
-        let newUser: any = {
+        let newUser: newUserType = {
           username: username,
           user_id: freshData.user_id,
         };
         setGlobalUser(newUser);
       } else {
-        setError(freshData.message || "An error occurred while fetching data.");
-        // navigate("/errorpage");
-        return;
+        throw new Error(freshData.message);
       }
     } catch (error: any) {
-      setError(error.message || "An unexpected error occurred");
-      // navigate("/errorpage");
+      alert(error.message);
     }
   };
 
@@ -215,8 +213,6 @@ export default function AuthProvider(props: any) {
     handleGoogleRedirect,
     getToken,
     fetchWithAuth,
-    error,
-    setError,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

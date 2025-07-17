@@ -1,6 +1,7 @@
 import ReactDom from "react-dom";
+import type { SavedModalProps } from "../utils/types";
 
-export default function SavedModal(props: any) {
+export default function SavedModal(props: SavedModalProps) {
   const { handleCloseSavedModal } = props;
   return ReactDom.createPortal(
     <div className="modal-container-solved">

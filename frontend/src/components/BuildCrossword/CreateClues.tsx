@@ -9,16 +9,17 @@ export default function CreateClues(props: CrosswordClueProps) {
     currentGridNumbers,
     blackSquares,
     gridDimensions,
-    createClue,
-    acrossClues,
-    setAcrossClues,
-    downClues,
-    setDownClues,
-    isFocusedClue,
     isFocusedCell,
     clueNumDirection,
+    acrossClues,
+    downClues,
+    isFocusedClue,
+    createClue,
+    setAcrossClues,
+    setDownClues,
     setClueNumDirection,
     handleFocusClue,
+    handleInputChangeClue,
     mapClues,
   } = props;
 
@@ -68,6 +69,7 @@ export default function CreateClues(props: CrosswordClueProps) {
         isFocusedCell,
         clueNumDirection,
         handleFocusClue,
+        handleInputChangeClue,
       });
       setAcrossClues(acrossCluesInit);
       setDownClues(downCluesInit);

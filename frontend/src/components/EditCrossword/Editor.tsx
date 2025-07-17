@@ -63,7 +63,7 @@ export default function Editor() {
       )}
       <div className="min-h-[80vh] items-center text-center mb-15">
         <h1 className="text-center text-7xl my-5">Edit</h1>
-        <p className="text-xl m-auto mb-3 h-fit">
+        <p className="text-xl m-auto mb-3 h-fit text-red-600">
           {userMessage ? userMessage : ""}
         </p>
         <CreateEditorCrossword

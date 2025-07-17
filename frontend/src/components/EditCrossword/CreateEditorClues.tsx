@@ -20,7 +20,6 @@ export default function CreateEditorClues(props: EditorClueProps) {
     setClueNumDirection,
     handleFocusClue,
     handleInputChangeClue,
-    assignNumbers,
     mapClues,
   } = props;
 
@@ -127,21 +126,14 @@ export default function CreateEditorClues(props: EditorClueProps) {
     const downClueValueArray = downArray;
     let acrossInit: React.ReactElement[] = [];
     let downInit: React.ReactElement[] = [];
+    if (!acrossArray || !downArray) return;
 
     if (isClear.current) {
-      const cleanArrayBool: boolean[] = Array(gridSize * gridSize).fill(false);
-      const newNumbers = assignNumbers(cleanArrayBool);
-      const cleanIsFocusedClue: boolean[] = Array(gridSize * gridSize).fill(
-        false
-      );
-      const cleanIsFocusedCell: boolean[] = Array(gridSize * gridSize).fill(
-        false
-      );
       const [acrossCluesInit, downCluesInit, clueDirectionsInit] = ClueInit({
         gridSize,
-        newNumbers,
-        cleanIsFocusedClue,
-        cleanIsFocusedCell,
+        currentGridNumbers,
+        isFocusedClue,
+        isFocusedCell,
         clueNumDirection,
         handleFocusClue,
         handleInputChangeClue,
@@ -149,8 +141,6 @@ export default function CreateEditorClues(props: EditorClueProps) {
       setAcrossClueInit(mapClues(acrossCluesInit));
       setDownClueInit(mapClues(downCluesInit));
       setClueNumDirection(clueDirectionsInit);
-      console.log(clueDirectionsInit);
-
       isClear.current = false;
     } else {
       const nullGrid: boolean = !currentGridNumbers.some(
@@ -231,6 +221,7 @@ export default function CreateEditorClues(props: EditorClueProps) {
         setAcrossClueValues(cleanArray);
         setDownClueValues(cleanArray);
         initialize(cleanArray, cleanArray);
+        isClear.current = false;
       } else {
         const newAcrossClues: React.ReactElement[] = [];
         const newDownClues: React.ReactElement[] = [];

@@ -8,7 +8,6 @@ import Library from "./components/AuthContent/Library.tsx";
 import Create from "./components/AuthContent/Create.tsx";
 import Solver from "./components/SolveCrossword/Solver.tsx";
 import Editor from "./components/EditCrossword/Editor.tsx";
-import ErrorPage from "./components/BaseContent/ErrorPage.tsx";
 import NoPage from "./components/BaseContent/NoPage.tsx";
 import { useAuth } from "./context/AuthContext";
 
@@ -31,7 +30,6 @@ function App() {
           <Route path="contact" element={<Contact />} />
           <Route path="solver/:gridId" element={<Solver />} />
           <Route path="editor/:gridId" element={<Editor />} />
-          <Route path="errorpage" element={<ErrorPage />} />
           <Route path="*" element={<NoPage />} />
         </Routes>
       </Layout>

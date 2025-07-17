@@ -23,24 +23,27 @@ export const jwtMiddleware = (req, res, next) => {
 export const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    const errorMessages = errors
+      .array()
+      .map((err) => err.msg)
+      .join(", ");
+    return res.status(400).send({ message: errorMessages });
   }
   next();
 };
 
 // Validation rules for signing up
 export const validateAddUser = [
-  body("username").isString().notEmpty().withMessage("Username is required"),
-  body("email").isEmail().notEmpty().withMessage("Invalid email format"),
+  body("username").isString().withMessage("Username is required"),
+  body("email").isEmail().withMessage("Invalid email format"),
   body("password")
     .isLength({ min: 6 })
-    .notEmpty()
     .withMessage("Password must be at least 6 characters long"),
 ];
 
 // Validation rules for logging in
 export const validateGetUser = [
-  body("username").isString().notEmpty().withMessage("Username is required"),
+  body("username").isString().withMessage("Username is required"),
   body("password").notEmpty().withMessage("Password is required"),
 ];
 
@@ -48,41 +51,38 @@ export const validateGetUser = [
 export const validateAddCrosswordGrid = [
   body("puzzleTitle").notEmpty().withMessage("Puzzle title is required"),
   body("currentGridValues")
-    .isArray() // Check if it's an array
+    .isArray()
     .withMessage("Grid values must be an array")
     .custom((value) => {
-      // Check if at least one item in the array is a non-empty string
       if (
         value &&
         value.some((item) => typeof item === "string" && item.trim() !== "")
       ) {
-        return true; // At least one valid entry
+        return true;
       }
       throw new Error("At least one grid value must be a non-empty string");
     }),
   body("acrossClueValues")
-    .isArray() // Check if it's an array
+    .isArray()
     .withMessage("Across clues must be an array")
     .custom((value) => {
-      // Check if at least one item in the array is a non-empty string
       if (
         value &&
         value.some((item) => typeof item === "string" && item.trim() !== "")
       ) {
-        return true; // At least one valid entry
+        return true;
       }
       throw new Error("At least one across clue must be a non-empty string");
     }),
   body("downClueValues")
-    .isArray() // Check if it's an array
+    .isArray()
     .withMessage("Down clues must be an array")
     .custom((value) => {
-      // Check if at least one item in the array is a non-empty string
       if (
         value &&
         value.some((item) => typeof item === "string" && item.trim() !== "")
       ) {
-        return true; // At least one valid entry
+        return true;
       }
       throw new Error("At least one down clue must be a non-empty string");
     }),
@@ -90,24 +90,21 @@ export const validateAddCrosswordGrid = [
 
 // Validation rules for sharing a crossword
 export const validateShareCrossword = [
-  body("recipientUsername")
-    .isString()
-    .notEmpty()
-    .withMessage("Username is required"),
+  body("recipientUsername").isString().withMessage("Username is required"),
 ];
 
 // Validation rules for contact form
 export const validateContactForm = [
-  body("name").isString().notEmpty().withMessage("Username is required"),
-  body("email").isEmail().notEmpty().withMessage("Invalid email format"),
-  body("message").isString().notEmpty().withMessage("Please provide a message"),
+  body("name").isString().withMessage("Username is required"),
+  body("email").isEmail().withMessage("Invalid email format"),
+  body("message").isString().withMessage("Please provide a message"),
 ];
 
 export const loginLimiter = rateLimit({
   windowMs: 5 * 60 * 1000, // 5 minutes
   max: 5,
   handler: (req, res) => {
-    return res.status(429).json({
+    return res.status(429).send({
       message: "Too many login attempts, please try again in 5 minutes.",
     });
   },
@@ -117,6 +114,6 @@ export const validateSession = (req, res, next) => {
   if (req.session && req.session.user) {
     return next();
   } else {
-    return res.status(401).json({ message: "Not authenticated" });
+    return res.status(401).send({ message: "Not authenticated" });
   }
 };

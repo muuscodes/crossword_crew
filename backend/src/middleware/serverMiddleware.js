@@ -5,7 +5,6 @@ import { pool } from "../db.js";
 import dotenv from "dotenv";
 dotenv.config();
 
-const NODE_ENV = process.env.NODE_ENV;
 const SESSION_SECRET = process.env.SESSION_SECRET;
 
 // Create a session store
@@ -20,9 +19,9 @@ export const sessionMiddleware = session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: NODE_ENV === "production",
+    secure: false,
     maxAge: 1000 * 60 * 60 * 2, // 2 hour session
-    sameSite: NODE_ENV === "production" ? "None" : "Lax",
+    sameSite: "Lax",
   },
 });
 

@@ -5,8 +5,11 @@ import CreateEditorClues from "./CreateEditorClues";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import type { CreateEditorCrosswordProps } from "../utils/types";
 
-export default function CreateCrossword(props: any) {
+export default function CreateEditorCrossword(
+  props: CreateEditorCrosswordProps
+) {
   const { setIsSaved, setUserMessage, setIsShared } = props;
   const [gridSize, setGridSize] = useState<number>(5);
   const [gridDimensions, setGridDimensions] = useState<string>("30vw");
@@ -57,7 +60,6 @@ export default function CreateCrossword(props: any) {
     setIsAuthenticated,
     setGlobalUser,
     fetchWithAuth,
-    setError,
   } = useAuth();
   const globalUserId = globalUser.user_id;
   const { gridId } = useParams();
@@ -84,13 +86,10 @@ export default function CreateCrossword(props: any) {
         setAcrossClueValues(result.across_clues);
         hasInitialized.current = true;
       } else {
-        setError(result.message || "An error occurred while fetching data.");
-        // navigate("/errorpage");
-        return;
+        throw new Error(result.message);
       }
     } catch (error: any) {
-      setError(error.message || "An unexpected error occurred");
-      // navigate("/errorpage");
+      alert(error.message);
     }
   };
 
@@ -171,19 +170,29 @@ export default function CreateCrossword(props: any) {
   };
 
   const handleClear = (): void => {
-    if (hasInitialized.current) {
-      isClear.current = true;
+    const hasAcrossClueValues: boolean = acrossClueValues.some(
+      (value: string) => value !== ""
+    );
+    const hasDownClueValues: boolean = downClueValues.some(
+      (value: string) => value !== ""
+    );
+    if (hasAcrossClueValues && hasDownClueValues) {
+      if (hasInitialized.current) {
+        isClear.current = true;
+      }
+      const cleanArrayBool: boolean[] = Array(gridSize * gridSize).fill(false);
+      const cleanArrayString: string[] = Array(gridSize * gridSize).fill("");
+      setBlackSquares(cleanArrayBool);
+      setIsFocusedCell(cleanArrayBool);
+      setIsFocusedClue(cleanArrayBool);
+      setIsSecondaryFocusedCell(cleanArrayBool);
+      setIsHighlightAcross(true);
+      setCurrentGridValues(cleanArrayString);
+      const newNumbers = assignNumbers(cleanArrayBool);
+      setCurrentGridNumbers(newNumbers);
+    } else {
+      alert("Must fill in clues in order to clear");
     }
-    const cleanArrayBool: boolean[] = Array(gridSize * gridSize).fill(false);
-    const cleanArrayString: string[] = Array(gridSize * gridSize).fill("");
-    setBlackSquares(cleanArrayBool);
-    setIsFocusedCell(cleanArrayBool);
-    setIsFocusedClue(cleanArrayBool);
-    setIsSecondaryFocusedCell(cleanArrayBool);
-    setIsHighlightAcross(true);
-    setCurrentGridValues(cleanArrayString);
-    const newNumbers = assignNumbers(cleanArrayBool);
-    setCurrentGridNumbers(newNumbers);
   };
 
   const handleFocusClue = (index: number, direction: string): void => {
@@ -254,7 +263,6 @@ export default function CreateCrossword(props: any) {
     setIsShowShare(false);
     let message = handleGridViability();
     if (!message) {
-      setIsShared(true);
       try {
         const response = await fetchWithAuth(
           `/users/${globalUserId}/grids/${gridId}/share`,
@@ -270,14 +278,13 @@ export default function CreateCrossword(props: any) {
           }
         );
         const result = await response.json();
-        if (!response.ok) {
-          setError(result.message || "An error occurred while fetching data.");
-          // navigate("/errorpage");
-          return;
+        if (response.ok) {
+          setIsShared(true);
+        } else {
+          throw new Error(result.message);
         }
       } catch (error: any) {
-        setError(error.message || "An unexpected error occurred");
-        // navigate("/errorpage");
+        alert(error.message);
       }
     }
   };
@@ -322,7 +329,6 @@ export default function CreateCrossword(props: any) {
   async function saveGrid() {
     let message = handleGridViability();
     if (!message) {
-      setIsSaved(true);
       try {
         const response = await fetchWithAuth(`/users/editor/${gridId}`, {
           method: "PUT",
@@ -341,12 +347,16 @@ export default function CreateCrossword(props: any) {
           }),
           credentials: "include",
         });
-        if (!response.ok) {
-          message = "Can not edit a shared crossword";
+        const result = await response.json();
+
+        if (response.ok) {
+          setIsSaved(true);
+        } else {
+          throw new Error(result.message);
         }
       } catch (error: any) {
-        setError(error.message || "An unexpected error occurred");
-        // navigate("/errorpage");
+        console.log(error);
+        alert(error.message);
       }
     }
     setUserMessage(message);
@@ -367,13 +377,10 @@ export default function CreateCrossword(props: any) {
       const result = await response.json();
       if (response.ok) navigate("/library");
       else {
-        setError(result.message || "An error occurred while fetching data.");
-        // navigate("/errorpage");
-        return;
+        throw new Error(result.message);
       }
     } catch (error: any) {
-      setError(error.message || "An unexpected error occurred");
-      // navigate("/errorpage");
+      alert(error.message);
     }
   };
 
@@ -416,18 +423,12 @@ export default function CreateCrossword(props: any) {
         getCrosswordData(globalUserId);
       } else {
         setIsAuthenticated(false);
-        setError(sessionData.message || "Session check failed");
-        // navigate("/errorpage");
-        return;
+        throw new Error("Unauthorized access");
       }
     } catch (error: any) {
       console.error("Error checking session:", error);
       setIsAuthenticated(false);
-      setError(
-        error.message ||
-          "An unexpected error occurred while checking the session"
-      );
-      // navigate("/errorpage");
+      alert(error.message);
     }
   };
 
@@ -533,7 +534,6 @@ export default function CreateCrossword(props: any) {
             clueNumDirection={clueNumDirection}
             setClueNumDirection={setClueNumDirection}
             handleFocusClue={handleFocusClue}
-            handleUserInputClue={handleUserInputClue}
             handleInputChangeClue={handleInputChangeClue}
             assignNumbers={assignNumbers}
             isClear={isClear}
