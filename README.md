@@ -4,7 +4,9 @@
 <br />
 <div align="center">
   <a href="https://github.com/muuscodes/crossword_crew">
-    <img src="./frontend/src/img/favicon.jpg" alt="Logo" width="80" height="80" style="border: 5px solid white;">
+  <div style="border: 5px solid white;">
+    <img src="./frontend/src/img/favicon.jpg" alt="Logo" width="80" height="80" >
+    </div>
   </a>
 
 <h3 align="center">Crossword Crew</h3>
