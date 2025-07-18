@@ -4,7 +4,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/muuscodes/crossword_crew">
-    <img src="./frontend/src/img/favicon.jpg" alt="Logo" width="80" height="80">
+    <img src="./frontend/src/img/favicon.jpg" alt="Logo" width="80" height="80" style="border: 5px solid white;">
   </a>
 
 <h3 align="center">Crossword Crew</h3>
@@ -59,8 +59,8 @@ You can run Crossword Crew locally with the following instructions.
    ```
 4. Create a .env in /backend and populate the following:
    ```sh
-   PORT=<your_port>
-   DB_USER=<your_database_user>
+   PORT=<your_desired_port>
+   DB_USER=<your_database_username>
    DB_ENCRYPTED_PASSWORD=<your_database_password>
    DB_HOST=localhost
    DB_PORT=5432
@@ -75,7 +75,7 @@ You can run Crossword Crew locally with the following instructions.
    ```
 5. Set Up the Database
 
-- Create a PostgreSQL database using the name specified in the .env file and run the following commands:
+- Create a PostgreSQL database using the name specified in the .env file and run the following commands to set up your database:
 
 ```sh
 CREATE TABLE users (
@@ -141,7 +141,7 @@ CREATE TABLE session (
 
 - If using Gmail, you can set up an app password by logging in and going to security and searching "App Passwords". Keep in mind, you have to turn on 2-Step-Verification to use app passwords
 
-7. Start the dev server
+7. You're ready to go! Start the dev server like this:
 
    ```sh
    npm start
