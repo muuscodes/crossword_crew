@@ -35,6 +35,8 @@ playing dense New York Times-style crossword puzzles.
 - [![Tailwind][Tailwind]][Tailwind-url]
 - [![Node.js][Node.js]][Node-url]
 - [![PostgreSQL][PostgreSQL]][PostgreSQL-url]
+- [![Docker][DockerLogo]][DockerLogo-url]
+- [![AWS][AWS]][AWS-url]
 
 ## Getting Started
 
@@ -42,6 +44,8 @@ You can run Crossword Crew locally with the following instructions.
 
 ### Prerequisites
 
+- [Docker][docker-url] (Make sure Docker Desktop is installed and running)
+- [Docker Compose][docker-compose-url] (Usually included with Docker Desktop)
 - [npm][npm-install-url]
 - [PostgreSQL][PostgresQL-url]
 
@@ -50,16 +54,13 @@ You can run Crossword Crew locally with the following instructions.
 1. Clone the repo
    ```sh
    git clone https://github.com/muuscodes/crossword_crew.git
+   cd crossword_crew
    ```
-2. Install packages
-   ```sh
-   npm install
-   ```
-3. Change directory to /backend
+2. Change directory to /backend
    ```sh
    cd backend
    ```
-4. Create a .env in /backend and populate the following:
+3. Create a `.env` in the `/backend` directory and populate it with the following:
    ```sh
    PORT=<your_desired_port>
    DB_USER=<your_database_username>
@@ -75,82 +76,37 @@ You can run Crossword Crew locally with the following instructions.
    EMAIL_USER=<your_email_account>
    EMAIL_APP_PASS=<your_email_account_password>
    ```
-5. Set Up the Database
-
-- Create a PostgreSQL database using the name specified in the .env file and run the following commands to set up your database:
-
-```sh
-CREATE TABLE users (
-    user_id SERIAL PRIMARY KEY,
-    username VARCHAR(50) NOT NULL,
-    email VARCHAR(100) NOT NULL UNIQUE,
-    password VARCHAR(255),
-    google_id VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE user_library (
-    user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
-    crossword_grid_id INTEGER,
-    solver_grid_id INTEGER
-);
-
-CREATE TABLE crossword_grids (
-    grid_id SERIAL PRIMARY KEY,
-    user_id INTEGER,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    puzzle_title VARCHAR(100),
-    grid_size INTEGER,
-    grid_values TEXT[],
-    grid_numbers INTEGER[],
-    black_squares BOOLEAN[],
-    across_clues TEXT[],
-    down_clues TEXT[],
-    clue_number_directions TEXT[]
-);
-
-CREATE TABLE solver_grids (
-    grid_id INTEGER NOT NULL,
-    user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    completed_status BOOLEAN,
-    puzzle_title VARCHAR(100),
-    grid_size INTEGER,
-    grid_values TEXT[],
-    grid_numbers INTEGER[],
-    black_squares BOOLEAN[],
-    across_clues TEXT[],
-    down_clues TEXT[],
-    clue_number_directions TEXT[]
-);
-
-CREATE TABLE session (
-    sid VARCHAR(255) PRIMARY KEY,
-    sess JSON NOT NULL,
-    expire TIMESTAMP(6) NOT NULL,
-    created TIMESTAMP(6) NOT NULL DEFAULT now(),
-    modified TIMESTAMP(6) NOT NULL DEFAULT now()
-);
-```
-
-5. Google Oauth Credentials
+4. Google Oauth Credentials
 
 - Head over to [Google Cloud][google-cloud-url] and create a new project using Oauth
+- When creating a client, be sure to have your Authorized JavaScript origins set to:
+  http://localhost:3000 (or ending in whatever port you specified in the .env file)
+- Be sure to have the Authorized redirect URIs set to: http://localhost:3000/auth/google/redirect
+  (also using you the same port)
 
 6. Email Setup
 
 - Ensure that your email credentials in the .env allow for a local server to login
-
 - If using Gmail, you can set up an app password by logging in and going to security and searching "App Passwords". Keep in mind, you have to turn on 2-Step-Verification to use app passwords
 
-7. You're ready to go! Start the dev server like this:
+7. You're ready to go! Start the application:
 
    ```sh
-   npm start
+   docker-compose up
    ```
 
    After a few moments, you should be able to interact with crossword_crew locally
    at [http://localhost:3000](http://localhost:3000).
+
+8. Welcome Crossword
+
+In the current configuration, the first crossword that the first user makes becomes a "welcome crossword"
+for all other users. Feel free to remove this feature in `/backend/src/routes/authRoutes.js`
+
+# Notes
+
+- If you make changes to the code, you can simply run `docker-compose up` again to see the changes reflected
+- If you need to stop the application, you can do so by pressing `Ctrl + C` in the terminal where Docker is running
 
 ## Contributing
 
@@ -165,6 +121,13 @@ create a pull request. Don't forget to give the project a star. Thanks again!
 
 Distributed under the MIT License. See `LICENSE.txt` for more information.
 
+## Acknowledgments
+
+- [The New York Times Crossword][nyt-url]
+- [Shelton Carr][shelton-url]
+- [Crosswyrd][crosswyrd-url]
+- [Font Awesome][font-awesome-url]
+
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 
@@ -178,5 +141,15 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 [Node-url]: https://nodejs.org/
 [PostgreSQL]: https://img.shields.io/badge/PostgreSQL-336791?style=for-the-badge&logo=postgresql&logoColor=white
 [PostgreSQL-url]: https://www.postgresql.org/
+[DockerLogo]: https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white
+[DockerLogo-url]: https://www.docker.com/
+[Docker-url]: https://docs.docker.com/get-docker/
+[Docker-compose-url]: https://docs.docker.com/compose/install/
+[AWS]: https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazonaws&logoColor=white
+[AWS-url]: https://aws.amazon.com/
 [npm-install-url]: https://docs.npmjs.com/cli/v9/configuring-npm/install?v=true
 [google-cloud-url]: https://console.cloud.google.com/
+[nyt-url]: https://www.nytimes.com/crosswords
+[crosswyrd-url]: https://crosswyrd.app/
+[shelton-url]: https://github.com/sheltoncarr
+[font-awesome-url]: https://fontawesome.com/

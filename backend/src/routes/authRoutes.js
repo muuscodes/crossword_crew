@@ -78,55 +78,57 @@ passport.use(
 
         const newUserData = newUser.rows[0];
 
-        // Add the welcome grid
+        // Add the welcome grid if its not the first user
 
-        // Get grid data from the crossword_grids table
-        const gridData = await pool.query(
-          "SELECT * FROM crossword_grids WHERE user_id = $1 AND grid_id = $2",
-          [1, 1]
-        );
-        if (gridData.rows.length === 0) {
-          return res.status(404).send({ message: "Grid not found" });
-        }
-        const puzzleTitle = gridData.rows[0].puzzle_title;
-        const gridSize = gridData.rows[0].grid_size;
-        const currentGridNumbers = gridData.rows[0].grid_numbers;
-        const blackSquares = gridData.rows[0].black_squares;
-        const acrossClueValues = gridData.rows[0].across_clues;
-        const downClueValues = gridData.rows[0].down_clues;
-        const clueNumDirection = gridData.rows[0].clue_number_directions;
-        const completed = false;
-        const cleanGridValues = Array(gridSize * gridSize).fill("");
+        if (newUserData.user_id > 1) {
+          // Get grid data from the crossword_grids table
+          const gridData = await pool.query(
+            "SELECT * FROM crossword_grids WHERE user_id = $1 AND grid_id = $2",
+            [1, 1]
+          );
+          if (gridData.rows.length === 0) {
+            return res.status(404).send({ message: "Grid not found" });
+          }
+          const puzzleTitle = gridData.rows[0].puzzle_title;
+          const gridSize = gridData.rows[0].grid_size;
+          const currentGridNumbers = gridData.rows[0].grid_numbers;
+          const blackSquares = gridData.rows[0].black_squares;
+          const acrossClueValues = gridData.rows[0].across_clues;
+          const downClueValues = gridData.rows[0].down_clues;
+          const clueNumDirection = gridData.rows[0].clue_number_directions;
+          const completed = false;
+          const cleanGridValues = Array(gridSize * gridSize).fill("");
 
-        const recipientUserId = newUserData.user_id;
+          const recipientUserId = newUserData.user_id;
 
-        // Insert into the solver_grids table
-        await pool.query(
-          `INSERT INTO solver_grids
+          // Insert into the solver_grids table
+          await pool.query(
+            `INSERT INTO solver_grids
         (grid_id, user_id, completed_status, puzzle_title, grid_size, grid_values, grid_numbers, black_squares, across_clues, down_clues, clue_number_directions) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-          [
-            1,
-            recipientUserId,
-            completed,
-            puzzleTitle,
-            gridSize,
-            cleanGridValues,
-            currentGridNumbers,
-            blackSquares,
-            acrossClueValues,
-            downClueValues,
-            clueNumDirection,
-          ]
-        );
+            [
+              1,
+              recipientUserId,
+              completed,
+              puzzleTitle,
+              gridSize,
+              cleanGridValues,
+              currentGridNumbers,
+              blackSquares,
+              acrossClueValues,
+              downClueValues,
+              clueNumDirection,
+            ]
+          );
 
-        // Add welcome grid to their library
-        await pool.query(
-          `INSERT INTO user_library (user_id, solver_grid_id) VALUES ($1, $2)
+          // Add welcome grid to their library
+          await pool.query(
+            `INSERT INTO user_library (user_id, solver_grid_id) VALUES ($1, $2)
       `,
-          [newUserData.user_id, 1]
-        );
+            [newUserData.user_id, 1]
+          );
+        }
 
-        // Send welcome email
+        // Send welcome email to all users
         await sendWelcomeEmail(displayName, email);
 
         return done(null, newUserData);
@@ -223,55 +225,57 @@ router.post(
         { expiresIn: "2h" }
       );
 
-      // Add the welcome grid
+      // Add the welcome grid if its not the first user
 
-      // Get grid data from the crossword_grids table
-      const gridData = await pool.query(
-        "SELECT * FROM crossword_grids WHERE user_id = $1 AND grid_id = $2",
-        [1, 1]
-      );
-      if (gridData.rows.length === 0) {
-        return res.status(404).send({ message: "Grid not found" });
-      }
-      const puzzleTitle = gridData.rows[0].puzzle_title;
-      const gridSize = gridData.rows[0].grid_size;
-      const currentGridNumbers = gridData.rows[0].grid_numbers;
-      const blackSquares = gridData.rows[0].black_squares;
-      const acrossClueValues = gridData.rows[0].across_clues;
-      const downClueValues = gridData.rows[0].down_clues;
-      const clueNumDirection = gridData.rows[0].clue_number_directions;
-      const completed = false;
-      const cleanGridValues = Array(gridSize * gridSize).fill("");
+      if (newUserData.user_id > 1) {
+        // Get grid data from the crossword_grids table
+        const gridData = await pool.query(
+          "SELECT * FROM crossword_grids WHERE user_id = $1 AND grid_id = $2",
+          [1, 1]
+        );
+        if (gridData.rows.length === 0) {
+          return res.status(404).send({ message: "Grid not found" });
+        }
+        const puzzleTitle = gridData.rows[0].puzzle_title;
+        const gridSize = gridData.rows[0].grid_size;
+        const currentGridNumbers = gridData.rows[0].grid_numbers;
+        const blackSquares = gridData.rows[0].black_squares;
+        const acrossClueValues = gridData.rows[0].across_clues;
+        const downClueValues = gridData.rows[0].down_clues;
+        const clueNumDirection = gridData.rows[0].clue_number_directions;
+        const completed = false;
+        const cleanGridValues = Array(gridSize * gridSize).fill("");
 
-      const recipientUserId = newUserData.user_id;
+        const recipientUserId = newUserData.user_id;
 
-      // Insert into the solver_grids table
-      const result = await pool.query(
-        `INSERT INTO solver_grids
+        // Insert into the solver_grids table
+        const result = await pool.query(
+          `INSERT INTO solver_grids
         (grid_id, user_id, completed_status, puzzle_title, grid_size, grid_values, grid_numbers, black_squares, across_clues, down_clues, clue_number_directions) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-        [
-          1,
-          recipientUserId,
-          completed,
-          puzzleTitle,
-          gridSize,
-          cleanGridValues,
-          currentGridNumbers,
-          blackSquares,
-          acrossClueValues,
-          downClueValues,
-          clueNumDirection,
-        ]
-      );
+          [
+            1,
+            recipientUserId,
+            completed,
+            puzzleTitle,
+            gridSize,
+            cleanGridValues,
+            currentGridNumbers,
+            blackSquares,
+            acrossClueValues,
+            downClueValues,
+            clueNumDirection,
+          ]
+        );
 
-      // Add welcome grid to their library
-      await pool.query(
-        `INSERT INTO user_library (user_id, solver_grid_id) VALUES ($1, $2)
+        // Add welcome grid to their library
+        await pool.query(
+          `INSERT INTO user_library (user_id, solver_grid_id) VALUES ($1, $2)
       `,
-        [newUserData.user_id, 1]
-      );
+          [newUserData.user_id, 1]
+        );
+      }
 
-      // Send welcome email
+      // Send welcome email to all users
       await sendWelcomeEmail(username, email);
 
       return res.status(200).send({ user: newUserData, token });

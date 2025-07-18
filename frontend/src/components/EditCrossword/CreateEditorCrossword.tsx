@@ -51,8 +51,9 @@ export default function CreateEditorCrossword(
   const [puzzleTitle, setPuzzleTitle] = useState<string>("");
   const [isShowShare, setIsShowShare] = useState<boolean>(false);
   const [recipientUsername, setRecipientUsername] = useState<string>("");
-  const hasInitialized = useRef(false);
-  const isClear = useRef(false);
+  const hasInitialized = useRef<boolean>(false);
+  const shareInputRef = useRef<HTMLInputElement>(null);
+  const isClear = useRef<boolean>(false);
 
   const {
     globalUser,
@@ -452,6 +453,12 @@ export default function CreateEditorCrossword(
   }, [currentGridNumbers]);
 
   useEffect(() => {
+    if (isShowShare && shareInputRef.current) {
+      shareInputRef.current.focus();
+    }
+  }, [isShowShare]);
+
+  useEffect(() => {
     checkSession();
   }, []);
 
@@ -569,6 +576,7 @@ export default function CreateEditorCrossword(
           <label htmlFor="recipient" className="text-xl"></label>
           <input
             type="text"
+            ref={shareInputRef}
             name="recipient"
             placeholder="Recipient's Username"
             required
