@@ -1,27 +1,18 @@
 <!-- README adapted from https://github.com/othneildrew/Best-README-Template -->
 
-<!-- PROJECT SHIELDS -->
-<div align="center">
-
-<a href="">[![Forks][forks-shield]][forks-url]</a>
-<a href="">[![Stargazers][stars-shield]][stars-url]</a>
-<a href="">[![Issues][issues-shield]][issues-url]</a>
-
-</div>
-
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
   <a href="https://github.com/muuscodes/crossword_crew">
-    <img src="src/img/favicon.jpg" alt="Logo" width="80" height="80">
+    <img src="./frontend/src/img/favicon.jpg" alt="Logo" width="80" height="80">
   </a>
 
 <h3 align="center">Crossword Crew</h3>
 
   <p align="center">
-    The Simple Crossword Constructor
+    The perfect space to create, share, and play crosswords with your friends!
     <br />
-    <a href="https://crossword_Crew.app" target="_blank" rel="noreferrer"><strong>Open the App</strong></a>
+    <a href="https://crossword_crew.app" target="_blank" rel="noreferrer"><strong>Open the App</strong></a>
     <br />
     <br />
     <a href="https://github.com/muuscodes/crossword_crew/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
@@ -78,10 +69,4 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 
-[forks-shield]: https://img.shields.io/github/forks/muuscodes/crossword_crew.svg?style=for-the-badge
-[forks-url]: https://github.com/muuscodes/crossword_crew/network/members
-[stars-shield]: https://img.shields.io/github/stars/muuscodes/crossword_crew.svg?style=for-the-badge
-[stars-url]: https://github.com/muuscodes/crossword_crew/stargazers
-[issues-shield]: https://img.shields.io/github/issues/muuscodes/crossword_crew.svg?style=for-the-badge
-[issues-url]: https://github.com/muuscodes/crossword_crew/issues
 [npm-install-url]: https://docs.npmjs.com/cli/v9/configuring-npm/install?v=true
