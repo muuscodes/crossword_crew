@@ -1,0 +1,2 @@
+CREATE ROLE admin WITH LOGIN PASSWORD 'password';
+CREATE DATABASE crossword_crew OWNER admin;

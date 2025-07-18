@@ -8,6 +8,7 @@ services:
       - ./backend/.env
     volumes:
       - ./backend:/usr/src/app
+      - ./frontend/dist:/usr/src/frontend/dist
     depends_on:
       - db
 

@@ -49,4 +49,3 @@ CREATE TABLE IF NOT EXISTS session (
     created TIMESTAMP(6) NOT NULL DEFAULT now(),
     modified TIMESTAMP(6) NOT NULL DEFAULT now()
 );
-```
