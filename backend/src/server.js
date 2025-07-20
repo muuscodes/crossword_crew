@@ -11,10 +11,14 @@ import {
   corsMiddleware,
   sessionMiddleware,
 } from "./middleware/serverMiddleware.js";
+
 dotenv.config();
 const PORT = process.env.PORT || 3000;
 
 const app = express();
+
+// Set trust proxy
+app.set("trust proxy", 1);
 
 // Basic middleware
 app.use(corsMiddleware);
