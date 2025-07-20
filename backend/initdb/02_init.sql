@@ -1,3 +1,6 @@
+CREATE ROLE admin WITH LOGIN PASSWORD 'password';
+CREATE DATABASE crossword_crew OWNER admin;
+
 CREATE TABLE IF NOT EXISTS users (
     user_id SERIAL PRIMARY KEY,
     username VARCHAR(50) NOT NULL,

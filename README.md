@@ -33,10 +33,10 @@ playing dense New York Times-style crossword puzzles.
 - [![React][React.js]][React-url]
 - [![Typescript][Typescript]][Typescript-url]
 - [![Tailwind][Tailwind]][Tailwind-url]
+- [![Vite][ViteLogo]][ViteLogo-url]
 - [![Node.js][Node.js]][Node-url]
 - [![PostgreSQL][PostgreSQL]][PostgreSQL-url]
 - [![Docker][DockerLogo]][DockerLogo-url]
-- [![AWS][AWS]][AWS-url]
 
 ## Getting Started
 
@@ -62,11 +62,11 @@ You can run Crossword Crew locally with the following instructions.
    ```
 3. Create a `.env` in the `/backend` directory and populate it with the following:
    ```sh
-   PORT=<your_desired_port>
+   PORT=<your_desired_server_port>
    DB_USER=<your_database_username>
-   DB_ENCRYPTED_PASSWORD=<your_database_password>
-   DB_HOST=localhost
-   DB_PORT=5432
+   DB_PASSWORD=<your_database_password>
+   DB_HOST=db
+   DB_PORT=5433
    DB_NAME=<your_database_name>
    GOOGLE_CLIENT_ID=<your_google_client_id>
    GOOGLE_CLIENT_SECRET=<your_google_client_secret>
@@ -75,6 +75,7 @@ You can run Crossword Crew locally with the following instructions.
    SESSION_SECRET=<your_session_secret>
    EMAIL_USER=<your_email_account>
    EMAIL_APP_PASS=<your_email_account_password>
+   NODE_ENV=development
    ```
 4. Google Oauth Credentials
 
@@ -100,8 +101,8 @@ You can run Crossword Crew locally with the following instructions.
 
 8. Welcome Crossword
 
-In the current configuration, the first crossword that the first user makes becomes a "welcome crossword"
-for all other users. Feel free to remove this feature in `/backend/src/routes/authRoutes.js`
+- In the current configuration, the first crossword that the first user makes becomes a "welcome crossword"
+  for all other users. Feel free to remove this feature in `/backend/src/routes/authRoutes.js`
 
 # Notes
 
@@ -124,8 +125,8 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 ## Acknowledgments
 
 - [The New York Times Crossword][nyt-url]
-- [Shelton Carr][shelton-url]
-- [Crosswyrd][crosswyrd-url]
+- [Shoutout to my mentor, Shelton Carr][shelton-url]
+- [A great crossword inspiration app][crosswyrd-url]
 - [Font Awesome][font-awesome-url]
 
 <!-- MARKDOWN LINKS & IMAGES -->
@@ -143,10 +144,10 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 [PostgreSQL-url]: https://www.postgresql.org/
 [DockerLogo]: https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white
 [DockerLogo-url]: https://www.docker.com/
+[ViteLogo]: https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white
+[ViteLogo-url]: https://vitejs.dev/
 [Docker-url]: https://docs.docker.com/get-docker/
 [Docker-compose-url]: https://docs.docker.com/compose/install/
-[AWS]: https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazonaws&logoColor=white
-[AWS-url]: https://aws.amazon.com/
 [npm-install-url]: https://docs.npmjs.com/cli/v9/configuring-npm/install?v=true
 [google-cloud-url]: https://console.cloud.google.com/
 [nyt-url]: https://www.nytimes.com/crosswords

@@ -1,7 +1,0 @@
-{
-  "name": "crossword_crew",
-  "private": true,
-  "scripts": {
-    "install": "npm install --prefix frontend && npm install --prefix backend"
-  }
-}
