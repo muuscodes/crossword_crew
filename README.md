@@ -63,11 +63,14 @@ You can run Crossword Crew locally with the following instructions.
 3. Create a `.env` in the `/backend` directory and populate it with the following:
    ```sh
    PORT=<your_desired_server_port>
-   DB_USER=<your_database_username>
-   DB_PASSWORD=<your_database_password>
+   DB_USER=admin
+   DB_PASSWORD=password
    DB_HOST=db
    DB_PORT=5433
-   DB_NAME=<your_database_name>
+   DB_NAME=crossword_crew
+   POSTGRES_USER=admin
+   POSTGRES_DB=crossword_crew
+   POSTGRES_PASSWORD=password
    GOOGLE_CLIENT_ID=<your_google_client_id>
    GOOGLE_CLIENT_SECRET=<your_google_client_secret>
    GOOGLE_CALLBACK_URI=<your_google_callback_uri>
@@ -77,6 +80,9 @@ You can run Crossword Crew locally with the following instructions.
    EMAIL_APP_PASS=<your_email_account_password>
    NODE_ENV=development
    ```
+
+- Feel free to customize the database variables, just keep in mind that the following variables should be equated: `DB_USER` = `POSTGRES_USER`, `DB_PASSWORD` = `POSTGRES_PASSWORD`, `DB_NAME` = `POSTGRES_DB`
+
 4. Google Oauth Credentials
 
 - Head over to [Google Cloud][google-cloud-url] and create a new project using Oauth
