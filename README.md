@@ -99,6 +99,7 @@ You can run Crossword Crew locally with the following instructions.
 7. You're ready to go! Start the application:
 
    ```sh
+   cd .. // get back to the root directory
    docker-compose up
    ```
 

@@ -1,7 +1,8 @@
 services:
-  backend:
+  app:
     build:
-      context: ./backend
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
     env_file:
@@ -11,14 +12,6 @@ services:
       - ./frontend/dist:/usr/src/frontend/dist
     depends_on:
       - db
-
-  frontend:
-    build:
-      context: ./frontend
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend:/usr/src/app
 
   db:
     image: postgres:latest
