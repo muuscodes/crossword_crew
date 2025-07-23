@@ -46,7 +46,6 @@ router.post(
         clueNumDirection,
       } = req.body;
 
-      // Insert into the crossword_grids table
       const result = await pool.query(
         `INSERT INTO crossword_grids
     (user_id, puzzle_title, grid_size, grid_values, grid_numbers, black_squares,
@@ -65,7 +64,6 @@ router.post(
         ]
       );
 
-      // Insert into the user's library
       await pool.query(
         `INSERT INTO user_library
     (user_id, crossword_grid_id) VALUES ($1, $2)`,
@@ -93,7 +91,6 @@ router.post(
       const { userId, gridId } = req.params;
       const { recipientUsername } = req.body;
 
-      // Get grid data from the crossword_grids table
       const gridData = await pool.query(
         "SELECT * FROM crossword_grids WHERE user_id = $1 AND grid_id = $2",
         [userId, gridId]
@@ -111,7 +108,6 @@ router.post(
       const completed = false;
       const cleanGridValues = Array(gridSize * gridSize).fill("");
 
-      // Get the sender's username
       const senderResult = await pool.query(
         `SELECT * FROM users WHERE user_id = $1`,
         [userId]
@@ -123,7 +119,6 @@ router.post(
 
       const senderUsername = senderResult.rows[0].username;
 
-      // Get the recipient's user_id
       const recipientResult = await pool.query(
         `SELECT * FROM users WHERE username = $1`,
         [recipientUsername]
@@ -136,7 +131,6 @@ router.post(
       const recipientUserId = recipientResult.rows[0].user_id;
       const recipientEmail = recipientResult.rows[0].email;
 
-      // Insert into the solver_grids table
       const result = await pool.query(
         `INSERT INTO solver_grids
         (grid_id, user_id, completed_status, puzzle_title, grid_size, grid_values, grid_numbers, black_squares, across_clues, down_clues, clue_number_directions) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
@@ -155,14 +149,12 @@ router.post(
         ]
       );
 
-      // Insert into the user's library
       await pool.query(
         `INSERT INTO user_library
     (user_id, solver_grid_id) VALUES ($1, $2)`,
         [recipientUserId, gridId]
       );
 
-      // Send email to notify recipient
       await sendSharingEmail(senderUsername, recipientEmail, recipientUsername);
 
       return res.status(200).send({
@@ -352,7 +344,6 @@ router.get("/:userId/grids/:gridId", jwtMiddleware, async (req, res) => {
   try {
     const { userId, gridId } = req.params;
 
-    // Find the creator's user_id using the gridId
     const creatorResult = await pool.query(
       `SELECT l.user_id
        FROM user_library l
@@ -367,8 +358,6 @@ router.get("/:userId/grids/:gridId", jwtMiddleware, async (req, res) => {
     }
 
     const creatorUserId = creatorResult.rows[0].user_id;
-
-    // Use creator's user_id to get the crossword grid
     const gridResult = await pool.query(
       `SELECT * FROM crossword_grids WHERE user_id = $1 AND grid_id = $2`,
       [creatorUserId, gridId]
@@ -391,7 +380,6 @@ router.patch("/solver/:gridId", jwtMiddleware, async (req, res) => {
     const { gridId } = req.params;
     const { currentGridValues, completed } = req.body;
 
-    // Update the solver_grids table
     await pool.query(
       `UPDATE solver_grids 
       SET completed_status = $1, grid_values = $2
@@ -412,7 +400,6 @@ router.delete("/:userId/delete/:gridId", jwtMiddleware, async (req, res) => {
   try {
     const { userId, gridId } = req.params;
 
-    // Check if the grid exists
     const checkGridExists = await pool.query(
       `SELECT * FROM crossword_grids WHERE grid_id = $1`,
       [gridId]
@@ -422,7 +409,6 @@ router.delete("/:userId/delete/:gridId", jwtMiddleware, async (req, res) => {
       return res.status(404).json({ message: "Grid not found" });
     }
 
-    // Check if grid was shared
     const result = await pool.query(
       `SELECT * FROM solver_grids WHERE grid_id = $1`,
       [gridId]
@@ -434,12 +420,10 @@ router.delete("/:userId/delete/:gridId", jwtMiddleware, async (req, res) => {
         .send({ message: "Can not delete a shared crossword" });
     }
 
-    // Delete from crossword grids
     await pool.query(`DELETE FROM crossword_grids WHERE grid_id = $1`, [
       gridId,
     ]);
 
-    // Delete from user library
     await pool.query(
       `DELETE FROM user_library WHERE user_id = $1 AND crossword_grid_id = $2`,
       [userId, gridId]

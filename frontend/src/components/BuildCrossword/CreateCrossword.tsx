@@ -157,17 +157,14 @@ export default function CreateCrossword(props: CreateCrosswordProps) {
       for (let j = 0; j < gridSize; j++) {
         const index: number = i * gridSize + j;
 
-        // Check if the cell is a black square
         if (blackSquares[index]) {
-          continue; // Skip black squares
+          continue;
         }
 
-        // Check for horizontal word start
         if (j === 0 || (i < gridSize && blackSquares[index - gridSize])) {
           newNumbers[index] = number++;
         }
 
-        // Check for vertical word start
         if (
           i === 0 ||
           (j < gridSize &&
@@ -175,7 +172,6 @@ export default function CreateCrossword(props: CreateCrosswordProps) {
             blackSquares[index - 1])
         ) {
           if (newNumbers[index] === null) {
-            // Only assign if not already assigned
             newNumbers[index] = number++;
           }
         }

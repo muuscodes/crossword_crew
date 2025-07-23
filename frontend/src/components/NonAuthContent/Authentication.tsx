@@ -71,7 +71,6 @@ export default function Authentication(props: AuthenticationProps) {
       }
     };
 
-    // Call fetchUserData if the user is redirected back
     if (window.location.pathname === "/home") {
       fetchUserData();
     }

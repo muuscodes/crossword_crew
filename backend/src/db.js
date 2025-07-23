@@ -19,7 +19,7 @@ console.log("Database connection pool created");
 
 let isShuttingDown = false;
 const shutdownDatabase = async () => {
-  if (isShuttingDown) return; // Prevent multiple shutdowns
+  if (isShuttingDown) return;
   isShuttingDown = true;
   console.log("Attempting to close database connection...");
   try {

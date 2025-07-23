@@ -62,7 +62,7 @@ You can run Crossword Crew locally with the following instructions.
    ```
 3. Create a `.env` in the `/backend` directory and populate it with the following:
    ```sh
-   PORT=<your_desired_server_port>
+   PORT=3000 or <your_desired_server_port>
    DB_USER=admin
    DB_PASSWORD=password
    DB_HOST=db
@@ -81,7 +81,7 @@ You can run Crossword Crew locally with the following instructions.
    NODE_ENV=development
    ```
 
-- Feel free to customize the database variables, just keep in mind that the following variables should be equated: `DB_USER` = `POSTGRES_USER`, `DB_PASSWORD` = `POSTGRES_PASSWORD`, `DB_NAME` = `POSTGRES_DB`
+- Feel free to customize the database variables, just keep in mind that the following variables should be equated: `DB_USER` = `POSTGRES_USER`, `DB_PASSWORD` = `POSTGRES_PASSWORD`, `DB_NAME` = `POSTGRES_DB`. Also the Docker files use `PORT=3000` so be sure to update those if you use a different port
 
 4. Google Oauth Credentials
 
@@ -98,13 +98,15 @@ You can run Crossword Crew locally with the following instructions.
 
 7. You're ready to go! Start the application:
 
-   ```sh
-   cd .. // get back to the root directory
-   docker-compose up
-   ```
+- Make sure that Docker Desktop is downloaded and running!
 
-   After a few moments, you should be able to interact with crossword_crew locally
-   at [http://localhost:3000](http://localhost:3000).
+  ```sh
+  cd .. // get back to the root directory
+  docker-compose up
+  ```
+
+  After a few moments, you should be able to interact with crossword_crew locally
+  at [http://localhost:3000](http://localhost:3000).
 
 8. Welcome Crossword
 
@@ -113,7 +115,7 @@ You can run Crossword Crew locally with the following instructions.
 
 # Notes
 
-- If you make changes to the code, you can simply run `docker-compose up` again to see the changes reflected
+- If you make changes to the code, you can simply run `docker-compose down -v` and then `docker-compose up` again to see the changes reflected
 - If you need to stop the application, you can do so by pressing `Ctrl + C` in the terminal where Docker is running
 
 ## Contributing

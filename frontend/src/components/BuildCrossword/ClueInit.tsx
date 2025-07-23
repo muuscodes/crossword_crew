@@ -99,7 +99,6 @@ export default function ClueInit(
           break;
         }
 
-        // Check for horizontal word start
         if (j === 0) {
           clueDirectionsInit[index][0] = "across";
 
@@ -114,7 +113,6 @@ export default function ClueInit(
           }
         }
 
-        // Check for vertical word start
         if (i === 0) {
           clueDirectionsInit[index][1] = "down";
           const newDownClue = createClue(

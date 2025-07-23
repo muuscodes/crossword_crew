@@ -61,16 +61,14 @@ passport.use(
         const { googleId, displayName, emails } = profile;
         const email = emails[0].value;
 
-        // Check if user already exists in the database
         const existingUser = await pool.query(
           "SELECT * FROM users WHERE google_id = $1 OR email = $2",
           [googleId, email]
         );
         if (existingUser.rows.length > 0) {
-          return done(null, existingUser.rows[0]); // User exists, return user
+          return done(null, existingUser.rows[0]);
         }
 
-        // If not, create a new user
         const newUser = await pool.query(
           "INSERT INTO users (google_id, username, email) VALUES ($1, $2, $3) RETURNING *",
           [googleId, displayName, email]
@@ -81,7 +79,6 @@ passport.use(
         // Add the welcome grid if its not the first user
 
         if (newUserData.user_id > 1) {
-          // Get grid data from the crossword_grids table
           const gridData = await pool.query(
             "SELECT * FROM crossword_grids WHERE user_id = $1 AND grid_id = $2",
             [1, 1]
@@ -101,7 +98,6 @@ passport.use(
 
           const recipientUserId = newUserData.user_id;
 
-          // Insert into the solver_grids table
           await pool.query(
             `INSERT INTO solver_grids
         (grid_id, user_id, completed_status, puzzle_title, grid_size, grid_values, grid_numbers, black_squares, across_clues, down_clues, clue_number_directions) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
@@ -120,7 +116,6 @@ passport.use(
             ]
           );
 
-          // Add welcome grid to their library
           await pool.query(
             `INSERT INTO user_library (user_id, solver_grid_id) VALUES ($1, $2)
       `,
@@ -128,7 +123,6 @@ passport.use(
           );
         }
 
-        // Send welcome email to all users
         await sendWelcomeEmail(displayName, email);
 
         return done(null, newUserData);
@@ -170,7 +164,6 @@ router.get(
 // Get google user data
 router.get("/google/user", (req, res) => {
   if (req.isAuthenticated()) {
-    // Create JWT
     const token = jwt.sign(
       { user_id: req.user.user_id, username: req.user.username },
       process.env.JWT_SECRET,
@@ -198,8 +191,6 @@ router.post(
   async (req, res) => {
     try {
       const { email, username, password } = req.body;
-
-      // Check if user already exists in the database
       const existingUser = await pool.query(
         "SELECT * FROM users WHERE email = $1 OR username = $2",
         [email, username]
@@ -210,7 +201,6 @@ router.post(
           .send({ message: "Username or email already exists" });
       }
 
-      // If not, create a new user
       const hashedPassword = await bcrypt.hash(password, 10);
       const newUser = await pool.query(
         "INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING *",
@@ -218,7 +208,6 @@ router.post(
       );
       const newUserData = newUser.rows[0];
 
-      // Create JWT
       const token = jwt.sign(
         { user_id: newUserData.user_id, username: newUserData.username },
         process.env.JWT_SECRET,
@@ -228,7 +217,6 @@ router.post(
       // Add the welcome grid if its not the first user
 
       if (newUserData.user_id > 1) {
-        // Get grid data from the crossword_grids table
         const gridData = await pool.query(
           "SELECT * FROM crossword_grids WHERE user_id = $1 AND grid_id = $2",
           [1, 1]
@@ -248,7 +236,6 @@ router.post(
 
         const recipientUserId = newUserData.user_id;
 
-        // Insert into the solver_grids table
         const result = await pool.query(
           `INSERT INTO solver_grids
         (grid_id, user_id, completed_status, puzzle_title, grid_size, grid_values, grid_numbers, black_squares, across_clues, down_clues, clue_number_directions) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
@@ -267,7 +254,6 @@ router.post(
           ]
         );
 
-        // Add welcome grid to their library
         await pool.query(
           `INSERT INTO user_library (user_id, solver_grid_id) VALUES ($1, $2)
       `,
@@ -275,7 +261,6 @@ router.post(
         );
       }
 
-      // Send welcome email to all users
       await sendWelcomeEmail(username, email);
 
       return res.status(200).send({ user: newUserData, token });
@@ -296,7 +281,6 @@ router.post(
     try {
       const { username, password } = req.body;
 
-      // Check if user exists
       const existingUser = await pool.query(
         "SELECT * FROM users WHERE username = $1",
         [username]

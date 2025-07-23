@@ -16,11 +16,8 @@ dotenv.config();
 const PORT = process.env.PORT || 3000;
 
 const app = express();
-
-// Set trust proxy
 app.set("trust proxy", 1);
 
-// Basic middleware
 app.use(corsMiddleware);
 app.use(express.json());
 app.use(sessionMiddleware);
@@ -31,7 +28,6 @@ app.use(passport.session());
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Serve static files from React app
 app.use(express.static(path.resolve(__dirname, "../../frontend/dist")));
 
 // Routes
@@ -59,19 +55,17 @@ app.use((err, req, res, next) => {
 
 const startServer = async () => {
   try {
-    // Start the server
     app.listen(PORT, () => {
       console.log(`Server is running on http://localhost:${PORT}`);
     });
 
-    // Handle database shutdown
     const shutdown = async () => {
       console.log("Shutting down gracefully...");
       await shutdownDatabase();
     };
 
-    process.on("SIGINT", shutdown); // CTRL + C
-    process.on("SIGTERM", shutdown); // Kill terminal
+    process.on("SIGINT", shutdown);
+    process.on("SIGTERM", shutdown);
   } catch (error) {
     console.error("Failed to connect to the database:", error);
     process.exit(1);

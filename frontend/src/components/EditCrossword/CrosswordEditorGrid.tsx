@@ -36,7 +36,6 @@ export default function CrosswordEditorGrid(props: EditorGridProps) {
     const cleanArray: boolean[] = Array(gridSize * gridSize).fill(false);
 
     if (positionBlackSquares) {
-      // Set black squares
       const newblackSquares: boolean[] = [...blackSquares].map((value) => {
         return value;
       });
@@ -114,7 +113,6 @@ export default function CrosswordEditorGrid(props: EditorGridProps) {
         newHighlightAcross = !isHighlightAcross;
         setIsHighlightAcross(newHighlightAcross);
       }
-      // Handle focused cell
       const newFocusGrid: boolean[] = Array(gridSize * gridSize).fill(false);
       newFocusGrid[index] = true;
       setIsFocusedCell(newFocusGrid);
@@ -134,7 +132,6 @@ export default function CrosswordEditorGrid(props: EditorGridProps) {
     const focusedCellCol: number = index % gridSize;
     const focusedCellRow: number = (index - focusedCellCol) / gridSize;
 
-    // Row secondary highlighting
     const rowSlice: number[] = [];
     for (let k = 1; k < gridSize + 1; k++)
       if (focusedCellCol === 0 || index - k == undefined) {
@@ -154,7 +151,6 @@ export default function CrosswordEditorGrid(props: EditorGridProps) {
         rowSlice.push(index + l);
       }
 
-    // Col secondary highlighting
     const colSlice: number[] = [];
     for (let k = 1; k < gridSize + 1; k++)
       if (focusedCellRow === 0 || index - k * gridSize == undefined) {
@@ -180,27 +176,22 @@ export default function CrosswordEditorGrid(props: EditorGridProps) {
         colSlice.push(index + l * gridSize);
       }
 
-    // Putting it all together
     for (let i = 0; i < gridSize; i++) {
       for (let j = 0; j < gridSize; j++) {
         const ind = i * gridSize + j;
 
-        // Skip focused cell
         if (ind === index) {
           continue;
         }
 
-        // Skip black squares
         if (blackSquares[ind]) {
           continue;
         }
 
-        // Row highlight
         if (i === focusedCellRow && acrossHighlight && rowSlice.includes(ind)) {
           newSecondaryFocusGrid[ind] = true;
         }
 
-        // Col highlight
         if (
           j === focusedCellCol &&
           !acrossHighlight &&
@@ -228,7 +219,6 @@ export default function CrosswordEditorGrid(props: EditorGridProps) {
     index: number,
     acrossHighlight: boolean
   ): [string, boolean[], number] => {
-    // Handle focused clue
     const newFocusedClues: boolean[] = Array(gridSize * gridSize).fill(false);
     const sortedAcross: number[] = rowSlice.sort((a, b) => a - b);
     const sortedDown: number[] = colSlice.sort((a, b) => a - b);
@@ -245,7 +235,6 @@ export default function CrosswordEditorGrid(props: EditorGridProps) {
       }
     });
 
-    // Down clue starting from the number
     if (
       currentGridNumbers[index] &&
       clueNumDirection[index][1] &&
@@ -255,9 +244,7 @@ export default function CrosswordEditorGrid(props: EditorGridProps) {
       direction = "down";
       clueListIndex = downIndices.indexOf(index);
       return [direction, newFocusedClues, clueListIndex];
-    }
-    // Across clue starting from the number
-    else if (
+    } else if (
       currentGridNumbers[index] &&
       clueNumDirection[index][0] &&
       acrossHighlight
@@ -266,9 +253,7 @@ export default function CrosswordEditorGrid(props: EditorGridProps) {
       direction = "across";
       clueListIndex = acrossIndices.indexOf(index);
       return [direction, newFocusedClues, clueListIndex];
-    }
-    // Across clue starting from a down number
-    else if (
+    } else if (
       currentGridNumbers[index] &&
       clueNumDirection[index][1] &&
       acrossHighlight
@@ -277,9 +262,7 @@ export default function CrosswordEditorGrid(props: EditorGridProps) {
       direction = "across";
       clueListIndex = acrossIndices.indexOf(sortedAcross[0]);
       return [direction, newFocusedClues, clueListIndex];
-    }
-    // Down clue starting from an across number
-    else if (
+    } else if (
       currentGridNumbers[index] &&
       clueNumDirection[index][0] &&
       !acrossHighlight
@@ -288,9 +271,7 @@ export default function CrosswordEditorGrid(props: EditorGridProps) {
       direction = "down";
       clueListIndex = downIndices.indexOf(sortedDown[0]);
       return [direction, newFocusedClues, clueListIndex];
-    }
-    // Across clue only one clue in slice
-    else if (
+    } else if (
       acrossHighlight &&
       !clueNumDirection[index][0] &&
       !clueNumDirection[index][1]
@@ -299,9 +280,7 @@ export default function CrosswordEditorGrid(props: EditorGridProps) {
       direction = "across";
       clueListIndex = acrossIndices.indexOf(sortedAcross[0]);
       return [direction, newFocusedClues, clueListIndex];
-    }
-    // Down clue only one clue in slice
-    else if (
+    } else if (
       !acrossHighlight &&
       !clueNumDirection[index][0] &&
       !clueNumDirection[index][1]
@@ -602,7 +581,6 @@ export default function CrosswordEditorGrid(props: EditorGridProps) {
       (value: number) => value !== null
     );
 
-    // Across clue with across highlighted
     if (
       hasNonNullValues &&
       isHighlightAcross &&
@@ -610,36 +588,28 @@ export default function CrosswordEditorGrid(props: EditorGridProps) {
       !clueNumDirection[index][1]
     ) {
       handleSecondaryFocus(index, true);
-    }
-    // Down clue with across highlighted
-    else if (
+    } else if (
       hasNonNullValues &&
       isHighlightAcross &&
       clueNumDirection[index][1] &&
       !clueNumDirection[index][0]
     ) {
       handleSecondaryFocus(index, false);
-    }
-    // Across clue with down highlighted
-    else if (
+    } else if (
       hasNonNullValues &&
       !isHighlightAcross &&
       clueNumDirection[index][0] &&
       !clueNumDirection[index][1]
     ) {
       handleSecondaryFocus(index, true);
-    }
-    // Down clue with down highlighted
-    else if (
+    } else if (
       hasNonNullValues &&
       !isHighlightAcross &&
       clueNumDirection[index][1] &&
       !clueNumDirection[index][0]
     ) {
       handleSecondaryFocus(index, false);
-    }
-    // Both across and down clue
-    else if (
+    } else if (
       hasNonNullValues &&
       clueNumDirection[index][0] &&
       clueNumDirection[index][1]
