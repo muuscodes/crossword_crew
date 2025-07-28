@@ -245,7 +245,7 @@ export default function CreateCrossword(props: CreateCrosswordProps) {
     direction: string,
     index: number
   ): void => {
-    const value: string = event.target.value;
+    const value: string = event.target.value.trim();
 
     const newAcrossValues: string[] = [...acrossClueValues].map((val) => {
       return val;
