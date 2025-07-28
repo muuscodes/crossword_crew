@@ -213,7 +213,7 @@ export default function CreateEditorCrossword(
     direction: string,
     index: number
   ): void => {
-    const value: string = event.target.value;
+    const value: string = event.target.value.trim();
     const newAcrossValues: string[] = [...acrossClueValues].map((value) => {
       return value;
     });

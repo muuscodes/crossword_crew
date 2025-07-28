@@ -14,7 +14,7 @@
   <p align="center">
     The perfect space to create, share, and play crosswords with your friends!
     <br />
-    <a href="https://crossword_crew.app" target="_blank" rel="noreferrer"><strong>Open the App</strong></a>
+    <a href="https://www.crosswordcrew.com" target="_blank" rel="noreferrer"><strong>Play now</strong></a>
     <br />
     <br />
     <a href="https://github.com/muuscodes/crossword_crew/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
@@ -25,7 +25,7 @@
 
 ## About The Project
 
-Crossword Crew is a web app for quickly and simply constructing, sharing, and
+Crossword Crew is a social web app for quickly and simply constructing, sharing, and
 playing dense New York Times-style crossword puzzles.
 
 ### Built With
@@ -40,7 +40,11 @@ playing dense New York Times-style crossword puzzles.
 
 ## Getting Started
 
-You can run Crossword Crew locally with the following instructions.
+If you want to play around without getting your hands dirty, go to the [website][website-url] and make an account. You are also welcome to use the guest account login for quick access (case sensitive):
+-Username: Guest
+-Password: CrosswordCrewGuest!
+
+You can also run Crossword Crew locally with the following instructions.
 
 ### Prerequisites
 
@@ -163,3 +167,4 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 [crosswyrd-url]: https://crosswyrd.app/
 [shelton-url]: https://github.com/sheltoncarr
 [font-awesome-url]: https://fontawesome.com/
+[website-url]: https://www.crosswordcrew.com
