@@ -41,10 +41,11 @@ playing dense New York Times-style crossword puzzles.
 ## Getting Started
 
 If you want to play around without getting your hands dirty, go to the [website][website-url] and make an account. You are also welcome to use the guest account login for quick access (case sensitive):
--Username: Guest
--Password: CrosswordCrewGuest!
 
-You can also run Crossword Crew locally with the following instructions.
+- Username: Guest
+- Password: CrosswordCrewGuest!
+
+You can also run Crossword Crew locally with the following instructions:
 
 ### Prerequisites
 
@@ -110,7 +111,7 @@ You can also run Crossword Crew locally with the following instructions.
   ```
 
   After a few moments, you should be able to interact with crossword_crew locally
-  at [http://localhost:3000](http://localhost:3000).
+  at [http://localhost:3000](http://localhost:3000) (or your specified port).
 
 8. Welcome Crossword
 

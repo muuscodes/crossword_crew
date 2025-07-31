@@ -129,6 +129,7 @@ export default function Authentication(props: AuthenticationProps) {
               type="button"
               onClick={togglePasswordVisibility}
               className=" text-white w-1/8 pt-1.5"
+              data-testid="eye"
             >
               <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
             </button>
