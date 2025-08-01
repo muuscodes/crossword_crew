@@ -40,10 +40,7 @@ playing dense New York Times-style crossword puzzles.
 
 ## Getting Started
 
-If you want to play around without getting your hands dirty, go to the [website][website-url] and make an account. You are also welcome to use the guest account login for quick access (case sensitive):
-
-- Username: Guest
-- Password: CrosswordCrewGuest!
+If you want to play around without getting your hands dirty, go to the [website][website-url] and make an account.
 
 You can also run Crossword Crew locally with the following instructions:
 
