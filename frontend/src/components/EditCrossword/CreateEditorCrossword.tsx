@@ -213,7 +213,7 @@ export default function CreateEditorCrossword(
     direction: string,
     index: number
   ): void => {
-    const value: string = event.target.value.trim();
+    const value: string = event.target.value;
     const newAcrossValues: string[] = [...acrossClueValues].map((value) => {
       return value;
     });
@@ -223,11 +223,11 @@ export default function CreateEditorCrossword(
 
     if (!isFocusedOnGrid) {
       if (direction === "across") {
-        newAcrossValues[index] = value;
+        newAcrossValues[index] = value.trim();
         setAcrossClueValues(newAcrossValues);
       }
       if (direction === "down") {
-        newDownValues[index] = value;
+        newDownValues[index] = value.trim();
         setDownClueValues(newDownValues);
       }
     }
