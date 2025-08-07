@@ -39,8 +39,13 @@ export default function CrosswordEditorGrid(props: EditorGridProps) {
       const newblackSquares: boolean[] = [...blackSquares].map((value) => {
         return value;
       });
+      const newGridValues: string[] = [...currentGridValues].map((value) => {
+        return value;
+      });
       newblackSquares[index] = !newblackSquares[index];
+      newGridValues[index] = "";
       setBlackSquares(newblackSquares);
+      setCurrentGridValues(newGridValues);
       setCurrentGridNumbers(assignNumbers(newblackSquares));
       setIsFocusedCell(cleanArray);
       setIsFocusedClue(cleanArray);

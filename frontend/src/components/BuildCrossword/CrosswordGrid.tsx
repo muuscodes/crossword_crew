@@ -40,8 +40,13 @@ export default function CrosswordGrid(props: CrosswordGridProps) {
       const newblackSquares: boolean[] = [...blackSquares].map((value) => {
         return value;
       });
+      const newGridValues: string[] = [...currentGridValues].map((value) => {
+        return value;
+      });
       newblackSquares[index] = !newblackSquares[index];
+      newGridValues[index] = "";
       setBlackSquares(newblackSquares);
+      setCurrentGridValues(newGridValues);
       setCurrentGridNumbers(assignNumbers(newblackSquares));
       setIsFocusedCell(cleanArray);
       setIsFocusedClue(cleanArray);
@@ -309,6 +314,10 @@ export default function CrosswordGrid(props: CrosswordGridProps) {
   const handleKeyDown = (event: KeyboardEvent): void => {
     const index: number = currentCell.current;
     event.stopPropagation();
+    if (event.key === "Enter") {
+      event.preventDefault();
+      return;
+    }
     if (event.key === "Backspace" && isFocusedOnGrid) {
       if (currentGridValues[index] === "" && isHighlightAcross) {
         handleArrowLeft(index);
