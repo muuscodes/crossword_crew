@@ -1,164 +1,177 @@
-import { useState, useEffect } from "react";
-import { useAuth } from "../../context/AuthContext";
-import googleLogo from "../../img/GoogleLogo.png";
-import { useNavigate } from "react-router-dom";
+import { faEye, faEyeSlash, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
-import type { AuthenticationProps } from "../utils/types";
+import { type FormEvent, type ReactNode, useState } from "react";
+import { useLocation, useNavigate } from "react-router";
+import { useAuth } from "../../context/auth";
+import googleLogo from "../../img/GoogleLogo.png";
+import { errorMessage } from "../../lib/api";
+import { BUTTON_PRIMARY, CHIP_YELLOW, INPUT } from "../Common/styles";
 
-export default function Authentication(props: AuthenticationProps) {
-  const { handleCloseModal } = props;
-  const [isSignUp, setIsSignUp] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string>("");
-  const [showPassword, setShowPassword] = useState(false);
+export type AuthMode = "login" | "signup";
 
+const COPY: Record<AuthMode, { title: string; subtitle: string; submit: string }> = {
+  login: { title: "Welcome back", subtitle: "Log in to keep puzzling.", submit: "Log in" },
+  signup: {
+    title: "Create your account",
+    subtitle: "Make crosswords and share them with friends.",
+    submit: "Create account",
+  },
+};
+
+function Field({ id, label, hint, children }: { id: string; label: string; hint?: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={id} className="font-bold">
+        {label}
+      </label>
+      {children}
+      {hint && <p className="text-sm text-neutral-600">{hint}</p>}
+    </div>
+  );
+}
+
+interface AuthenticationProps {
+  onClose: () => void;
+  initialMode?: AuthMode;
+  initialError?: string | null;
+}
+
+export default function Authentication({ onClose, initialMode = "login", initialError = null }: AuthenticationProps) {
+  const { login, signup } = useAuth();
   const navigate = useNavigate();
-  const { signup, login, setGlobalUser, isLoading } = useAuth();
+  const location = useLocation();
+  const [mode, setMode] = useState<AuthMode>(initialMode);
+  const [error, setError] = useState<string | null>(initialError);
+  const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const isSignUp = mode === "signup";
+  const copy = COPY[mode];
 
-  const togglePasswordVisibility = () => {
-    setShowPassword((prev) => !prev);
-  };
-
-  const handleSignUpToggle = () => {
-    setIsSignUp(!isSignUp);
-    setErrorMessage("");
-  };
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    const username = formData.get("username") as string;
-    const email = isSignUp ? (formData.get("email") as string) : "";
-    const password = formData.get("password") as string;
-
+    const form = new FormData(event.currentTarget);
+    const field = (name: string) => String(form.get(name) ?? "");
+    setSubmitting(true);
+    setError(null);
     try {
-      if (isSignUp) {
-        await signup(email, username, password);
-      } else {
-        await login(username, password);
-      }
-      handleCloseModal();
-    } catch (error: any) {
-      setErrorMessage(error.message);
+      if (isSignUp) await signup(field("email").trim(), field("username").trim(), field("password"));
+      else await login(field("username").trim(), field("password"));
+      // Go back to the page that asked for a login, if there was one.
+      const from = (location.state as { from?: string } | null)?.from;
+      onClose();
+      navigate(from ?? "/home", { replace: true });
+    } catch (submitError) {
+      setError(errorMessage(submitError));
+      setSubmitting(false);
     }
   };
 
-  const handleGoogleLogin = () => {
-    window.location.href = "/auth/google";
+  const switchMode = () => {
+    setMode(isSignUp ? "login" : "signup");
+    setError(null);
   };
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const response = await fetch("/auth/google/user", {
-          method: "GET",
-          credentials: "include",
-        });
-        const result = await response.json();
-        if (response.ok) {
-          const newGlobalUser = {
-            username: result.username,
-            user_id: result.user_id,
-          };
-          setGlobalUser(newGlobalUser);
-          navigate("/home");
-        } else {
-          console.error("Failed to fetch user data");
-          throw new Error(result.message);
-        }
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      }
-    };
-
-    if (window.location.pathname === "/home") {
-      fetchUserData();
-    }
-  }, [setGlobalUser, navigate]);
 
   return (
-    <>
-      <div className="flex flex-row-reverse justify-between">
+    <div className="flex flex-col gap-5">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className={CHIP_YELLOW}>{isSignUp ? "Sign up" : "Log in"}</p>
+          <h2 className="mt-3 text-3xl font-extrabold tracking-tight">{copy.title}</h2>
+          <p className="mt-1 text-neutral-600">{copy.subtitle}</p>
+        </div>
         <button
-          className="text-right text-3xl hover:opacity-50 hover:scale-130 cursor-pointer"
-          onClick={handleCloseModal}
+          type="button"
+          aria-label="Close"
+          onClick={onClose}
+          className="-mr-2 -mt-2 flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center border-2 border-transparent text-xl hover:border-black hover:bg-cursor"
         >
-          X
+          <FontAwesomeIcon icon={faXmark} />
         </button>
-        <h2 className="text-5xl text-left ">
-          {isSignUp ? "Sign up" : "Login"}
-        </h2>
       </div>
-      <p className="text-xl">
-        {isSignUp ? "Create an account" : "Sign into your account"}
-      </p>
-      {errorMessage && (
-        <div className="text-red-500 text-center mt-2">{errorMessage}</div>
-      )}
-      <div className="flex flex-row w-full">
-        <form
-          onSubmit={handleSubmit}
-          className="flex flex-col w-2/3 border-r-3 pr-4"
-        >
-          <input
-            type="text"
-            name="username"
-            className="bg-white text-black pl-3 p-0.5 mt-2"
-            placeholder="username"
-            required
-          />
 
-          {isSignUp && (
+      <a
+        href="/auth/google"
+        className="flex items-center justify-center gap-3 border-2 border-black bg-white px-4 py-2.5 font-bold shadow-tile transition hover:translate-x-px hover:translate-y-px hover:bg-yellow-50 hover:shadow-[2px_2px_0_0_#000]"
+      >
+        <img src={googleLogo} alt="" className="h-5 w-5" />
+        Continue with Google
+      </a>
+
+      <div className="flex items-center gap-3 text-sm font-bold uppercase tracking-wider text-neutral-600">
+        <span aria-hidden="true" className="h-0.5 flex-1 bg-black" />
+        or
+        <span aria-hidden="true" className="h-0.5 flex-1 bg-black" />
+      </div>
+
+      {error && (
+        <p role="alert" className="border-2 border-red-700 bg-red-50 px-3 py-2 text-red-800">
+          {error}
+        </p>
+      )}
+
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <Field id="auth-username" label="Username">
+          <input
+            id="auth-username"
+            name="username"
+            type="text"
+            autoComplete="username"
+            required
+            maxLength={50}
+            className={INPUT}
+            data-autofocus
+          />
+        </Field>
+        {isSignUp && (
+          <Field id="auth-email" label="Email">
             <input
-              type="text"
+              id="auth-email"
               name="email"
-              className="bg-white text-black pl-3 p-0.5 mt-2"
-              placeholder="email"
+              type="email"
+              autoComplete="email"
               required
+              maxLength={100}
+              className={INPUT}
             />
-          )}
-          <div className="flex flex-row w-full">
+          </Field>
+        )}
+        <Field id="auth-password" label="Password" hint={isSignUp ? "At least 6 characters." : undefined}>
+          <div className="relative">
             <input
-              type={showPassword ? "text" : "password"}
+              id="auth-password"
               name="password"
-              placeholder={isSignUp ? "password" : "********"}
-              className="bg-white text-black pl-3 p-0.5 mt-2 w-7/8"
+              type={showPassword ? "text" : "password"}
+              autoComplete={isSignUp ? "new-password" : "current-password"}
               required
+              minLength={isSignUp ? 6 : undefined}
+              maxLength={72}
+              className={`${INPUT} pr-12`}
             />
             <button
               type="button"
-              onClick={togglePasswordVisibility}
-              className=" text-white w-1/8 pt-1.5"
-              data-testid="eye"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              onClick={() => setShowPassword((current) => !current)}
+              className="absolute inset-y-0 right-0 flex w-12 cursor-pointer items-center justify-center text-neutral-500 hover:text-black"
             >
               <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
             </button>
           </div>
+        </Field>
+        <button type="submit" className={`${BUTTON_PRIMARY} mt-1 w-full`} disabled={submitting}>
+          {submitting ? "Please wait…" : copy.submit}
+        </button>
+      </form>
 
-          <button type="submit" className="text-xl p-2 w-20 mt-4 fancyButton">
-            {isSignUp ? "Submit" : "Login"}
-          </button>
-        </form>
+      <p className="text-center text-neutral-600">
+        {isSignUp ? "Already have an account?" : "New to Crossword Crew?"}{" "}
         <button
-          onClick={handleGoogleLogin}
-          className={`flex flex-col w-1/3 items-center text-center m-l-3 hover:underline cursor-pointer ${
-            isSignUp ? "mt-7" : ""
-          }`}
+          type="button"
+          onClick={switchMode}
+          className="cursor-pointer font-bold text-black underline underline-offset-2 hover:no-underline"
         >
-          <img src={googleLogo} alt="Google Logo" className="w-18" />
-          <p>Sign in with Google</p>
+          {isSignUp ? "Log in" : "Sign up"}
         </button>
-      </div>
-      <hr className="text-white" />
-      <div className="flex flex-col items-center">
-        <p className={`text-2xl ${isSignUp ? "" : "mt-5"} `}>
-          {isSignUp ? "Already have an account?" : "Don't have an account?"}
-        </p>
-        <button onClick={handleSignUpToggle} className="fancyButton text-2xl">
-          {isSignUp ? "Login" : "Sign up"}
-        </button>
-      </div>
-      {isLoading && <p className="text-4xl text-center">Loading...</p>}
-    </>
+      </p>
+    </div>
   );
 }

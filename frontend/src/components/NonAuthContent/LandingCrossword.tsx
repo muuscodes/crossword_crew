@@ -1,156 +1,78 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { assignNumbers, clueStarts } from "../../lib/crossword";
 
+const SIZE = 5;
+const CELLS = SIZE * SIZE;
+
+// Starts with a pair of opposite corners filled in, so the numbering already looks like a puzzle.
+const startingGrid = () => Array.from({ length: CELLS }, (_, index) => index === 4 || index === 20);
+
+// A small grid to play with on the landing page: click squares to turn them black and watch the
+// clue numbers follow. With symmetry on, the square opposite turns too, the way most published
+// crosswords are built.
 export default function LandingCrossword() {
-  const gridSize: number = 5;
-  const [gridDimensions, setGridDimensions] = useState<string>("25vw");
-  const [gridHeight, setGridHeight] = useState<string>(gridDimensions + "5px");
-  const [currentGridNumbers, setCurrentGridNumbers] = useState<
-    (number | null)[]
-  >([
-    1,
-    2,
-    3,
-    4,
-    5,
-    6,
-    null,
-    null,
-    null,
-    null,
-    7,
-    null,
-    null,
-    null,
-    null,
-    8,
-    null,
-    null,
-    null,
-    null,
-    9,
-    null,
-    null,
-    null,
-    null,
-  ]);
-  const [blackSquares, setBlackSquares] = useState<boolean[]>(
-    Array(gridSize * gridSize).fill(false)
-  );
+  const [black, setBlack] = useState(startingGrid);
+  const [symmetric, setSymmetric] = useState(true);
+  const numbers = assignNumbers(black, SIZE);
+  const across = clueStarts(black, SIZE, "across").length;
+  const down = clueStarts(black, SIZE, "down").length;
 
-  const handleCellInteraction = (index: number): void => {
-    const newblackSquares: boolean[] = [...blackSquares];
-    newblackSquares[index] = !newblackSquares[index];
-    setBlackSquares(newblackSquares);
-    setCurrentGridNumbers(assignNumbers(newblackSquares));
-  };
-
-  const assignNumbers = (blackSquares: boolean[]): number[] => {
-    const newNumbers: number[] = Array(gridSize * gridSize).fill(null);
-    let number: number = 1;
-
-    for (let i = 0; i < gridSize; i++) {
-      for (let j = 0; j < gridSize; j++) {
-        const index = i * gridSize + j;
-
-        if (blackSquares[index]) {
-          continue;
-        }
-
-        if (j === 0 || (i < gridSize && blackSquares[index - gridSize])) {
-          newNumbers[index] = number++;
-        }
-
-        if (
-          i === 0 ||
-          (j < gridSize &&
-            !blackSquares[index - gridSize] &&
-            blackSquares[index - 1])
-        ) {
-          if (newNumbers[index] === null) {
-            newNumbers[index] = number++;
-          }
-        }
-      }
-    }
-
-    return newNumbers;
-  };
-
-  const handleBgColor = (index: number): string => {
-    let bgColor: string = "bg-white";
-    if (blackSquares && blackSquares[index]) {
-      bgColor = "bg-black";
-    }
-    return bgColor;
-  };
-
-  const handleSpaceKey = (
-    event: React.KeyboardEvent<HTMLDivElement>,
-    index: number
-  ): void => {
-    event.stopPropagation();
-    if (event.key === " ") {
-      event.preventDefault();
-      handleCellInteraction(index);
-    }
-  };
-
-  const updateGridDimensions = () => {
-    const newWidth: string =
-      window.innerWidth < 420
-        ? "310px"
-        : window.innerWidth < 1024
-        ? "387.5px"
-        : gridDimensions;
-    const newHeight: string =
-      window.innerWidth < 768 ? "h-fit" : `${gridDimensions} + 5px`;
-    setGridDimensions(newWidth);
-    setGridHeight(newHeight);
-  };
-
-  useEffect(() => {
-    window.addEventListener("resize", updateGridDimensions);
-    updateGridDimensions();
-
-    return () => {
-      window.removeEventListener("resize", updateGridDimensions);
-    };
-  }, []);
+  const toggle = (index: number) =>
+    setBlack((current) => {
+      const next = [...current];
+      next[index] = !current[index];
+      if (symmetric) next[CELLS - 1 - index] = next[index];
+      return next;
+    });
 
   return (
-    <div
-      className="grid border-3 border-black"
-      style={{
-        gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
-        gridTemplateRows: `repeat(${gridSize}, 1fr)`,
-        width: `calc(${gridDimensions} + 5px)`,
-        height: gridHeight,
-      }}
-    >
-      {Array.from({ length: gridSize * gridSize }, (_, index) => (
-        <div
-          key={index}
-          onClick={() => handleCellInteraction(index)}
-          onKeyDown={(event) => handleSpaceKey(event, index)}
-          tabIndex={0}
-          className={`flex border border-black relative 
-          ${handleBgColor(index)}`}
-          style={{
-            height: `calc(${gridDimensions}/${gridSize})`,
-            width: `calc(${gridDimensions}/${gridSize})`,
-            fontSize: `calc((${gridDimensions} / ${gridSize}) / 2)`,
-            boxSizing: "border-box",
-          }}
-        >
-          <div
-            style={{
-              fontSize: `calc((${gridDimensions} / ${gridSize}) / 4)`,
-            }}
+    <div className="flex w-full max-w-sm flex-col items-center gap-5">
+      <div
+        role="group"
+        aria-label="Sample crossword grid. Select squares to turn them black or white."
+        className="grid w-full gap-[3px] border-3 border-black bg-black shadow-[6px_6px_0_0_#000]"
+        style={{ gridTemplateColumns: `repeat(${SIZE}, minmax(0, 1fr))`, aspectRatio: "1 / 1", containerType: "inline-size" }}
+      >
+        {numbers.map((number, index) => (
+          <button
+            key={index}
+            type="button"
+            aria-pressed={black[index]}
+            aria-label={`Row ${Math.floor(index / SIZE) + 1}, column ${(index % SIZE) + 1}`}
+            onClick={() => toggle(index)}
+            className={`relative cursor-pointer transition-colors focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-blue-600 ${
+              black[index] ? "bg-black hover:bg-neutral-700" : "bg-white hover:bg-yellow-200"
+            }`}
           >
-            {currentGridNumbers[index]}
-          </div>
-        </div>
-      ))}
+            {number !== null && (
+              <span
+                aria-hidden="true"
+                className="absolute left-[6%] top-[3%] font-bold leading-none"
+                style={{ fontSize: `calc(100cqw / ${SIZE} * 0.27)` }}
+              >
+                {number}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+      <p aria-live="polite" className="text-lg">
+        <strong>{across}</strong> across clues and <strong>{down}</strong> down clues
+      </p>
+      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
+        <label className="flex items-center gap-2 text-lg">
+          Keep it symmetric
+          <input
+            type="checkbox"
+            className="custom-checkbox"
+            checked={symmetric}
+            onChange={(event) => setSymmetric(event.target.checked)}
+          />
+        </label>
+        <button type="button" className="fancyButton" onClick={() => setBlack(startingGrid())}>
+          Start over
+        </button>
+      </div>
     </div>
   );
 }

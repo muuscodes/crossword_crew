@@ -1,219 +1,66 @@
-import { useState, useContext, createContext } from "react";
-import type { AuthContextType } from "../components/utils/types";
-import type { globalUserType } from "../components/utils/types";
-import type { AuthProviderProps } from "../components/utils/types";
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { apiRequest, setUnauthorizedListener } from "../lib/api";
+import type { User } from "../components/utils/types";
+import { AuthContext, type AuthContextValue, type AuthStatus } from "./auth";
 
-const defaultAuthContext: AuthContextType = {
-  globalUser: {
-    username: "",
-    user_id: -1,
-  },
-  setGlobalUser: () => {},
-  isLoading: false,
-  signup: async () => {},
-  login: async () => {},
-  logout: async () => {},
-  isAuthenticated: false,
-  setIsAuthenticated: () => {},
-  librarySortSetting: "dateNewest",
-  setLibrarySortSetting: () => {},
-  handleGoogleRedirect: async () => {},
-  getToken: () => "",
-  fetchWithAuth: async (
-    url: string,
-    options?: RequestInit
-  ): Promise<Response> => {
-    return fetch(url, options);
-  },
-};
-
-interface newUserType {
-  username: string;
-  user_id: number;
+interface AuthState {
+  status: AuthStatus;
+  user: User | null;
 }
 
-const AuthContext = createContext<AuthContextType>(defaultAuthContext);
+const LOGGED_OUT: AuthState = { status: "unauthenticated", user: null };
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
+// Restores the session once when the app loads (the session cookie survives page reloads),
+// and logs the person out in the app whenever the server reports the session has ended.
+export default function AuthProvider({ children }: { children: ReactNode }) {
+  const [auth, setAuth] = useState<AuthState>({ status: "loading", user: null });
 
-export default function AuthProvider(props: AuthProviderProps) {
-  const { children } = props;
-  const [globalUser, setGlobalUser] = useState<globalUserType>({
-    username: "",
-    user_id: -1,
-  });
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [librarySortSetting, setLibrarySortSetting] =
-    useState<string>("dateNewest");
-
-  const getUserId = async (username: string) => {
-    try {
-      const response = await fetch(`/users/${username}`, {
-        method: "GET",
-        credentials: "include",
+  useEffect(() => {
+    let cancelled = false;
+    setUnauthorizedListener(() => setAuth(LOGGED_OUT));
+    apiRequest<{ user: User }>("/auth/session")
+      .then(({ user }) => {
+        if (!cancelled) setAuth({ status: "authenticated", user });
+      })
+      .catch(() => {
+        if (!cancelled) setAuth(LOGGED_OUT);
       });
-      const freshData = await response.json();
-      if (response.ok) {
-        let newUser: newUserType = {
-          username: username,
-          user_id: freshData.user_id,
-        };
-        setGlobalUser(newUser);
-      } else {
-        throw new Error(freshData.message);
-      }
-    } catch (error: any) {
-      alert(error.message);
-    }
-  };
-
-  const signup = async (email: string, username: string, password: string) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`/auth/signup`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          username,
-          password,
-        }),
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message);
-      }
-      await login(username, password);
-    } catch (error) {
-      console.error("Signup error:", error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const login = async (username: string, password: string) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username,
-          password,
-        }),
-        credentials: "include",
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message);
-      }
-      const userData = await response.json();
-      const newGlobalUser = {
-        username: userData.user.username,
-        user_id: userData.user.user_id,
-      };
-      setGlobalUser(newGlobalUser);
-      getUserId(userData.user.username);
-      setIsAuthenticated(true);
-
-      localStorage.setItem("token", userData.token);
-    } catch (error) {
-      console.error("Login error:", error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const logout = async (): Promise<void> => {
-    setIsLoading(true);
-    try {
-      await fetchWithAuth(`/auth/logout`, {
-        method: "GET",
-        credentials: "include",
-      });
-      setGlobalUser({ username: "", user_id: -1 });
-      setIsAuthenticated(false);
-      localStorage.removeItem("token");
-    } catch (error) {
-      console.error("Logout error:", error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleGoogleRedirect = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`/auth/google/user`, {
-        method: "GET",
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch user data");
-      }
-
-      const userData = await response.json();
-      const newGlobalUser = {
-        username: userData.user.username,
-        user_id: userData.user.user_id,
-      };
-      setGlobalUser(newGlobalUser);
-      getUserId(userData.user.username);
-      setIsAuthenticated(true);
-
-      localStorage.setItem("token", userData.token);
-    } catch (error) {
-      console.error("Google redirect error:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const getToken = () => {
-    return localStorage.getItem("token");
-  };
-
-  const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-    const token = getToken();
-    const headers = {
-      ...options.headers,
-      Authorization: `Bearer ${token}`,
+    return () => {
+      cancelled = true;
+      setUnauthorizedListener(null);
     };
+  }, []);
 
-    const response = fetch(url, {
-      ...options,
-      headers,
+  const login = useCallback(async (username: string, password: string) => {
+    const { user } = await apiRequest<{ user: User }>("/auth/login", {
+      method: "POST",
+      body: { username, password },
     });
+    setAuth({ status: "authenticated", user });
+  }, []);
 
-    return response;
-  };
+  const signup = useCallback(async (email: string, username: string, password: string) => {
+    const { user } = await apiRequest<{ user: User }>("/auth/signup", {
+      method: "POST",
+      body: { email, username, password },
+    });
+    setAuth({ status: "authenticated", user });
+  }, []);
 
-  const value = {
-    globalUser,
-    setGlobalUser,
-    isLoading,
-    signup,
-    login,
-    logout,
-    isAuthenticated,
-    setIsAuthenticated,
-    librarySortSetting,
-    setLibrarySortSetting,
-    handleGoogleRedirect,
-    getToken,
-    fetchWithAuth,
-  };
+  const logout = useCallback(async () => {
+    try {
+      await apiRequest("/auth/logout", { method: "POST" });
+    } finally {
+      setAuth(LOGGED_OUT);
+    }
+  }, []);
+
+  const updateUser = useCallback((user: User) => setAuth({ status: "authenticated", user }), []);
+
+  const value = useMemo<AuthContextValue>(
+    () => ({ ...auth, login, signup, logout, updateUser }),
+    [auth, login, signup, logout, updateUser],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -1,33 +1,36 @@
-import { Pool } from "pg";
-import dotenv from "dotenv";
-dotenv.config();
-const user = process.env.DB_USER;
-const pw = process.env.DB_PASSWORD;
-const host = process.env.DB_HOST;
-const port = process.env.DB_PORT;
-const db_name = process.env.DB_NAME;
+import pg from "pg";
 
-const pool = new Pool({
-  user: user,
-  password: pw,
-  host: host,
-  port: port,
-  database: db_name,
-});
+export function createPool(dbConfig) {
+  const pool = new pg.Pool(dbConfig);
+  // Without a listener, an idle client losing its connection would crash the process.
+  pool.on("error", (error) => console.error("Unexpected database error:", error));
+  return pool;
+}
 
-console.log("Database connection pool created");
-
-let isShuttingDown = false;
-const shutdownDatabase = async () => {
-  if (isShuttingDown) return;
-  isShuttingDown = true;
-  console.log("Attempting to close database connection...");
-  try {
-    await pool.end();
-    console.log("Database connection closed.");
-  } catch (err) {
-    console.error("Error closing the database connection", err.stack);
-  }
-};
-
-export { pool, shutdownDatabase };
+// Wraps a pg Pool in the small interface the app uses, so tests can swap in an in-memory database.
+//   query(text, params)  parameterized query
+//   exec(sql)            run a multi-statement script (migrations)
+//   transaction(work)    run work(tx) inside BEGIN/COMMIT, rolling back if it throws
+export function createDb(pool) {
+  return {
+    query: (text, params) => pool.query(text, params),
+    exec: (sql) => pool.query(sql),
+    async transaction(work) {
+      const client = await pool.connect();
+      try {
+        await client.query("BEGIN");
+        const result = await work({
+          query: (text, params) => client.query(text, params),
+          exec: (sql) => client.query(sql),
+        });
+        await client.query("COMMIT");
+        return result;
+      } catch (error) {
+        await client.query("ROLLBACK").catch(() => {});
+        throw error;
+      } finally {
+        client.release();
+      }
+    },
+  };
+}

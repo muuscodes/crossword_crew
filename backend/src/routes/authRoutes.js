@@ -1,338 +1,136 @@
 import { Router } from "express";
-import passport from "passport";
-import jwt from "jsonwebtoken";
-const router = Router();
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import dotenv from "dotenv";
-import { pool } from "../db.js";
-import bcrypt from "bcrypt";
-import {
-  jwtMiddleware,
-  handleValidationErrors,
-  validateAddUser,
-  validateGetUser,
-  loginLimiter,
-  validateSession,
-} from "../middleware/validationMiddleware.js";
-import { sendWelcomeEmail } from "./emailRoutes.js";
+import { HttpError, UNIQUE_VIOLATION, runInBackground } from "../lib/errors.js";
+import { checkPassword, hashPassword } from "../lib/passwords.js";
+import { SESSION_COOKIE } from "../lib/session.js";
+import { handleValidationErrors, validateLogin, validateSignup } from "../middleware/validation.js";
+import { GoogleSignInError, findOrCreateGoogleUser } from "../services/googleUsers.js";
+import { addWelcomePuzzle } from "../services/puzzles.js";
 
-dotenv.config();
-const client_id = process.env.GOOGLE_CLIENT_ID;
-const client_secret = process.env.GOOGLE_CLIENT_SECRET;
-const callback = process.env.GOOGLE_CALLBACK_URI;
+const LOGIN_FAILED = "Incorrect username or password.";
+const ALREADY_REGISTERED = "That username or email is already registered.";
 
-passport.serializeUser((user, done) => {
-  return done(null, user.user_id);
-});
+// Values for the ?login= query string the frontend turns into a message.
+const GOOGLE_FAILURE_CODES = { email_in_use: "email-in-use" };
 
-passport.deserializeUser(async (id, done) => {
-  try {
-    const user = await pool.query("SELECT * FROM users WHERE user_id = $1", [
-      id,
-    ]);
-    return done(null, user.rows[0]);
-  } catch (error) {
-    return done(error, null);
-  }
-});
+const publicUser = ({ user_id, username }) => ({ user_id, username });
 
-// Get the session
-router.get("/session", validateSession, (req, res) => {
-  if (req.session && req.session.user) {
-    return res.status(200).send({
-      user_id: req.session.user.user_id,
-      username: req.session.user.username,
-    });
-  } else {
-    return res.status(401).send({ message: "Not authenticated" });
-  }
-});
+function logIn(req, user) {
+  return new Promise((resolve, reject) => {
+    req.login(user, (error) => (error ? reject(error) : resolve()));
+  });
+}
 
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: client_id,
-      clientSecret: client_secret,
-      callbackURL: callback,
-      scope: ["email", "profile"],
-    },
-    async (accessToken, refreshToken, profile, done) => {
-      try {
-        const { googleId, displayName, emails } = profile;
-        const email = emails[0].value;
+export function createAuthRouter({ db, mailer, config, passport, limiters }) {
+  const router = Router();
 
-        const existingUser = await pool.query(
-          "SELECT * FROM users WHERE google_id = $1 OR email = $2",
-          [googleId, email]
-        );
-        if (existingUser.rows.length > 0) {
-          return done(null, existingUser.rows[0]);
-        }
-
-        const newUser = await pool.query(
-          "INSERT INTO users (google_id, username, email) VALUES ($1, $2, $3) RETURNING *",
-          [googleId, displayName, email]
-        );
-
-        const newUserData = newUser.rows[0];
-
-        // Add the welcome grid if its not the first user
-
-        if (newUserData.user_id > 1) {
-          const gridData = await pool.query(
-            "SELECT * FROM crossword_grids WHERE user_id = $1 AND grid_id = $2",
-            [1, 1]
-          );
-          if (gridData.rows.length === 0) {
-            return res.status(404).send({ message: "Grid not found" });
-          }
-          const puzzleTitle = gridData.rows[0].puzzle_title;
-          const gridSize = gridData.rows[0].grid_size;
-          const currentGridNumbers = gridData.rows[0].grid_numbers;
-          const blackSquares = gridData.rows[0].black_squares;
-          const acrossClueValues = gridData.rows[0].across_clues;
-          const downClueValues = gridData.rows[0].down_clues;
-          const clueNumDirection = gridData.rows[0].clue_number_directions;
-          const completed = false;
-          const cleanGridValues = Array(gridSize * gridSize).fill("");
-
-          const recipientUserId = newUserData.user_id;
-
-          await pool.query(
-            `INSERT INTO solver_grids
-        (grid_id, user_id, completed_status, puzzle_title, grid_size, grid_values, grid_numbers, black_squares, across_clues, down_clues, clue_number_directions) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-            [
-              1,
-              recipientUserId,
-              completed,
-              puzzleTitle,
-              gridSize,
-              cleanGridValues,
-              currentGridNumbers,
-              blackSquares,
-              acrossClueValues,
-              downClueValues,
-              clueNumDirection,
-            ]
-          );
-
-          await pool.query(
-            `INSERT INTO user_library (user_id, solver_grid_id) VALUES ($1, $2)
-      `,
-            [newUserData.user_id, 1]
-          );
-        }
-
-        await sendWelcomeEmail(displayName, email);
-
-        return done(null, newUserData);
-      } catch (error) {
-        console.error("Database error:", error);
-        return done(error, null);
-      }
+  // The session stores only the user id. Each request loads the id and username, never the hash.
+  passport.serializeUser((user, done) => done(null, user.user_id));
+  passport.deserializeUser(async (id, done) => {
+    try {
+      const { rows } = await db.query("SELECT user_id, username FROM users WHERE user_id = $1", [id]);
+      done(null, rows[0] ?? false);
+    } catch (error) {
+      done(error);
     }
-  )
-);
+  });
 
-// Authentication route
-router.get("/google", passport.authenticate("google"), (req, res) => {
-  return res.status(200).send({ message: "Authentication initiated" });
-});
+  router.get("/session", (req, res) => {
+    if (!req.user) return res.status(401).json({ message: "Not logged in." });
+    res.json({ user: publicUser(req.user) });
+  });
 
-// Redirect route
-router.get(
-  "/google/redirect",
-  passport.authenticate("google", { failureRedirect: "/failure" }),
-  (req, res) => {
-    req.login(req.user, (err) => {
-      if (err) {
-        return res.status(500).send({ message: "Login failed" });
-      }
+  router.post("/signup", limiters.signup, validateSignup, handleValidationErrors, async (req, res) => {
+    const { username, email, password } = req.body;
+    const passwordHash = await hashPassword(password);
 
-      const userData = {
-        username: req.user.username,
-        user_id: req.user.user_id,
-      };
+    let user;
+    try {
+      user = await db.transaction(async (tx) => {
+        const taken = await tx.query(
+          "SELECT 1 FROM users WHERE username = $1 OR lower(email) = $2",
+          [username, email],
+        );
+        if (taken.rows.length > 0) throw new HttpError(409, ALREADY_REGISTERED);
+        const { rows } = await tx.query(
+          "INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING user_id, username",
+          [username, email, passwordHash],
+        );
+        await addWelcomePuzzle(tx, rows[0].user_id, config.welcomeGridId);
+        return rows[0];
+      });
+    } catch (error) {
+      // Two sign-ups racing for the same name get past the check above but not the constraint.
+      if (error.code === UNIQUE_VIOLATION) throw new HttpError(409, ALREADY_REGISTERED);
+      throw error;
+    }
 
-      req.session.user = userData;
+    await logIn(req, publicUser(user));
+    runInBackground(mailer.sendWelcomeEmail(user.username, email), "welcome email");
+    res.status(201).json({ user: publicUser(user) });
+  });
 
-      return res.redirect("/home");
+  router.post("/login", limiters.login, validateLogin, handleValidationErrors, async (req, res) => {
+    const { username, password } = req.body;
+    const { rows } = await db.query(
+      "SELECT user_id, username, password FROM users WHERE username = $1",
+      [username],
+    );
+    const account = rows[0];
+    if (account && !account.password) {
+      throw new HttpError(401, "This account signs in with Google. Use the Sign in with Google button.");
+    }
+    if (!(await checkPassword(password, account?.password))) throw new HttpError(401, LOGIN_FAILED);
+
+    await logIn(req, publicUser(account));
+    res.json({ user: publicUser(account) });
+  });
+
+  router.post("/logout", (req, res, next) => {
+    req.logout((logoutError) => {
+      if (logoutError) return next(logoutError);
+      req.session.destroy((destroyError) => {
+        if (destroyError) return next(destroyError);
+        res.clearCookie(SESSION_COOKIE, { path: "/" });
+        res.status(204).end();
+      });
     });
-  }
-);
+  });
 
-// Get google user data
-router.get("/google/user", (req, res) => {
-  if (req.isAuthenticated()) {
-    const token = jwt.sign(
-      { user_id: req.user.user_id, username: req.user.username },
-      process.env.JWT_SECRET,
-      { expiresIn: "2h" }
+  if (config.google) {
+    passport.use(
+      new GoogleStrategy(
+        { ...config.google, scope: ["email", "profile"] },
+        async (accessToken, refreshToken, profile, done) => {
+          try {
+            const { user, email, created } = await findOrCreateGoogleUser(db, profile, config);
+            if (created) runInBackground(mailer.sendWelcomeEmail(user.username, email), "welcome email");
+            done(null, publicUser(user));
+          } catch (error) {
+            if (error instanceof GoogleSignInError) return done(null, false, { reason: error.reason });
+            done(error);
+          }
+        },
+      ),
     );
 
-    return res.status(200).send({ user: req.user, token });
-  } else {
-    return res.status(401).send({ message: "User not authenticated" });
-  }
-});
+    router.get("/google", passport.authenticate("google"));
 
-// Failure route
-router.get("/failure", (req, res) => {
-  return res
-    .status(400)
-    .send({ message: "Google login failed, please try again" });
-});
-
-// Normal user sign up route
-router.post(
-  "/signup",
-  validateAddUser,
-  handleValidationErrors,
-  async (req, res) => {
-    try {
-      const { email, username, password } = req.body;
-      const existingUser = await pool.query(
-        "SELECT * FROM users WHERE email = $1 OR username = $2",
-        [email, username]
-      );
-      if (existingUser.rows.length > 0) {
-        return res
-          .status(400)
-          .send({ message: "Username or email already exists" });
-      }
-
-      const hashedPassword = await bcrypt.hash(password, 10);
-      const newUser = await pool.query(
-        "INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING *",
-        [username, email, hashedPassword]
-      );
-      const newUserData = newUser.rows[0];
-
-      const token = jwt.sign(
-        { user_id: newUserData.user_id, username: newUserData.username },
-        process.env.JWT_SECRET,
-        { expiresIn: "2h" }
-      );
-
-      // Add the welcome grid if its not the first user
-
-      if (newUserData.user_id > 1) {
-        const gridData = await pool.query(
-          "SELECT * FROM crossword_grids WHERE user_id = $1 AND grid_id = $2",
-          [1, 1]
-        );
-        if (gridData.rows.length === 0) {
-          return res.status(404).send({ message: "Grid not found" });
+    router.get("/google/redirect", (req, res, next) => {
+      passport.authenticate("google", (error, user, info) => {
+        if (error) {
+          console.error("Google sign-in failed:", error);
+          return res.redirect("/?login=failed");
         }
-        const puzzleTitle = gridData.rows[0].puzzle_title;
-        const gridSize = gridData.rows[0].grid_size;
-        const currentGridNumbers = gridData.rows[0].grid_numbers;
-        const blackSquares = gridData.rows[0].black_squares;
-        const acrossClueValues = gridData.rows[0].across_clues;
-        const downClueValues = gridData.rows[0].down_clues;
-        const clueNumDirection = gridData.rows[0].clue_number_directions;
-        const completed = false;
-        const cleanGridValues = Array(gridSize * gridSize).fill("");
-
-        const recipientUserId = newUserData.user_id;
-
-        const result = await pool.query(
-          `INSERT INTO solver_grids
-        (grid_id, user_id, completed_status, puzzle_title, grid_size, grid_values, grid_numbers, black_squares, across_clues, down_clues, clue_number_directions) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-          [
-            1,
-            recipientUserId,
-            completed,
-            puzzleTitle,
-            gridSize,
-            cleanGridValues,
-            currentGridNumbers,
-            blackSquares,
-            acrossClueValues,
-            downClueValues,
-            clueNumDirection,
-          ]
-        );
-
-        await pool.query(
-          `INSERT INTO user_library (user_id, solver_grid_id) VALUES ($1, $2)
-      `,
-          [newUserData.user_id, 1]
-        );
-      }
-
-      await sendWelcomeEmail(username, email);
-
-      return res.status(200).send({ user: newUserData, token });
-    } catch (error) {
-      console.error("Database error:", error);
-      return res.status(500).send({ message: "Internal server error" });
-    }
-  }
-);
-
-// Normal user login route
-router.post(
-  "/login",
-  loginLimiter,
-  validateGetUser,
-  handleValidationErrors,
-  async (req, res) => {
-    try {
-      const { username, password } = req.body;
-
-      const existingUser = await pool.query(
-        "SELECT * FROM users WHERE username = $1",
-        [username]
-      );
-      if (existingUser.rows.length > 0) {
-        const user = existingUser.rows[0];
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (isMatch) {
-          const token = jwt.sign(
-            { user_id: user.user_id, username: user.username },
-            process.env.JWT_SECRET,
-            { expiresIn: "2h" }
-          );
-
-          req.login(user, (err) => {
-            if (err) {
-              console.error("Login error:", err);
-              return res.status(500).send({ message: "Login has failed" });
-            }
-            const userData = {
-              username: req.user.username,
-              user_id: req.user.user_id,
-            };
-            req.session.user = userData;
-            return res.status(200).send({ user: userData, token });
-          });
-        } else {
-          return res.status(401).send({ message: "Incorrect password" });
-        }
-      } else {
-        return res.status(401).send({ message: "User not found" });
-      }
-    } catch (error) {
-      console.error("Database error:", error);
-      return res.status(500).send({ message: "Internal server error" });
-    }
-  }
-);
-
-// Logout route
-router.get("/logout", jwtMiddleware, (req, res) => {
-  if (req.session) {
-    req.session.destroy((err) => {
-      if (err) {
-        console.error("Session destruction error:", err);
-        return res.status(500).send({ message: "Could not log out" });
-      }
-      return res.status(200).send({ message: "User logged out" });
+        if (!user) return res.redirect(`/?login=${GOOGLE_FAILURE_CODES[info?.reason] ?? "failed"}`);
+        req.logIn(user, (loginError) => (loginError ? next(loginError) : res.redirect("/home")));
+      })(req, res, next);
     });
   } else {
-    return res.status(500).send({ message: "Internal server error" });
+    router.get(["/google", "/google/redirect"], (req, res) => {
+      res.redirect("/?login=google-unavailable");
+    });
   }
-});
 
-export default router;
+  return router;
+}

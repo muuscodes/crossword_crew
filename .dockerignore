@@ -1,0 +1,12 @@
+# Keep secrets, local installs and build output out of the Docker build context.
+**/.env
+**/.env.*
+!**/.env.example
+**/node_modules
+**/dist
+**/coverage
+**/*.log
+**/.DS_Store
+**/notes.txt
+**/test.rest
+.git

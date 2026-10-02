@@ -1,7 +1,27 @@
 @import "tailwindcss";
 
+/* The look, taken from the crossword grid itself: black ink on paper, white squares with black
+   borders and an offset shadow, yellow for where you are and blue for what goes with it. */
+@theme {
+  --color-paper: #f6f3ec;
+  --color-cursor: #fff085;
+  --color-focus: #155dfc;
+  --shadow-tile: 3px 3px 0 0 #000;
+  --shadow-card: 6px 6px 0 0 #000;
+}
+
+/* Plain CSS below uses these, so they exist whether or not a class mentions them. */
 :root {
-  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+  --paper: #f6f3ec;
+  --cursor: #fff085;
+  --focus: #155dfc;
+  --tile-shadow: 3px 3px 0 0 #000;
+}
+
+/* Libre Franklin ships with the app, so every device gets the same Franklin Gothic look. */
+:root {
+  font-family: "Libre Franklin Variable", "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+  font-weight: 500;
 }
 
 @keyframes open-menu {
@@ -20,292 +40,259 @@
   animation: open-menu 0.5s ease-in-out forwards;
 }
 
-.hero {
-  background: url("./img/hero.jpeg") center/cover no-repeat;
-  width: 100%;
-  height: calc(100vh - 50px);
-  display: flex;
+/* Faint graph paper, the background behind every page. */
+.graph-paper {
+  background-color: var(--paper);
+  background-image:
+    linear-gradient(rgb(0 0 0 / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(0 0 0 / 0.05) 1px, transparent 1px);
+  background-size: 3rem 3rem;
+  background-position: center;
 }
 
-.modal-container {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
-  width: 100vw;
-  display: flex;
-  color: white;
-  flex-direction: column;
-  text-align: center;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  padding: 1rem;
-}
-.modal-underlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.834);
-  opacity: 0.8;
-  z-index: 9;
-  border: none;
-  width: 100%;
-  box-shadow: unset;
-}
-
-.modal-underlay:hover {
-  transform: translate(0);
-  box-shadow: unset;
-}
-
-.modal-content {
-  position: relative;
-  z-index: 101;
-  max-width: 600px;
-  width: 100%;
-  margin: 0 auto;
-  min-height: 400px;
-  border-radius: 15px;
-  border: 1px solid black;
-  background: #333;
-  text-align: left;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.modal-container-help {
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
-  width: 100vw;
-  display: flex;
-  color: black;
-  flex-direction: column;
-  text-align: center;
-  align-items: center;
-  z-index: 100;
-  padding: 8rem 1rem;
-}
-
-.modal-underlay-help {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.834);
-  opacity: 0.8;
-  z-index: 9;
-  border: none;
-  width: 100%;
-  box-shadow: unset;
-}
-
-.modal-underlay-help:hover {
-  transform: translate(0);
-  box-shadow: unset;
-  cursor: pointer;
-  opacity: 70%;
-}
-
-.modal-content-help {
-  position: relative;
-  z-index: 101;
-  max-width: 600px;
-  width: 100%;
-  margin: 0 auto;
-  min-height: 400px;
-  border: 10px solid black;
-  background: #ffffff;
-  text-align: center;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  overflow-y: auto;
-}
-
-.help-modal-button {
-  padding: 5px;
-  border: 2px solid black;
-  background-color: #f8f2f2b6;
-  box-shadow: 0px 2px 2px 0 black;
-  border-radius: 3px;
-  transition-duration: 200ms;
-}
-
-.help-modal-button:hover {
-  box-shadow: 0 0 0 0 black;
-  transform: translate(3px, 3px);
-  cursor: pointer;
-}
-
-@media (hover: none) and (pointer: coarse) {
-  .help-modal-button {
-    transform: none;
-    box-shadow: none;
+@keyframes letter-in {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5em) rotate(-12deg) scale(0.7);
   }
-  .help-modal-button:hover {
-    box-shadow: none;
+  to {
+    opacity: 1;
     transform: none;
-    cursor: pointer;
+  }
+}
+.letter-in {
+  display: inline-block;
+  animation: letter-in 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+.fade-in {
+  animation: fade-in 0.8s ease-out both;
+}
+
+/* A text cursor in the landing page's pictures of the app. */
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+.caret-blink {
+  animation: caret-blink 1.1s step-end infinite;
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem) scale(0.96);
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .letter-in,
+  .fade-in,
+  .caret-blink,
+  .modal-content,
+  .modal-content-help,
+  .modal-content-solved {
+    animation: none;
+  }
+}
+
+/* Dialogs: a white card with a black border and offset shadow over a dimmed page. */
+.modal-container,
+.modal-container-help,
 .modal-container-solved {
   position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
-  width: 100vw;
+  inset: 0;
   display: flex;
-  color: black;
   flex-direction: column;
-  text-align: center;
   align-items: center;
   justify-content: center;
   z-index: 100;
   padding: 1rem;
+  color: black;
 }
 
+/* The help dialog is long, so it starts near the top and scrolls inside the visible screen. */
+.modal-container-help {
+  justify-content: flex-start;
+  height: 100vh;
+  height: 100dvh;
+  text-align: center;
+}
+@media (min-width: 768px) {
+  .modal-container-help {
+    padding: 6rem 1rem;
+  }
+}
+
+.modal-underlay,
+.modal-underlay-help,
 .modal-underlay-solved {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.834);
-  opacity: 0.8;
-  z-index: 9;
-  border: none;
   width: 100%;
-  box-shadow: unset;
-}
-
-.modal-underlay-solved:hover {
-  transform: translate(0);
-  box-shadow: unset;
+  border: none;
+  background: rgb(0 0 0 / 0.6);
   cursor: pointer;
-  opacity: 70%;
 }
 
+.modal-content,
+.modal-content-help,
 .modal-content-solved {
   position: relative;
-  z-index: 101;
+  width: 100%;
+  overflow-y: auto;
+  border: 3px solid black;
+  background: white;
+  box-shadow: 8px 8px 0 0 black;
+  animation: pop-in 0.2s ease-out both;
+}
+
+/* Log in and sign up. */
+.modal-content {
+  max-width: 28rem;
+  max-height: calc(100vh - 2rem);
+  padding: 1.75rem;
+  text-align: left;
+}
+
+/* Help and "are you sure?" questions. */
+.modal-content-help {
+  max-width: 40rem;
+  max-height: 100%;
   margin: 0 auto;
-  min-height: 200px;
-  min-width: 200px;
-  border: 10px solid black;
-  background: #ffffff;
-  text-align: center;
-  padding: 2rem;
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  overflow-y: auto;
-  font-size: 3rem;
-  font-weight: bolder;
 }
 
+/* "Puzzle saved!" and friends. */
+.modal-content-solved {
+  width: auto;
+  min-width: 16rem;
+  max-width: 100%;
+  padding: 2rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  text-align: center;
+  font-size: 2.75rem;
+  font-weight: 800;
+  line-height: 1.05;
+}
+
+/* Keyboard keys in the help dialog, drawn as small tiles. */
+.help-modal-button {
+  display: inline-block;
+  min-width: 2rem;
+  padding: 0.1rem 0.5rem;
+  border: 2px solid black;
+  background-color: white;
+  box-shadow: 2px 2px 0 0 black;
+  font-size: 0.9em;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* The everyday button: a square tile that presses into the page. */
 .fancyButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 0.4rem 1.15rem;
   color: black;
   background-color: white;
-  width: fit-content;
   font-family: inherit;
   font-size: inherit;
-  font-weight: 500;
-  padding: 0.25rem 1.25rem;
-  border: 1.5px solid black;
-  box-shadow: 2px 2px 2px 0 black;
-  transition-duration: 200ms;
-}
-
-.fancyButton:hover {
-  box-shadow: 0 0 0 0 black;
-  transform: translate(3px, 3px);
+  font-weight: 700;
+  border: 2px solid black;
+  box-shadow: var(--tile-shadow);
   cursor: pointer;
+  transition:
+    transform 120ms ease-out,
+    box-shadow 120ms ease-out,
+    background-color 120ms ease-out;
+}
+.fancyButton:hover {
+  background-color: var(--cursor);
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 0 black;
+}
+.fancyButton:active {
+  transform: translate(3px, 3px);
+  box-shadow: none;
+}
+.fancyButton:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+.fancyButton:disabled,
+.fancyButton:disabled:hover {
+  cursor: not-allowed;
+  opacity: 0.5;
+  background-color: white;
+  transform: none;
+  box-shadow: var(--tile-shadow);
 }
 
-.fancyButton:active {
-  background-color: black;
-  color: white;
-}
-@media (hover: none) and (pointer: coarse) {
-  .fancyButton {
-    transform: none;
-    box-shadow: none;
-  }
-  .fancyButton:hover {
-    box-shadow: none;
-    transform: none;
-    cursor: pointer;
-  }
-  .fancyButton:active {
-    background-color: black;
-    color: white;
-    transform: none;
-    box-shadow: none;
-  }
+/* "Saved": flat and green, so it reads as done rather than as a button to press. */
+.fancyButton.saved:disabled,
+.fancyButton.saved:disabled:hover {
+  cursor: default;
+  opacity: 1;
+  color: #166534;
+  background-color: #dcfce7;
+  border-color: #166534;
+  box-shadow: none;
+  transform: none;
 }
 
 .bigger {
   font-size: 1.25rem;
 }
 
+/* Dropdowns: the browser's arrow swapped for a chevron like the one on the Check and Reveal menus. */
+.select-chevron {
+  appearance: none;
+  padding-right: 2.25rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 6l4.5 4.5L12.5 6' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='square'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.65rem center;
+  background-size: 1rem;
+}
+
+/* Checkboxes look like grid squares: white when off, black when on. */
 .custom-checkbox {
   appearance: none;
-  width: 25px;
-  height: 25px;
+  flex-shrink: 0;
+  width: 1.6rem;
+  height: 1.6rem;
   border: 2px solid black;
-  border-radius: 0.375rem;
+  background-color: white;
+  box-shadow: 2px 2px 0 0 black;
   cursor: pointer;
   position: relative;
-  background-color: white;
 }
-
+.custom-checkbox:hover {
+  background-color: var(--cursor);
+}
+/* A white check mark on black. */
 .custom-checkbox:checked {
-  background-color: black;
-  border-color: black;
+  background: black url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8.5l3.2 3.2L13 4.8' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='square'/%3E%3C/svg%3E")
+    center / 80% no-repeat;
 }
-
-.custom-checkbox:checked::after {
-  content: "";
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  background-color: white;
-  border-radius: 0.25rem;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+.custom-checkbox:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
 }
-
-.account-table {
-  display: flex;
-  border: 4px solid black;
-  width: 66vw;
-  height: 50vh;
-  margin: auto;
-  font-size: 2rem;
-  justify-content: space-around;
-}
-.account-table tbody {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  justify-content: space-evenly;
-  width: 66%;
-}
-
-.account-table tr {
-  width: 100%;
-  border-bottom: 1px dotted black;
-  display: flex;
-  justify-content: space-between;
-}
-
-.account-table th {
-  font-weight: bold;
-}
-
-.account-table td {
-  color: rgba(0, 0, 0, 0.716);
+.custom-checkbox:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
 }

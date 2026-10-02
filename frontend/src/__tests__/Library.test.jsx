@@ -1,125 +1,58 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom"; // Import MemoryRouter
+import { screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, test } from "vitest";
 import Library from "../components/AuthContent/Library";
-import { useAuth } from "../context/AuthContext";
+import { jsonResponse, mockApi, renderPage } from "./testUtils";
 
-vi.mock("../context/AuthContext", () => ({
-  useAuth: vi.fn(),
-}));
+const library = {
+  created: [{ grid_id: 1, puzzle_title: "Zebra", created_at: "2026-03-01T12:00:00Z" }],
+  received: [
+    {
+      grid_id: 2,
+      puzzle_title: "Apple",
+      created_at: "2026-05-01T12:00:00Z",
+      completed_status: true,
+      creator_username: "bob",
+    },
+  ],
+};
 
-describe("Library Component", () => {
-  const setGlobalUser = vi.fn();
-  const setIsAuthenticated = vi.fn();
-  const fetchWithAuth = vi.fn();
+const renderLibrary = (route = "/library") => renderPage(<Library />, { route, path: "/library" });
+const cardTitles = () => screen.getAllByRole("link").map((link) => link.getAttribute("aria-label"));
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-    window.alert = vi.fn();
-    global.fetch = vi.fn().mockImplementation((url) => {
-      if (url.includes("/auth/session")) {
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({
-            username: "testUser",
-            user_id: "123",
-          }),
-        });
-      }
-      return Promise.resolve({
-        ok: true,
-        json: async () => ({
-          crossword_grids: [],
-          solver_grids: [],
-        }),
-      });
-    });
+describe("Library", () => {
+  test("own puzzles open in the editor and received ones in the solver", async () => {
+    mockApi({ "GET /users/me/grids": library });
+    renderLibrary();
+    const edit = await screen.findByRole("link", { name: "Edit Zebra" });
+    expect(edit).toHaveAttribute("href", "/editor/1");
+    expect(within(edit).getByText("Made by you")).toBeInTheDocument();
 
-    useAuth.mockReturnValue({
-      globalUser: { user_id: "123", username: "testUser" },
-      isAuthenticated: true,
-      setIsAuthenticated,
-      setGlobalUser,
-      librarySortSetting: "author",
-      setLibrarySortSetting: vi.fn(),
-      fetchWithAuth,
-    });
+    const solve = screen.getByRole("link", { name: "Solve Apple" });
+    expect(solve).toHaveAttribute("href", "/solver/2");
+    expect(within(solve).getByText("Solved")).toBeInTheDocument();
   });
 
-  const renderWithRouter = (ui) => render(<MemoryRouter>{ui}</MemoryRouter>);
+  test("sorting follows the select and the URL", async () => {
+    const user = userEvent.setup();
+    mockApi({ "GET /users/me/grids": library });
+    renderLibrary("/library?sort=created");
+    await screen.findByRole("link", { name: "Edit Zebra" });
+    expect(cardTitles()).toEqual(["Edit Zebra", "Solve Apple"]);
 
-  test("renders Library component and displays title", () => {
-    renderWithRouter(<Library />);
-    expect(screen.getByText(/Library/i)).toBeInTheDocument();
+    await user.selectOptions(screen.getByRole("combobox", { name: "Sort by" }), "title");
+    expect(cardTitles()).toEqual(["Solve Apple", "Edit Zebra"]);
   });
 
-  test("displays user cards after fetching data", async () => {
-    fetchWithAuth.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        crossword_grids: [
-          {
-            username: "testUser",
-            puzzle_title: "Test Puzzle",
-            created_at: "2023-01-01T00:00:00Z",
-            grid_id: 1,
-          },
-        ],
-        solver_grids: [],
-      }),
-    });
-
-    renderWithRouter(<Library />);
-
-    await waitFor(() => {
-      expect(screen.getAllByText(/Puzzle/i)).toHaveLength(4);
-    });
+  test("an empty library points to the Create page", async () => {
+    mockApi({ "GET /users/me/grids": { created: [], received: [] } });
+    renderLibrary();
+    expect(await screen.findByRole("link", { name: "Create a puzzle" })).toHaveAttribute("href", "/create");
   });
 
-  test("sorts user cards by author when selected", async () => {
-    fetchWithAuth.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        crossword_grids: [
-          {
-            username: "Alice",
-            puzzle_title: "Puzzle A",
-            created_at: "2023-01-01T00:00:00Z",
-            grid_id: 1,
-          },
-          {
-            username: "Bob",
-            puzzle_title: "Puzzle B",
-            created_at: "2023-01-02T00:00:00Z",
-            grid_id: 2,
-          },
-        ],
-        solver_grids: [],
-      }),
-    });
-
-    renderWithRouter(<Library />);
-
-    const sortSelect = screen.getByRole("combobox");
-    fireEvent.change(sortSelect, { target: { value: "author" } });
-
-    await waitFor(() => {
-      const cards = screen.getAllByText(/Puzzle/i);
-      expect(cards[0]).toHaveTextContent("Puzzles created");
-    });
-  });
-
-  test("handles error when fetching user data fails", async () => {
-    fetchWithAuth.mockResolvedValueOnce({
-      ok: false,
-      json: async () => ({ message: "Error fetching data" }),
-    });
-
-    renderWithRouter(<Library />);
-
-    await waitFor(() => {
-      expect(
-        screen.queryByText(/Error fetching data/i)
-      ).not.toBeInTheDocument();
-    });
+  test("errors are shown on the page", async () => {
+    mockApi({ "GET /users/me/grids": jsonResponse({ message: "Database unavailable" }, 503) });
+    renderLibrary();
+    expect(await screen.findByText("Database unavailable")).toBeInTheDocument();
   });
 });

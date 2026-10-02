@@ -1,158 +1,152 @@
-import { useState, useEffect } from "react";
-import favicon from "../../img/favicon.jpg";
-import type { NavbarProps } from "../utils/types";
-import { useAuth } from "../../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { faBars, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useEffect, useState } from "react";
+import { Link, NavLink, useNavigate } from "react-router";
+import { useAuth } from "../../context/auth";
 
-export default function Navbar(props: NavbarProps) {
-  const { setShowModal, isAuthenticated } = props;
-  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
-  const { logout } = useAuth();
-  const navigate = useNavigate();
+const LINKS = [
+  { to: "/create", label: "Create" },
+  { to: "/library", label: "Library" },
+  { to: "/connections", label: "Connections" },
+  { to: "/feedback", label: "Feedback" },
+  { to: "/settings", label: "Settings" },
+];
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
+// Square tiles, like everything else. The page you're on is yellow, like the selected square.
+const FOCUS = "focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-cursor";
+const TILE = `cursor-pointer border-2 px-3.5 py-1 font-bold transition-colors ${FOCUS}`;
+const DESKTOP_LINK = (isActive: boolean) =>
+  `${TILE} text-lg ${isActive ? "border-cursor bg-cursor text-black" : "border-transparent text-white/85 hover:border-white hover:text-white"}`;
+const MOBILE_LINK = (isActive: boolean) =>
+  `border-2 px-4 py-3 text-3xl font-bold ${FOCUS} ${isActive ? "border-cursor bg-cursor text-black" : "border-transparent text-white hover:border-white"}`;
+const ICON_BUTTON = `flex h-11 w-11 cursor-pointer items-center justify-center border-2 border-transparent text-2xl hover:border-white ${FOCUS}`;
 
-  const landingButton = (
-    <button
-      onClick={() => setShowModal(true)}
-      className="p-3 mr-5 lg:text-3xl text-xl text-white hover:opacity-50 max-h-[10vh] hover:scale-110 hover:cursor-pointer"
-    >
-      Sign In | Sign Up
-    </button>
+// "CC" in two squares, highlighted like a word being typed.
+function BrandMark() {
+  const square = "flex h-8 w-8 items-center justify-center border-2 border-white text-lg font-extrabold text-black";
+  return (
+    <span aria-hidden="true" className="flex">
+      <span className={`${square} bg-cursor`}>C</span>
+      <span className={`${square} -ml-0.5 bg-blue-200`}>C</span>
+    </span>
   );
+}
 
-  const createMenuNavLink = (href: string, value: string) => {
-    return (
-      <a
-        href={href}
-        target="_self"
-        id={value}
-        key={value}
-        aria-label={value + " page"}
-        className={`text-white hover:scale-120 ${
-          isMenuOpen
-            ? "text-6xl w-full text-center py-8 hover:opacity-50"
-            : "text-3xl p-3 hover:cursor-pointer hover:opacity-50 focus:opacity-70"
-        }`}
-      >
-        {value}
-      </a>
-    );
-  };
+interface NavbarProps {
+  onLogIn: () => void;
+  onSignUp: () => void;
+}
+
+export default function Navbar({ onLogIn, onSignUp }: NavbarProps) {
+  const { status, logout } = useAuth();
+  const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const isAuthenticated = status === "authenticated";
+
+  // While the full-screen mobile menu is open, the page behind it shouldn't scroll.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [menuOpen]);
 
   const handleLogout = async () => {
-    try {
-      await logout();
-      if (isMenuOpen) {
-        setIsMenuOpen(false);
-      }
-      navigate("/");
-    } catch (error) {
-      console.error(error);
-    }
+    setMenuOpen(false);
+    await logout().catch(() => {});
+    navigate("/");
   };
 
-  useEffect(() => {
-    if (isMenuOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "unset";
-    }
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, [isMenuOpen]);
-
   return (
-    <header className=" bg-black text-white z-10">
-      <section className="p-4 flex justify-between items-center">
-        <div>
-          <a
-            href={isAuthenticated ? "/home" : "/"}
-            target="_self"
-            id="home-logo"
-            aria-label="Crossword crew home page"
-          >
-            <img
-              src={favicon}
-              alt="Crossword 3D image"
-              className="max-h-[10vh] inline ml-2"
-            />
-          </a>
+    <header className="z-10 bg-black text-white">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
+        <Link
+          to={isAuthenticated ? "/home" : "/"}
+          aria-label="Crossword Crew home"
+          className={`flex items-center gap-3 ${FOCUS}`}
+        >
+          <BrandMark />
+          <span className="hidden text-2xl font-extrabold tracking-tight sm:inline">Crossword Crew</span>
+        </Link>
 
-          <a
-            href={isAuthenticated ? "/home" : "/"}
-            target="_self"
-            id="home-words"
-            aria-label="Crossword crew home page"
-          >
-            <h1 className="font-extrabold lg:text-4xl sm:inline hidden sm:text-2xl md:text-3xl">
-              Crossword Crew
-            </h1>
-          </a>
-        </div>
-        {isAuthenticated ? (
-          <div>
-            <button
-              className="lg:hidden text-4xl cursor-pointer pr-5 justify-end"
-              onClick={toggleMenu}
-            >
-              &#9776;
-            </button>
-            <nav className="hidden lg:flex pr-5">
-              {createMenuNavLink("/create", "Create")}
-              {createMenuNavLink("/library", "Library")}
-              {createMenuNavLink("/contact", "Contact")}
+        {isAuthenticated && (
+          <>
+            <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">
+              {LINKS.map(({ to, label }) => (
+                <NavLink key={to} to={to} className={({ isActive }) => DESKTOP_LINK(isActive)}>
+                  {label}
+                </NavLink>
+              ))}
               <button
+                type="button"
                 onClick={handleLogout}
-                className={`text-white hover:scale-120 ${
-                  isMenuOpen
-                    ? "text-6xl w-full text-center py-8 hover:opacity-50"
-                    : "text-3xl p-3 hover:cursor-pointer hover:opacity-50 focus:opacity-70"
-                }`}
+                className={`${TILE} ml-2 border-white text-lg hover:bg-white hover:text-black`}
               >
-                Logout
+                Log out
               </button>
             </nav>
-          </div>
-        ) : (
-          landingButton
+            <button
+              type="button"
+              aria-label="Open menu"
+              aria-expanded={menuOpen}
+              aria-controls="mobile-menu"
+              className={`${ICON_BUTTON} lg:hidden`}
+              onClick={() => setMenuOpen(true)}
+            >
+              <FontAwesomeIcon icon={faBars} />
+            </button>
+          </>
         )}
-      </section>
-      <section
-        className={`absolute top-0 bg-black z-100 w-full text-5xl flex-col justify-center origin-top animateMenu ${
-          isMenuOpen ? "flex" : "hidden"
-        }`}
-      >
-        <button onClick={toggleMenu} className="text-8xl self-end px-6">
-          &times;
-        </button>
-        <nav
-          className="flex flex-col min-h-screen items-center py-8"
-          aria-label="mobile"
-        >
-          {createMenuNavLink("/home", "Home")}
-          <hr className="text-white w-5/6" />
-          {createMenuNavLink("/create", "Create")}
-          <hr className="text-white w-5/6" />
-          {createMenuNavLink("/library", "Library")}
-          <hr className="text-white w-5/6" />
-          {createMenuNavLink("/contact", "Contact")}
-          <hr className="text-white w-5/6" />
-          <button
-            onClick={handleLogout}
-            className={`text-white hover:scale-120 ${
-              isMenuOpen
-                ? "text-6xl text-white w-5/6 text-center py-8 hover:opacity-50"
-                : "text-3xl p-3 hover:cursor-pointer hover:opacity-50 focus:opacity-70"
-            }`}
-          >
-            Logout
-          </button>
-        </nav>
-      </section>
+
+        {status === "unauthenticated" && (
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={onLogIn} className={`${TILE} border-transparent text-white hover:border-white`}>
+              Log in
+            </button>
+            <button type="button" onClick={onSignUp} className={`${TILE} border-cursor bg-cursor text-black hover:border-white hover:bg-white`}>
+              Sign up
+            </button>
+          </div>
+        )}
+      </div>
+
+      {isAuthenticated && menuOpen && (
+        <div id="mobile-menu" className="animateMenu fixed inset-0 z-100 flex flex-col overflow-y-auto bg-black px-4 pb-10 sm:px-6">
+          <div className="flex h-16 shrink-0 items-center justify-between">
+            <span className="text-2xl font-extrabold tracking-tight">Menu</span>
+            <button
+              type="button"
+              aria-label="Close menu"
+              autoFocus
+              className={ICON_BUTTON}
+              onClick={() => setMenuOpen(false)}
+            >
+              <FontAwesomeIcon icon={faXmark} />
+            </button>
+          </div>
+          <nav aria-label="Mobile" className="mt-4 flex flex-col gap-1">
+            {[{ to: "/home", label: "Home" }, ...LINKS].map(({ to, label }) => (
+              <NavLink key={to} to={to} className={({ isActive }) => MOBILE_LINK(isActive)} onClick={() => setMenuOpen(false)}>
+                {label}
+              </NavLink>
+            ))}
+            <button
+              type="button"
+              onClick={handleLogout}
+              className={`mt-6 cursor-pointer border-2 border-white px-4 py-3 text-2xl font-bold hover:bg-white hover:text-black ${FOCUS}`}
+            >
+              Log out
+            </button>
+          </nav>
+        </div>
+      )}
     </header>
   );
 }
