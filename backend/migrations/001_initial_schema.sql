@@ -1,3 +1,6 @@
+-- The original schema, exactly as backend/initdb/init.sql created it.
+-- Every statement is idempotent, so databases created by init.sql treat this as already applied.
+
 CREATE TABLE IF NOT EXISTS users (
     user_id SERIAL PRIMARY KEY,
     username VARCHAR(50) NOT NULL,
