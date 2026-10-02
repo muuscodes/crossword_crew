@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- The navbar's "CC" mark: two crossword squares, highlighted like a word being typed. -->
+  <rect width="64" height="64" fill="#000"/>
+  <g stroke="#fff" stroke-width="2.5">
+    <rect x="5.5" y="18.5" width="27" height="27" fill="#fff085"/>
+    <rect x="32.5" y="18.5" width="27" height="27" fill="#bedbff"/>
+  </g>
+  <g font-family="'Arial Black', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="19" text-anchor="middle">
+    <text x="19" y="39">C</text>
+    <text x="46" y="39">C</text>
+  </g>
+</svg>

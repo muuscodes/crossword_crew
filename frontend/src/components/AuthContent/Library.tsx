@@ -1,261 +1,146 @@
-import LibraryCard from "./LibraryCard";
-import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { useAuth } from "../../context/AuthContext";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router";
+import { useAuth } from "../../context/auth";
+import { apiRequest, errorMessage } from "../../lib/api";
+import PageHeader from "../Common/PageHeader";
+import PageMessage from "../Common/PageMessage";
+import { BUTTON_PRIMARY, CARD } from "../Common/styles";
+import type { LibraryResponse } from "../utils/types";
+import LibraryCard, { type LibraryItem } from "./LibraryCard";
 
-interface UserData {
-  username: string;
-  puzzle_title: string;
-  created_at: string;
-  formatted_created_at: string;
-  completed_status?: boolean;
-  grid_id: number;
+const SORT_OPTIONS = {
+  dateNewest: "Date: newest",
+  dateOldest: "Date: oldest",
+  author: "Author",
+  title: "Title",
+  created: "Puzzles created",
+  received: "Puzzles received",
+  completed: "Completion status",
+} as const;
+
+export type LibrarySort = keyof typeof SORT_OPTIONS;
+
+const isSort = (value: string | null): value is LibrarySort => value !== null && value in SORT_OPTIONS;
+
+const time = (item: LibraryItem) => new Date(item.createdAt).getTime();
+
+// Newest first, then the chosen order on top (Array.prototype.sort is stable).
+function sortItems(items: LibraryItem[], sort: LibrarySort): LibraryItem[] {
+  const byNewest = [...items].sort((a, b) => time(b) - time(a));
+  switch (sort) {
+    case "dateNewest":
+      return byNewest;
+    case "dateOldest":
+      return byNewest.reverse();
+    case "author":
+      return byNewest.sort((a, b) => a.author.localeCompare(b.author));
+    case "title":
+      return byNewest.sort((a, b) => a.title.localeCompare(b.title));
+    case "created":
+      return byNewest.sort((a, b) => Number(b.isOwner) - Number(a.isOwner));
+    case "received":
+      return byNewest.sort((a, b) => Number(a.isOwner) - Number(b.isOwner));
+    case "completed":
+      return byNewest.sort((a, b) => Number(Boolean(b.completed)) - Number(Boolean(a.completed)));
+  }
 }
 
-interface UserDataSolver {
-  creator_username: string;
-  puzzle_title: string;
-  created_at: string;
-  formatted_created_at: string;
-  completed_status: boolean;
-  grid_id: number;
+function toItems(library: LibraryResponse, username: string): LibraryItem[] {
+  const formatDate = (date: string) => format(new Date(date), "MMMM d, yyyy 'at' h:mm a");
+  return [
+    ...library.created.map((puzzle) => ({
+      key: `created-${puzzle.grid_id}`,
+      gridId: puzzle.grid_id,
+      title: puzzle.puzzle_title || "Crossword Puzzle",
+      author: username,
+      createdAt: puzzle.created_at,
+      formattedDate: formatDate(puzzle.created_at),
+      isOwner: true,
+    })),
+    ...library.received.map((puzzle) => ({
+      key: `received-${puzzle.grid_id}`,
+      gridId: puzzle.grid_id,
+      title: puzzle.puzzle_title || "Crossword Puzzle",
+      author: puzzle.creator_username,
+      createdAt: puzzle.created_at,
+      formattedDate: formatDate(puzzle.created_at),
+      isOwner: false,
+      completed: puzzle.completed_status,
+    })),
+  ];
 }
 
 export default function Library() {
-  const [userData, setUserData] = useState<UserData[]>([]);
-  const [userCards, setUserCards] = useState<React.ReactNode[]>([]);
-
-  const {
-    globalUser,
-    isAuthenticated,
-    setIsAuthenticated,
-    setGlobalUser,
-    librarySortSetting,
-    setLibrarySortSetting,
-    fetchWithAuth,
-  } = useAuth();
-  const [sortOption, setSortOption] = useState(librarySortSetting);
-  const globalUserId = globalUser.user_id;
-
-  async function getUserData(userId: number) {
-    try {
-      const response = await fetchWithAuth(`/users/${userId}/grids`, {
-        method: "GET",
-        credentials: "include",
-      });
-      const data = await response.json();
-      if (response.ok) {
-        const crossword_grids = data.crossword_grids;
-        const solver_grids = data.solver_grids;
-        const newUserData: UserData[] = [];
-        const newCards: React.ReactNode[] = [];
-
-        if (crossword_grids) {
-          crossword_grids.forEach((element: UserData) => {
-            let newData: UserData = {
-              username: element.username,
-              puzzle_title: "",
-              created_at: element.created_at,
-              formatted_created_at: "",
-              grid_id: element.grid_id,
-            };
-            const newTitle = element.puzzle_title;
-            if (newTitle === "") {
-              newData.puzzle_title = "Crossword Puzzle";
-            } else {
-              newData.puzzle_title = newTitle;
-            }
-
-            const formattedDate = format(
-              element.created_at,
-              "MMMM d, yyyy 'at' h:mm a"
-            );
-            newData.formatted_created_at = formattedDate;
-
-            newUserData.push(newData);
-            const newCard = (
-              <LibraryCard
-                author={newData.username}
-                name={newData.puzzle_title}
-                date={newData.formatted_created_at}
-                key={"cw_grid: " + element.grid_id.toString()}
-                gridId={element.grid_id}
-              />
-            );
-            newCards.push(newCard);
-          });
-        }
-
-        if (solver_grids) {
-          solver_grids.forEach((element: UserDataSolver) => {
-            let newData: UserData = {
-              username: element.creator_username,
-              puzzle_title: "",
-              created_at: element.created_at,
-              formatted_created_at: "",
-              completed_status: element.completed_status,
-              grid_id: element.grid_id,
-            };
-            const newTitle = element.puzzle_title;
-            if (newTitle === "") {
-              newData.puzzle_title = "Crossword Puzzle";
-            } else {
-              newData.puzzle_title = newTitle;
-            }
-
-            const formattedDate = format(
-              element.created_at,
-              "MMMM d, yyyy 'at' h:mm a"
-            );
-            newData.formatted_created_at = formattedDate;
-
-            newUserData.push(newData);
-            const newCard = (
-              <LibraryCard
-                author={newData.username}
-                name={newData.puzzle_title}
-                date={newData.formatted_created_at}
-                completed={newData.completed_status}
-                key={"solver_grid: " + element.grid_id.toString()}
-                gridId={element.grid_id}
-              />
-            );
-            newCards.push(newCard);
-          });
-        }
-        setUserData(newUserData);
-        handleSort(librarySortSetting, newUserData);
-      } else {
-        throw new Error(data.message);
-      }
-    } catch (error: any) {
-      alert(error.message);
-    }
-  }
-
-  const handleSort = (
-    initial: string,
-    userData: UserData[],
-    event?: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    let selectedOption: string = "";
-    if (event) {
-      selectedOption = event?.target.value;
-    } else {
-      selectedOption = initial;
-    }
-
-    if (sortOption !== selectedOption) {
-      setSortOption(selectedOption);
-    }
-    setLibrarySortSetting(selectedOption);
-
-    const sortedData = [...userData].sort((a, b) => {
-      switch (selectedOption) {
-        case "author":
-          return a.username.localeCompare(b.username);
-        case "title":
-          return a.puzzle_title.localeCompare(b.puzzle_title);
-        case "dateNewest":
-          return (
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          );
-        case "dateOldest":
-          return (
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-          );
-        case "created":
-          const isACreatedByUser = a.username === globalUser.username;
-          const isBCreatedByUser = b.username === globalUser.username;
-          return isACreatedByUser === isBCreatedByUser
-            ? 0
-            : isACreatedByUser
-            ? -1
-            : 1;
-        case "received":
-          const isAReceived = a.username !== globalUser.username;
-          const isBReceived = b.username !== globalUser.username;
-          return isAReceived === isBReceived ? 0 : isAReceived ? -1 : 1;
-        case "completed":
-          return b.completed_status === a.completed_status
-            ? 0
-            : b.completed_status
-            ? 1
-            : -1;
-        default:
-          return 0;
-      }
-    });
-
-    const sortedCards = sortedData.map((data) => (
-      <LibraryCard
-        author={data.username}
-        name={data.puzzle_title}
-        date={data.formatted_created_at}
-        completed={data.completed_status}
-        key={data.grid_id}
-        gridId={data.grid_id}
-      />
-    ));
-
-    setUserCards(sortedCards);
-  };
-
-  const checkSession = async () => {
-    try {
-      const response = await fetch("/auth/session", {
-        method: "GET",
-        credentials: "include",
-      });
-      const sessionData = await response.json();
-      if (response.ok && sessionData.username && !isAuthenticated) {
-        const newGlobalUser = {
-          username: sessionData.username,
-          user_id: sessionData.user_id,
-        };
-        getUserData(newGlobalUser.user_id);
-        setGlobalUser(newGlobalUser);
-        setIsAuthenticated(true);
-      } else if (isAuthenticated) {
-        getUserData(globalUserId);
-      } else {
-        setIsAuthenticated(false);
-        throw new Error("Unauthorized access");
-      }
-    } catch (error: any) {
-      console.error("Error checking session:", error);
-      setIsAuthenticated(false);
-      alert(error.message);
-    }
-  };
+  const { user } = useAuth();
+  const username = user?.username ?? "";
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requestedSort = searchParams.get("sort");
+  const sort: LibrarySort = isSort(requestedSort) ? requestedSort : "dateNewest";
+  const [items, setItems] = useState<LibraryItem[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    checkSession();
-  }, []);
+    let cancelled = false;
+    apiRequest<LibraryResponse>("/users/me/grids")
+      .then((library) => {
+        if (!cancelled) setItems(toItems(library, username));
+      })
+      .catch((requestError) => {
+        if (!cancelled) setError(errorMessage(requestError));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [username]);
+
+  const sorted = useMemo(() => (items ? sortItems(items, sort) : []), [items, sort]);
+
+  if (error) return <PageMessage>{error}</PageMessage>;
+  if (!items) return <PageMessage>Loading your library…</PageMessage>;
+
+  const made = items.filter((item) => item.isOwner).length;
 
   return (
-    <div className="min-h-screen flex flex-col m-auto w-5/6">
-      <h1 className="text-center text-7xl mb-10 mt-5">Library</h1>
-      <div className="border-1 w-fit mb-5">
-        <p className="inline px-2 text-bold border-r-1">Sort by:</p>
-        <select
-          name="sort-library"
-          id="sort-library"
-          defaultValue={librarySortSetting}
-          onChange={(e) => handleSort(librarySortSetting, userData, e)}
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6 md:py-14">
+      <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+        <PageHeader label={`${items.length} ${items.length === 1 ? "puzzle" : "puzzles"}`} title="Library">
+          <p>
+            {made} made by you and {items.length - made} shared with you. Yours open in the editor, the rest
+            are ready to solve.
+          </p>
+        </PageHeader>
+        <label className="flex shrink-0 items-center gap-3 text-lg font-bold">
+          Sort by
+          <select
+            className="select-chevron cursor-pointer border-2 border-black bg-white px-2 py-1.5 font-bold shadow-tile outline-none focus:bg-yellow-50"
+            value={sort}
+          onChange={(event) => setSearchParams({ sort: event.target.value }, { replace: true })}
         >
-          <option value="author">Author</option>
-          <option value="title">Title</option>
-          <option value="dateNewest">Date: newest</option>
-          <option value="dateOldest">Date: oldest</option>
-          <option value="created">Puzzles created</option>
-          <option value="received">Puzzles recieved</option>
-          <option value="completed">Completion status</option>
-        </select>
+          {Object.entries(SORT_OPTIONS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+          </select>
+        </label>
       </div>
-      <section className="flex flex-row gap-5 mb-15 flex-wrap justify-around">
-        {userCards}
-      </section>
+      {sorted.length === 0 ? (
+        <div className={`${CARD} flex flex-col items-center gap-5 p-8 text-center text-xl`}>
+          <p>Your library is empty. Make your first crossword, or ask a friend to share one with you.</p>
+          <Link to="/create" className={BUTTON_PRIMARY}>
+            Create a puzzle
+          </Link>
+        </div>
+      ) : (
+        <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {sorted.map((item) => (
+            <li key={item.key}>
+              <LibraryCard item={item} />
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

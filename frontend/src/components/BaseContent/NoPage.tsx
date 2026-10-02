@@ -1,55 +1,22 @@
-import { useEffect } from "react";
-import { useAuth } from "../../context/AuthContext";
+import { Link } from "react-router";
+import { useAuth } from "../../context/auth";
+import { BUTTON_PRIMARY } from "../Common/styles";
+import WordTiles from "../NonAuthContent/WordTiles";
 
 export default function NoPage() {
-  const { setIsAuthenticated, setGlobalUser } = useAuth();
-
-  const checkSession = async () => {
-    try {
-      const response = await fetch("/auth/session", {
-        method: "GET",
-        credentials: "include",
-      });
-      const sessionData = await response.json();
-
-      if (response.ok) {
-        if (sessionData.username) {
-          const newGlobalUser = {
-            username: sessionData.username,
-            user_id: sessionData.user_id,
-          };
-          setGlobalUser(newGlobalUser);
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
-        }
-      } else {
-        setIsAuthenticated(false);
-        throw new Error("Unauthorized access");
-      }
-    } catch (error: any) {
-      console.error("Error checking session:", error);
-      setIsAuthenticated(false);
-      alert(error.message);
-    }
-  };
-
-  useEffect(() => {
-    checkSession();
-  }, []);
-
+  const { status } = useAuth();
   return (
-    <div className="min-h-screen justify-center text-center">
-      <h1 className="md:text-6xl text-2xl mt-50 mx-auto">Page not found!</h1>
-      <a
-        href={"/"}
-        target="_self"
-        id={"home"}
-        key={"home"}
-        aria-label={"home" + " page"}
-      >
-        <h2 className="md:text-4xl text-xl underline mt-10">Homepage</h2>
-      </a>
+    <div className="flex min-h-[70vh] flex-col items-center justify-center gap-8 px-4 py-16 text-center">
+      <h1>
+        <span className="sr-only">Page not found!</span>
+        <WordTiles entries={[{ word: "NOT#FOUND", highlight: [5, 9] }]} />
+      </h1>
+      <p className="max-w-md text-xl text-neutral-700">
+        There's no page at this address. It may have moved, or the link has a typo.
+      </p>
+      <Link to={status === "authenticated" ? "/home" : "/"} className={BUTTON_PRIMARY}>
+        Go to the homepage
+      </Link>
     </div>
   );
 }

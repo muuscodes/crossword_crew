@@ -1,127 +1,82 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import CreateCrossword from "../components/BuildCrossword/CreateCrossword";
-import { useAuth } from "../context/AuthContext";
+import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, test } from "vitest";
+import Create from "../components/AuthContent/Create";
+import { callsTo, jsonResponse, mockApi, renderPage } from "./testUtils";
 
-// Mock the useAuth context
-vi.mock("../context/AuthContext", () => ({
-  useAuth: vi.fn(),
-}));
+const renderCreate = () => renderPage(<Create />, { route: "/create", path: "/create" });
 
-describe("CreateCrossword Component", () => {
-  const setIsSaved = vi.fn();
-  const setUserMessage = vi.fn();
-  const fetchWithAuth = vi.fn();
+async function fillPuzzle(user) {
+  await user.type(screen.getByRole("textbox", { name: "Puzzle title:" }), "My Puzzle");
+  await user.click(screen.getByRole("textbox", { name: /^Row 1, column 1\b/ }));
+  await user.keyboard("cat");
+  await user.type(screen.getByRole("textbox", { name: "1 across clue" }), "Feline");
+  await user.type(screen.getByRole("textbox", { name: "1 down clue" }), "Taxi");
+}
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-    useAuth.mockReturnValue({
-      globalUser: { user_id: "123" },
-      fetchWithAuth,
-    });
+describe("Create", () => {
+  test("explains what's missing instead of saving an incomplete puzzle", async () => {
+    const user = userEvent.setup();
+    const fetchMock = mockApi({});
+    renderCreate();
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Please add a title, entries to the grid, across clues, and down clues.",
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  test("renders CreateCrossword component and displays grid size selector", () => {
-    render(
-      <CreateCrossword
-        setIsSaved={setIsSaved}
-        setUserMessage={setUserMessage}
-      />
-    );
-    expect(screen.getByLabelText(/Grid Size:/i)).toBeInTheDocument();
+  test("saves the puzzle and opens it in the editor", async () => {
+    const user = userEvent.setup();
+    const fetchMock = mockApi({ "POST /users/me/grids": jsonResponse({ grid_id: 42 }, 201) });
+    renderCreate();
+    await fillPuzzle(user);
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(await screen.findByTestId("location")).toHaveTextContent("/editor/42");
+    const [body] = callsTo(fetchMock, "POST", "/users/me/grids");
+    expect(body).toMatchObject({ puzzleTitle: "My Puzzle", gridSize: 5 });
+    expect(body.gridValues.slice(0, 3)).toEqual(["C", "A", "T"]);
+    expect(body.acrossClues[0]).toBe("Feline");
+    expect(body.downClues[0]).toBe("Taxi");
   });
 
-  test("changes grid size and updates grid dimensions", () => {
-    render(
-      <CreateCrossword
-        setIsSaved={setIsSaved}
-        setUserMessage={setUserMessage}
-      />
-    );
-    const gridSizeSelect = screen.getByLabelText(/Grid Size:/i);
-    fireEvent.change(gridSizeSelect, { target: { value: "7" } });
-    expect(gridSizeSelect.value).toBe("7");
+  test("stays put with an error, and no 'saved' message, when the save fails", async () => {
+    const user = userEvent.setup();
+    mockApi({ "POST /users/me/grids": jsonResponse({ message: "Server is down" }, 500) });
+    renderCreate();
+    await fillPuzzle(user);
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(await screen.findByText("Server is down")).toBeInTheDocument();
+    expect(screen.queryByText(/saved/i)).not.toBeInTheDocument();
+    expect(screen.queryByTestId("location")).not.toBeInTheDocument();
   });
 
-  test("toggles black squares option", () => {
-    render(
-      <CreateCrossword
-        setIsSaved={setIsSaved}
-        setUserMessage={setUserMessage}
-      />
-    );
-    const checkbox = screen.getByLabelText(/Set Black Squares/i);
-    fireEvent.click(checkbox);
-    expect(checkbox).toBeChecked();
+  test("asks before a new grid size throws away work", async () => {
+    const user = userEvent.setup();
+    mockApi({});
+    renderCreate();
+    await user.click(screen.getByRole("textbox", { name: /^Row 1, column 1\b/ }));
+    await user.keyboard("a");
+
+    await user.selectOptions(screen.getByRole("combobox", { name: "Grid size:" }), "7");
+    expect(screen.getByRole("dialog", { name: "Start a new grid?" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.getAllByRole("textbox", { name: /^Row \d, column \d/ })).toHaveLength(25);
+
+    await user.selectOptions(screen.getByRole("combobox", { name: "Grid size:" }), "7");
+    await user.click(screen.getByRole("button", { name: "Change size" }));
+    expect(screen.getAllByRole("textbox", { name: /^Row \d, column \d/ })).toHaveLength(49);
   });
 
-  test("updates puzzle title", () => {
-    render(
-      <CreateCrossword
-        setIsSaved={setIsSaved}
-        setUserMessage={setUserMessage}
-      />
-    );
-    const titleInput = screen.getByLabelText(/Puzzle Title:/i);
-    fireEvent.change(titleInput, { target: { value: "My Crossword" } });
-    expect(titleInput.value).toBe("My Crossword");
-  });
-
-  test("calls saveGrid function when Save button is clicked", async () => {
-    render(
-      <CreateCrossword
-        setIsSaved={setIsSaved}
-        setUserMessage={setUserMessage}
-      />
-    );
-    const saveButton = screen.getByRole("button", { name: /Save/i });
-
-    fetchWithAuth.mockResolvedValue({
-      ok: true,
-      json: async () => ({ message: "Grid saved successfully" }),
-    });
-
-    fireEvent.click(saveButton);
-
-    await waitFor(() => {
-      expect(setIsSaved);
-    });
-  });
-
-  test("shows error message when save fails", async () => {
-    render(
-      <CreateCrossword
-        setIsSaved={setIsSaved}
-        setUserMessage={setUserMessage}
-      />
-    );
-    const saveButton = screen.getByRole("button", { name: /Save/i });
-
-    fetchWithAuth.mockResolvedValue({
-      ok: false,
-      json: async () => ({ message: "Failed to save grid" }),
-    });
-
-    fireEvent.click(saveButton);
-
-    await waitFor(() => {
-      expect(setUserMessage).toHaveBeenCalled();
-    });
-  });
-
-  test("clears the grid when Clear button is clicked", () => {
-    render(
-      <CreateCrossword
-        setIsSaved={setIsSaved}
-        setUserMessage={setUserMessage}
-      />
-    );
-
-    const titleInput = screen.getByLabelText(/Puzzle Title:/i);
-    fireEvent.change(titleInput, { target: { value: "My Crossword" } });
-
-    const clearButton = screen.getByRole("button", { name: /Clear/i });
-    fireEvent.click(clearButton);
-
-    expect(setIsSaved);
+  test("the help dialog opens and closes", async () => {
+    const user = userEvent.setup();
+    mockApi({});
+    renderCreate();
+    await user.click(screen.getByRole("button", { name: "How to create a crossword" }));
+    expect(screen.getByRole("dialog", { name: "How to create a crossword" })).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });

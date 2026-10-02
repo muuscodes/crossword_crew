@@ -1,113 +1,46 @@
-import AuthProvider from "../context/AuthContext";
-import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import Home from "../components/AuthContent/Home.tsx";
-import { BrowserRouter as Router } from "react-router-dom";
+import { screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, test } from "vitest";
+import Home from "../components/AuthContent/Home";
+import { jsonResponse, mockApi, renderPage } from "./testUtils";
 
-const mockFetchWithAuth = vi.fn();
-const mockHandleGoogleRedirect = vi.fn();
-const mockSetGlobalUser = vi.fn();
-const mockSetIsAuthenticated = vi.fn();
-const mockSetLibrarySortSetting = vi.fn();
+const renderHome = () => renderPage(<Home />, { route: "/home", path: "/home" });
 
-const mockAuthContextValue = {
-  globalUser: { user_id: 1, username: "Guest" },
-  isAuthenticated: true,
-  setIsAuthenticated: mockSetIsAuthenticated,
-  setGlobalUser: mockSetGlobalUser,
-  setLibrarySortSetting: mockSetLibrarySortSetting,
-  fetchWithAuth: mockFetchWithAuth,
-  handleGoogleRedirect: mockHandleGoogleRedirect,
-};
+describe("Home", () => {
+  test("greets the user and shows their stats", async () => {
+    mockApi({ "GET /users/me/stats": { total: 3, created: 2, received: 1, solved: 0 } });
+    renderHome();
+    expect(screen.getByRole("heading", { name: "Welcome back, alice" })).toBeInTheDocument();
 
-describe("Home Component", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    render(
-      <AuthProvider value={mockAuthContextValue}>
-        <Router>
-          <Home />
-        </Router>
-      </AuthProvider>
+    const created = await screen.findByRole("link", { name: /Puzzles you made/ });
+    expect(created).toHaveTextContent("2");
+    expect(created).toHaveAttribute("href", "/library?sort=created");
+    expect(screen.getByRole("link", { name: /Puzzles shared with you/ })).toHaveAttribute(
+      "href",
+      "/library?sort=received",
     );
   });
 
-  test("renders welcome message with username", () => {
-    const welcomeMessage = screen.getByText(/Welcome Guest!/i);
-    expect(welcomeMessage).toBeInTheDocument();
+  test("counts of zero aren't links", async () => {
+    mockApi({ "GET /users/me/stats": { total: 3, created: 2, received: 1, solved: 0 } });
+    renderHome();
+    await screen.findByRole("link", { name: /Puzzles you made/ });
+    expect(screen.queryByRole("link", { name: /Puzzles solved/ })).not.toBeInTheDocument();
+    expect(screen.getByText("Puzzles solved")).toBeInTheDocument();
   });
 
-  test("fetches user data on mount", async () => {
-    mockFetchWithAuth.mockResolvedValueOnce({
-      ok: true,
-      json: vi.fn().mockResolvedValueOnce({
-        totalPuzzleCount: 5,
-        createdByUserCount: 3,
-        createdByOtherCount: 2,
-        solvedPuzzleCount: 4,
-      }),
-    });
-
-    mockHandleGoogleRedirect.mockImplementation(() => {});
-
-    render(
-      <AuthProvider value={mockAuthContextValue}>
-        <Router>
-          <Home />
-        </Router>
-      </AuthProvider>
-    );
-
-    await waitFor(() => {
-      expect(mockFetchWithAuth);
-    });
+  test("shows an error instead of an alert when stats can't load", async () => {
+    mockApi({ "GET /users/me/stats": jsonResponse({ message: "Stats unavailable" }, 500) });
+    renderHome();
+    expect(await screen.findByRole("alert")).toHaveTextContent("Stats unavailable");
   });
 
-  test("handles sort setting on link click", () => {
-    const libraryLink = screen.getByText(/Number of puzzles in library/i);
-    fireEvent.click(libraryLink);
-    mockSetLibrarySortSetting("dateNewest");
-    expect(mockSetLibrarySortSetting).toHaveBeenCalledWith("dateNewest");
-  });
-
-  test("disables link if count is zero", async () => {
-    mockFetchWithAuth.mockResolvedValueOnce({
-      ok: true,
-      json: vi.fn().mockResolvedValueOnce({
-        totalPuzzleCount: 0,
-        createdByUserCount: 2,
-        createdByOtherCount: 5,
-        solvedPuzzleCount: 3,
-      }),
-    });
-
-    await waitFor(() => {
-      expect(screen.getAllByText("0")[0]).toBeInTheDocument();
-    });
-
-    const libraryLink = screen.getAllByRole("link")[0];
-    expect(libraryLink).toHaveClass("hover:cursor-not-allowed");
-  });
-
-  test("alerts on error fetching user data", async () => {
-    const alertMock = vi.spyOn(window, "alert").mockImplementation(() => {});
-    mockFetchWithAuth.mockResolvedValueOnce({
-      ok: false,
-      json: vi.fn().mockResolvedValueOnce({ message: "Error fetching data" }),
-    });
-
-    render(
-      <AuthProvider value={mockAuthContextValue}>
-        <Router>
-          <Home />
-        </Router>
-      </AuthProvider>
-    );
-
-    await waitFor(() => {
-      expect(alertMock);
-    });
-
-    alertMock.mockRestore();
+  test("shows the note from a page that sent the user here, until it's dismissed", async () => {
+    const user = userEvent.setup();
+    mockApi({ "GET /users/me/stats": { total: 0, created: 0, received: 0, solved: 0 } });
+    renderPage(<Home />, { route: { pathname: "/home", state: { notice: "That puzzle isn't yours." } }, path: "/home" });
+    expect(screen.getByText("That puzzle isn't yours.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Dismiss" }));
+    expect(screen.queryByText("That puzzle isn't yours.")).not.toBeInTheDocument();
   });
 });
