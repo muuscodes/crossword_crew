@@ -1,0 +1,23 @@
+# Secrets. backend/.env.example is the committed template.
+.env
+.env.*
+!.env.example
+
+# Dependencies and build output
+node_modules/
+dist/
+coverage/
+*.log
+
+# Personal scratch files
+notes.txt
+test.rest
+
+# Claude Code setup from the starter kit, kept local
+.claude/
+
+# Editors and OS files
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json

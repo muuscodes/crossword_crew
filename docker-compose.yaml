@@ -1,27 +1,36 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     ports:
       - "3000:3000"
     env_file:
       - ./backend/.env
-    volumes:
-      - ./backend:/usr/src/app/backend
-      - ./frontend/dist:/usr/src/frontend/dist
+    environment:
+      # Inside the compose network the database is the "db" service on Postgres's own port.
+      DB_HOST: db
+      DB_PORT: "5432"
+      # Nothing sits in front of the app locally, so don't trust X-Forwarded-For.
+      TRUST_PROXY: "false"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    restart: unless-stopped
 
   db:
-    image: postgres:latest
+    # Pinned: a new major version can't read an existing data volume.
+    image: postgres:17
     env_file:
       - ./backend/.env
     ports:
       - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./backend/initdb:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
 
 volumes:
   pgdata:
